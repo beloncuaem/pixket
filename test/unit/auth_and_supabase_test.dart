@@ -5,6 +5,7 @@ import 'package:chi_tieu/core/constants/app_colors.dart';
 import 'package:chi_tieu/core/utils/icon_helper.dart';
 import 'package:chi_tieu/providers/auth_provider.dart';
 import 'package:chi_tieu/widgets/category_icon_badge.dart';
+import 'package:chi_tieu/widgets/pixel/app_icon.dart';
 
 void main() {
   group('Auth State Tests', () {
@@ -59,10 +60,13 @@ void main() {
       expect(IconHelper.availableIcons.contains('shoppingBag'), isTrue);
 
       final widgetFork = IconHelper.getIconWidget('forkKnife');
-      expect(widgetFork, isA<Icon>());
+      expect(widgetFork, isA<AppIcon>());
 
       final widgetEmoji = IconHelper.getIconWidget('🍜');
-      expect(widgetEmoji, isA<Icon>());
+      expect(widgetEmoji, isA<AppIcon>());
+
+      final widgetUnknown = IconHelper.getIconWidget('chưa_biết');
+      expect(widgetUnknown, isA<AppIcon>());
     });
 
     test('Parses hex colors safely', () {

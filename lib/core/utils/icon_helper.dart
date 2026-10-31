@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
 
+import '../icons/pixel_glyph_data.dart';
+import '../../widgets/pixel/app_icon.dart';
+
 class IconHelper {
-  static final Map<String, IconData> _iconRegistry = {
-    'forkKnife': Icons.restaurant_rounded,
-    'coffee': Icons.local_cafe_rounded,
-    'car': Icons.directions_car_rounded,
-    'shoppingBag': Icons.shopping_bag_rounded,
-    'receipt': Icons.receipt_long_rounded,
-    'gameController': Icons.sports_esports_rounded,
-    'heartbeat': Icons.favorite_rounded,
-    'graduationCap': Icons.school_rounded,
-    'house': Icons.home_rounded,
-    'airplaneTilt': Icons.flight_rounded,
-    'gift': Icons.card_giftcard_rounded,
-    'pawPrint': Icons.pets_rounded,
-    'barbell': Icons.fitness_center_rounded,
-    'filmStrip': Icons.movie_rounded,
-    'tShirt': Icons.checkroom_rounded,
-    'deviceMobile': Icons.smartphone_rounded,
-    'bank': Icons.account_balance_rounded,
-    'wallet': Icons.account_balance_wallet_rounded,
-    'dotsThreeOutline': Icons.more_horiz_rounded,
+  static const Set<String> categoryIconKeys = {
+    'forkKnife',
+    'coffee',
+    'car',
+    'shoppingBag',
+    'receipt',
+    'gameController',
+    'heartbeat',
+    'graduationCap',
+    'house',
+    'airplaneTilt',
+    'gift',
+    'pawPrint',
+    'barbell',
+    'filmStrip',
+    'tShirt',
+    'deviceMobile',
+    'bank',
+    'wallet',
+    'dotsThreeOutline',
   };
 
   // Ánh xạ từ các emoji cũ sang icon tương ứng
-  static final Map<String, String> _emojiToIconName = {
+  static const Map<String, String> _emojiToIconName = {
     '🍜': 'forkKnife',
     '🍲': 'forkKnife',
     '🍔': 'forkKnife',
@@ -47,31 +50,31 @@ class IconHelper {
     '🎁': 'gift',
   };
 
-  static List<String> get availableIcons => _iconRegistry.keys.toList();
+  static List<String> get availableIcons =>
+      categoryIconKeys.toList(growable: false);
 
   static String normalizeIconKey(String iconKey) {
     final mappedKey = _emojiToIconName[iconKey] ?? iconKey;
-    return _iconRegistry.containsKey(mappedKey) ? mappedKey : 'dotsThreeOutline';
+    return categoryIconKeys.contains(mappedKey)
+        ? mappedKey
+        : 'dotsThreeOutline';
   }
 
   static Widget getIconWidget(
     String iconKey, {
-    double size = 22,
+    double size = 16,
     Color? color,
+    Color? secondary,
   }) {
     final mappedKey = _emojiToIconName[iconKey] ?? iconKey;
-    final iconData = _iconRegistry[mappedKey];
-
-    if (iconData != null) {
-      return Icon(iconData, size: size, color: color);
-    }
-
-    // Nếu iconKey là chuỗi emoji
-    if (iconKey.runes.length <= 2 && !iconKey.contains(RegExp(r'[a-zA-Z]'))) {
-      return Text(iconKey, style: TextStyle(fontSize: size * 0.9));
-    }
-
-    return Icon(Icons.label_outline_rounded, size: size, color: color);
+    return AppIcon(
+      name: PixelGlyphData.rowsOf(mappedKey) != null
+          ? mappedKey
+          : PixelGlyphData.fallbackKey,
+      size: size,
+      color: color,
+      secondary: secondary,
+    );
   }
 
   static Color parseColor(

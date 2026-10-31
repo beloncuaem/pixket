@@ -6,6 +6,12 @@ import 'package:chi_tieu/widgets/category_chip.dart';
 import 'package:chi_tieu/widgets/expense_card.dart';
 import 'package:chi_tieu/data/models/expense.dart';
 import 'package:chi_tieu/data/models/category.dart';
+import 'package:chi_tieu/widgets/pixel/app_icon.dart';
+
+/// Glyph pixel tương ứng emoji cũ `🍜`, dùng để kiểm tra ánh xạ emoji → glyph.
+final Finder forkKnifeGlyph = find.byWidgetPredicate(
+  (widget) => widget is AppIcon && widget.name == 'forkKnife',
+);
 
 void main() {
   group('AmountDisplay Widget Tests', () {
@@ -91,7 +97,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.restaurant_rounded), findsOneWidget);
+      expect(forkKnifeGlyph, findsOneWidget);
       expect(find.text('Ăn uống'), findsOneWidget);
 
       await tester.tap(find.byType(CategoryChip));
@@ -121,7 +127,7 @@ void main() {
 
       expect(find.text('Phở bò Hà Nội'), findsOneWidget);
       expect(find.text('Ăn uống'), findsOneWidget);
-      expect(find.byIcon(Icons.restaurant_rounded), findsNWidgets(2));
+      expect(forkKnifeGlyph, findsNWidgets(2));
       expect(find.text('Thiết yếu'), findsOneWidget);
       expect(find.text('45.000\u00a0đ'), findsOneWidget);
       expect(find.text('07:30'), findsOneWidget);
