@@ -83,7 +83,7 @@ không có bản sao dữ liệu tài chính trên thiết bị và không cần
 | :--- | :--- | :--- |
 | **Framework** | Flutter (Dart 3.13+) | Ứng dụng đa nền tảng |
 | **State Management** | `flutter_riverpod` ^2.6.1 | StateNotifier, quản lý trạng thái |
-| **Cloud Database** | `supabase_flutter` ^2.8.3 | Auth, PostgreSQL RLS, Storage |
+| **Cloud Database** | `supabase_flutter` ^2.8.3 | Auth, PostgreSQL RLS, Storage private + signed URL |
 | **Cài đặt cục bộ** | `sqflite` ^2.4.2 | Chỉ lưu tùy chọn onboarding và mức độ cần thiết |
 | **Giao diện** | `google_fonts`, Material 3 | Be Vietnam Pro, Light/Dark |
 | **Biểu đồ** | `fl_chart` ^0.70.2 | Donut và bar chart |
@@ -162,6 +162,15 @@ flutter pub get
 > Không commit `.env`. Chỉ anon/publishable key được nhúng vào app;
 > tuyệt đối không dùng `service_role` key trong client.
 
+Bucket `expense-receipts` là **private** (từ v2.2): app lưu đúng storage path
+`<user_id>/<file>` vào cột `image_url` và hiển thị ảnh qua **signed URL hạn 24 giờ**.
+Ảnh cũ dạng public URL vẫn đọc được vì client tự quy về path, nhưng app không ghi mới URL public.
+
+### 3b. Giữ Supabase hoạt động
+
+Supabase free tier tạm dừng project sau 7 ngày không có hoạt động. Bật workflow
+keep-alive và theo dõi hướng dẫn tại [docs/supabase-keepalive.md](docs/supabase-keepalive.md).
+
 ### 4. Chạy ứng dụng
 ```bash
 flutter run
@@ -179,7 +188,7 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ```bash
 flutter analyze     # không có lỗi biên dịch
-flutter test        # 66/66 passed
+flutter test        # 89/89 passed
 ```
 
 - **Unit Tests**: model, formatter VND/ngày, trạng thái ngân sách/thống kê/auth,

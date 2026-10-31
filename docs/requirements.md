@@ -39,6 +39,9 @@ khách hay ngoại tuyến.
 | FR-18 | Kiểm tra Google provider trước khi mở trình duyệt để báo lỗi rõ ràng. | Đã có |
 | FR-19 | Xem ảnh dạng lưới trong nhật ký và nhảy tới đúng ảnh trong feed. | Đã có |
 | FR-20 | Hiển thị "Quá ngân sách: X" thay vì số còn lại âm khi vượt hạn mức. | Đã có |
+| FR-21 | Ảnh hóa đơn lưu bucket private, hiển thị qua signed URL hạn 24h. | Đã có |
+| FR-22 | Keep-alive Supabase bằng GitHub Actions (kèm cron-job.org dự phòng). | Đã có, cần người dùng cấu hình secrets |
+| FR-23 | Rollback ảnh đã upload khi ghi DB thất bại. | Đã có |
 
 ## 4. Quy tắc dữ liệu
 
@@ -86,8 +89,10 @@ khách hay ngoại tuyến.
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
 - `flutter analyze`: không có issue nào.
-- `flutter test`: 66/66 bài pass.
-- `flutter build apk --debug`: build thành công sau đợt sửa camera, ngân sách và thùng rác.
+- `flutter test`: 89/89 bài pass.
+- `flutter build apk --debug`: **không chạy được trong phiên này** vì máy phát triển chưa có
+  Android SDK/JDK (`flutter doctor` báo "Unable to locate Android SDK"). APK sẽ được build
+  bởi workflow GitHub Actions.
 - Emulator Android API 35:
   - Onboarding và cấp quyền camera/thông báo hoạt động.
   - Đăng nhập email sai hiển thị "Email hoặc mật khẩu không chính xác." từ Supabase,
@@ -96,3 +101,7 @@ khách hay ngoại tuyến.
   - Feed Locket, nút 3 gạch, drawer và 4 khu vực điều hướng hiển thị đúng.
   - Google OAuth bị chặn bởi cấu hình provider (`external.google = false`) và nay được
     app báo rõ trước khi mở trình duyệt.
+- Chưa xác minh bằng tay (không có thiết bị/emulator trong phiên): tải ảnh thật lên
+  bucket private, xem ảnh qua signed URL trên thiết bị, ảnh legacy còn hiển thị.
+- Người dùng cần: chạy lại `supabase_setup.sql`, thêm GitHub Secrets, chạy workflow tay
+  một lần và xác nhận `HTTP 200`.
