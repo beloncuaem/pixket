@@ -255,4 +255,30 @@ void main() {
       expect(AppColors.getPriorityColor(999), AppColors.priority3);
     });
   });
+
+  group('Expense.displayImageUrl', () {
+    Expense sample() => Expense(
+      id: 1,
+      caption: 'Cà phê',
+      amount: 45000,
+      categoryId: 3,
+      createdAt: DateTime(2026, 11, 1, 9, 30),
+      imagePath: 'user-1/1710_204.jpg',
+    );
+
+    test('mặc định null và không ghi vào toMap', () {
+      final expense = sample();
+      expect(expense.displayImageUrl, isNull);
+      expect(expense.toMap().containsKey('display_image_url'), isFalse);
+    });
+
+    test('copyWith gán URL hiển thị mà không đổi imagePath', () {
+      final updated = sample().copyWith(
+        displayImageUrl: 'https://signed/abc',
+      );
+      expect(updated.displayImageUrl, 'https://signed/abc');
+      expect(updated.imagePath, 'user-1/1710_204.jpg');
+      expect(updated.id, 1);
+    });
+  });
 }
