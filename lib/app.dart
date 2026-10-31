@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
@@ -39,6 +42,13 @@ class ChiTieuApp extends ConsumerWidget {
 class _AppHome extends ConsumerWidget {
   const _AppHome();
 
+  Future<void> _clearUserCaches() async {
+    PaintingBinding.instance.imageCache
+      ..clear()
+      ..clearLiveImages();
+    await DefaultCacheManager().emptyCache();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider);
@@ -59,6 +69,7 @@ class _AppHome extends ConsumerWidget {
         ref.invalidate(categoryProvider);
         ref.invalidate(budgetProvider);
         ref.invalidate(statisticsProvider);
+        unawaited(_clearUserCaches());
       }
     });
 

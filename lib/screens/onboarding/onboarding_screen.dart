@@ -25,7 +25,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _OnboardingPage(
       icon: Icons.cloud_done_outlined,
       title: 'Đồng bộ an toàn trên Cloud',
-      description: 'Mỗi khoản chi cần một ảnh từ camera hoặc thư viện. Ảnh và dữ liệu được lưu ngay trên Cloud, không chiếm bộ nhớ máy.',
+      description: 'Mỗi khoản chi cần một ảnh từ camera hoặc thư viện. Ảnh và dữ liệu được đồng bộ trên Cloud; máy chỉ giữ bản đệm tạm để xem nhanh.',
     ),
     _OnboardingPage(
       icon: Icons.notifications_active_outlined,

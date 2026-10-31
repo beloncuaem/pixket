@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
@@ -41,16 +40,20 @@ class SupabaseStorageService {
   }
 
   Future<void> deleteReceiptImage(String imageUrl) async {
+    final path = storagePathFromUrl(imageUrl);
+    if (path == null) return;
     final client = SupabaseConfig.client;
-    if (client == null) return;
-
-    try {
-      if (imageUrl.contains('/$bucketName/')) {
-        final path = imageUrl.split('/$bucketName/').last;
-        await client.storage.from(bucketName).remove([path]);
-      }
-    } catch (e) {
-      debugPrint('Error deleting receipt from Supabase Storage: $e');
+    if (client == null) {
+      throw StateError('Chưa cấu hình Supabase.');
     }
+    await client.storage.from(bucketName).remove([path]);
+  }
+
+  static String? storagePathFromUrl(String imageUrl) {
+    final segments = Uri.tryParse(imageUrl)?.pathSegments;
+    if (segments == null) return null;
+    final bucketIndex = segments.indexOf(bucketName);
+    if (bucketIndex < 0 || bucketIndex == segments.length - 1) return null;
+    return segments.sublist(bucketIndex + 1).join('/');
   }
 }

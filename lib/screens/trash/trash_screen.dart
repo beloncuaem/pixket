@@ -56,8 +56,21 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
       ),
     );
     if (confirm != true) return;
-    await ref.read(expenseProvider.notifier).permanentlyDeleteExpense(expense);
-    if (mounted) setState(_reload);
+    try {
+      await ref
+          .read(expenseProvider.notifier)
+          .permanentlyDeleteExpense(expense);
+      if (mounted) setState(_reload);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Không thể xóa vĩnh viễn. Kiểm tra kết nối và thử lại.',
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildThumbnail(String? imagePath) {

@@ -152,7 +152,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
 
   Future<void> _pickFromGallery() async {
     try {
-      final image = await _picker.pickImage(source: ImageSource.gallery);
+      final image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 80,
+      );
       if (image != null && mounted) {
         await _openExpenseForm(imagePath: image.path);
       }

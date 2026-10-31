@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/models/expense.dart';
@@ -153,16 +154,19 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
 
   Future<void> permanentlyDeleteExpense(Expense expense) async {
     if (expense.id == null) return;
-    await _repository.permanentlyDeleteExpense(expense.id!);
     final imagePath = expense.imagePath;
-    if (imagePath == null || imagePath.isEmpty) return;
-
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      await SupabaseStorageService().deleteReceiptImage(imagePath);
-      return;
+    if (imagePath != null && imagePath.isNotEmpty) {
+      if (imagePath.startsWith('http://') ||
+          imagePath.startsWith('https://')) {
+        await SupabaseStorageService().deleteReceiptImage(imagePath);
+        await CachedNetworkImage.evictFromCache(imagePath);
+      } else {
+        final file = File(imagePath);
+        if (await file.exists()) await file.delete();
+      }
     }
-    final file = File(imagePath);
-    if (await file.exists()) await file.delete();
+    // Ảnh phải xóa xong trước để không còn URL công khai mồ côi.
+    await _repository.permanentlyDeleteExpense(expense.id!);
   }
 
   Future<double> getTodayTotal() async {

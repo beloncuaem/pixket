@@ -25,10 +25,11 @@ class AppAuthState {
     sb.User? user,
     String? errorMessage,
     bool? isConfigured,
+    bool clearUser = false,
   }) {
     return AppAuthState(
       status: status ?? this.status,
-      user: user ?? this.user,
+      user: clearUser ? null : user ?? this.user,
       errorMessage: errorMessage,
       isConfigured: isConfigured ?? this.isConfigured,
     );
@@ -70,7 +71,7 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
         } else {
           state = state.copyWith(
             status: AuthStatus.unauthenticated,
-            user: null,
+            clearUser: true,
             errorMessage: null,
           );
         }
@@ -165,7 +166,10 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
 
   Future<void> signOut() async {
     await _repo.signOut();
-    state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+    state = state.copyWith(
+      status: AuthStatus.unauthenticated,
+      clearUser: true,
+    );
   }
 
   String _humanReadableError(String raw) {
