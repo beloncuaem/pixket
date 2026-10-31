@@ -1,0 +1,41 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '0 3 */2 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Giữ dự án Supabase hoạt động
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kiểm tra secrets
+        run: |
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "Thiếu secret SUPABASE_URL hoặc SUPABASE_ANON_KEY." >&2
+            exit 1
+          fi
+          echo "Secrets đã đủ (không in giá trị)."
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: REST ping tới bảng categories
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/categories?select=id&limit=1")
+          echo "HTTP ${status}"
+          if [ "${status}" -ge 400 ]; then
+            echo "Supabase trả lỗi ${status}. Kiểm tra URL, anon key và RLS." >&2
+            exit 1
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
