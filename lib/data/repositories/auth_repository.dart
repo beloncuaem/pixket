@@ -7,6 +7,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/supabase_config.dart';
 
 class AuthRepository {
+  /// Deep link đã khai báo trong AndroidManifest.xml (`io.supabase.chitieu`).
+  static const String recoveryRedirect =
+      'io.supabase.chitieu://login-callback/';
+
   SupabaseClient? get _client => SupabaseConfig.client;
 
   User? get currentUser => _client?.auth.currentUser;
@@ -117,13 +121,32 @@ class AuthRepository {
     }
   }
 
-  Future<void> resetPassword(String email) async {
+  Future<void> resetPassword(
+    String email, {
+    String redirectTo = recoveryRedirect,
+  }) async {
     final client = _client;
     if (client == null) {
       throw Exception(
         'Supabase chưa được cấu hình. Vui lòng kiểm tra file .env',
       );
     }
-    await client.auth.resetPasswordForEmail(email.trim());
+    await client.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo: redirectTo,
+    );
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    final client = _client;
+    if (client == null) {
+      throw Exception(
+        'Supabase chưa được cấu hình. Vui lòng kiểm tra file .env',
+      );
+    }
+    if (newPassword.length < 6) {
+      throw Exception('Mật khẩu phải có ít nhất 6 ký tự.');
+    }
+    await client.auth.updateUser(UserAttributes(password: newPassword));
   }
 }

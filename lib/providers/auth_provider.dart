@@ -12,12 +12,14 @@ class AppAuthState {
   final sb.User? user;
   final String? errorMessage;
   final bool isConfigured;
+  final bool recoveryMode;
 
   const AppAuthState({
     this.status = AuthStatus.initial,
     this.user,
     this.errorMessage,
     this.isConfigured = false,
+    this.recoveryMode = false,
   });
 
   AppAuthState copyWith({
@@ -25,6 +27,7 @@ class AppAuthState {
     sb.User? user,
     String? errorMessage,
     bool? isConfigured,
+    bool? recoveryMode,
     bool clearUser = false,
   }) {
     return AppAuthState(
@@ -32,6 +35,7 @@ class AppAuthState {
       user: clearUser ? null : user ?? this.user,
       errorMessage: errorMessage,
       isConfigured: isConfigured ?? this.isConfigured,
+      recoveryMode: recoveryMode ?? this.recoveryMode,
     );
   }
 }
@@ -62,6 +66,16 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
     if (stream != null) {
       _authSubscription = stream.listen((data) {
         final session = data.session;
+        if (data.event == sb.AuthChangeEvent.passwordRecovery) {
+          // Deep link đã đổi code thành session: ưu tiên màn đặt lại mật khẩu.
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            user: session?.user,
+            recoveryMode: true,
+            errorMessage: null,
+          );
+          return;
+        }
         if (session != null) {
           state = state.copyWith(
             status: AuthStatus.authenticated,
@@ -72,6 +86,7 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
           state = state.copyWith(
             status: AuthStatus.unauthenticated,
             clearUser: true,
+            recoveryMode: false,
             errorMessage: null,
           );
         }
@@ -164,12 +179,57 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
     }
   }
 
+  /// Gửi email đặt lại mật khẩu. Luôn trả về thông điệp trung tính để
+  /// không tiết lộ email nào tồn tại trong hệ thống.
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+      await _repo.resetPassword(email);
+      state = state.copyWith(
+        status: state.user != null
+            ? AuthStatus.authenticated
+            : AuthStatus.unauthenticated,
+        errorMessage: null,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        status: state.user != null
+            ? AuthStatus.authenticated
+            : AuthStatus.unauthenticated,
+        errorMessage: _humanReadableError(e.toString()),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> setNewPassword(String password) async {
+    try {
+      state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+      await _repo.updatePassword(password);
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        recoveryMode: false,
+        errorMessage: null,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        recoveryMode: true,
+        errorMessage: _humanReadableError(e.toString()),
+      );
+      return false;
+    }
+  }
+
+  void exitRecoveryMode() {
+    state = state.copyWith(recoveryMode: false);
+  }
+
   Future<void> signOut() async {
     await _repo.signOut();
-    state = state.copyWith(
-      status: AuthStatus.unauthenticated,
-      clearUser: true,
-    );
+    state = state.copyWith(status: AuthStatus.unauthenticated, clearUser: true);
   }
 
   String _humanReadableError(String raw) {
@@ -187,6 +247,15 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
     }
     if (raw.contains('Password should be at least')) {
       return 'Mật khẩu phải có ít nhất 6 ký tự.';
+    }
+    if (raw.contains('AuthSessionMissingException') ||
+        raw.contains('Session missing') ||
+        raw.contains('valid session')) {
+      return 'Phiên đặt lại mật khẩu đã hết hạn. Hãy bấm "Quên mật khẩu" một lần nữa.';
+    }
+    if (raw.contains('For security purposes') ||
+        raw.contains('requires reauthentication')) {
+      return 'Cần đăng nhập lại trước khi đổi mật khẩu.';
     }
     if (raw.contains('Supabase chưa được cấu hình')) {
       return 'Chưa cấu hình Supabase. Vui lòng thêm URL và Anon Key vào file .env.';

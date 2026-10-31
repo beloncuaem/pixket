@@ -30,6 +30,24 @@ void main() {
       expect(updated.isConfigured, isTrue);
     });
 
+    test('AppAuthState defaults recoveryMode to false', () {
+      const state = AppAuthState();
+      expect(state.recoveryMode, isFalse);
+    });
+
+    test('copyWith turns recoveryMode on and off again', () {
+      const state = AppAuthState();
+      final recovering = state.copyWith(
+        status: AuthStatus.authenticated,
+        recoveryMode: true,
+      );
+      expect(recovering.recoveryMode, isTrue);
+
+      final done = recovering.copyWith(recoveryMode: false);
+      expect(done.recoveryMode, isFalse);
+      expect(done.status, AuthStatus.authenticated);
+    });
+
     test('copyWith clearUser removes the previous user', () {
       final user = sb.User(
         id: 'user-1',
@@ -83,10 +101,7 @@ void main() {
       expect(AppColors.primary, const Color(0xFF2F9E6E));
       expect(AppColors.backgroundDark, const Color(0xFF1A130D));
       expect(AppColors.cardGradientDark.colors.length, 2);
-      expect(
-        AppColors.cardGradientDark.colors.first,
-        const Color(0xFF241A12),
-      );
+      expect(AppColors.cardGradientDark.colors.first, const Color(0xFF241A12));
     });
   });
 
