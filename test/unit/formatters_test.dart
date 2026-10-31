@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:chi_tieu/core/utils/amount_input_formatter.dart';
 import 'package:chi_tieu/core/utils/currency_formatter.dart';
 import 'package:chi_tieu/core/utils/date_formatter.dart';
 
@@ -36,6 +38,93 @@ void main() {
 
       final evening = DateTime(2026, 10, 14, 21, 45);
       expect(DateFormatter.formatTime(evening), '21:45');
+    });
+  });
+
+  group('CurrencyFormatter.parseInput', () {
+    test('reads grouped and punctuated VND text', () {
+      expect(CurrencyFormatter.parseInput('1.500.000'), 1500000);
+      expect(CurrencyFormatter.parseInput('1,500,000'), 1500000);
+      expect(CurrencyFormatter.parseInput('  35 000 ₫'), 35000);
+      expect(CurrencyFormatter.parseInput('0'), 0);
+    });
+
+    test('returns null when no digit exists', () {
+      expect(CurrencyFormatter.parseInput(''), isNull);
+      expect(CurrencyFormatter.parseInput('abc'), isNull);
+      expect(CurrencyFormatter.parseInput('   '), isNull);
+    });
+
+    test('toEditableText seeds controllers with grouped digits', () {
+      expect(CurrencyFormatter.toEditableText(1500000), '1.500.000');
+      expect(CurrencyFormatter.toEditableText(35000.6), '35.001');
+      expect(CurrencyFormatter.toEditableText(0), '');
+    });
+  });
+
+  group('ThousandsSeparatorInputFormatter', () {
+    const formatter = ThousandsSeparatorInputFormatter();
+
+    TextEditingValue edit(String from, String to, {int? cursor}) {
+      return formatter.formatEditUpdate(
+        TextEditingValue(
+          text: from,
+          selection: TextSelection.collapsed(offset: from.length),
+        ),
+        TextEditingValue(
+          text: to,
+          selection: TextSelection.collapsed(offset: cursor ?? to.length),
+        ),
+      );
+    }
+
+    test('groups every three digits', () {
+      expect(edit('', '3').text, '3');
+      expect(edit('35', '35000').text, '35.000');
+      expect(edit('150000', '1500000').text, '1.500.000');
+    });
+
+    test('drops non digits pasted from elsewhere', () {
+      expect(edit('', '1,234,567 đ').text, '1.234.567');
+    });
+
+    test('strips leading zeros', () {
+      expect(edit('', '007').text, '7');
+      expect(edit('0', '').text, '');
+    });
+
+    test('refuses more than maxDigits', () {
+      final result = edit('123.456.789.012', '123.456.789.0123');
+      expect(result.text, '123.456.789.012');
+    });
+
+    test('reformats when appending a digit at the end', () {
+      final result = edit('35.000', '35.0001');
+      expect(result.text, '350.001');
+      expect(result.selection.extentOffset, result.text.length);
+    });
+
+    test('keeps the caret in place when typing in the middle', () {
+      // '35.000' + chen '0' ngay sau ky tu dau -> '305.000', con tro sau so 3.
+      final result = edit('35.000', '305.000', cursor: 3);
+      expect(result.text, '305.000');
+      expect(result.selection.extentOffset, 3);
+    });
+
+    test('static helpers round-trip digit counting', () {
+      expect(
+        ThousandsSeparatorInputFormatter.groupDigits('1234567'),
+        '1.234.567',
+      );
+      expect(
+        ThousandsSeparatorInputFormatter.countDigitsBefore('1.234.5', 6),
+        4,
+      );
+      expect(
+        // '1.234.567': sau chu so thu 4 ('4') la offset 5, ke do dau cham.
+        ThousandsSeparatorInputFormatter.offsetAfterDigitCount('1.234.567', 4),
+        5,
+      );
     });
   });
 }
