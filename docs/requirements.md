@@ -80,6 +80,8 @@ khách hay ngoại tuyến.
   và allowlist redirect URL. Xem `docs/google-oauth-troubleshooting.md`.
 - Nếu bật "Confirm email", người dùng đăng ký phải xác nhận email trước khi đăng nhập.
 - Chạy `supabase_setup.sql` để tạo bảng, RLS và bucket `expense-receipts`.
+- Từ v2.2 bucket `expense-receipts` là **private**: phải chạy lại `supabase_setup.sql`
+  rồi cài bản app mới. Bản app cũ (dùng public URL) sẽ không còn xem được ảnh.
 
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
