@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/icon_helper.dart';
@@ -982,10 +983,10 @@ class _FilterSheetState extends State<_FilterSheet> {
     _categoryId = widget.initial.categoryId;
     _priorityId = widget.initial.priorityId;
     _minController = TextEditingController(
-      text: widget.initial.minAmount?.toInt().toString() ?? '',
+      text: CurrencyFormatter.toEditableText(widget.initial.minAmount ?? 0),
     );
     _maxController = TextEditingController(
-      text: widget.initial.maxAmount?.toInt().toString() ?? '',
+      text: CurrencyFormatter.toEditableText(widget.initial.maxAmount ?? 0),
     );
   }
 
@@ -1098,6 +1099,9 @@ class _FilterSheetState extends State<_FilterSheet> {
                       child: TextField(
                         controller: _minController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: const [
+                          ThousandsSeparatorInputFormatter(),
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Từ số tiền',
                           suffixText: '₫',
@@ -1109,6 +1113,9 @@ class _FilterSheetState extends State<_FilterSheet> {
                       child: TextField(
                         controller: _maxController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: const [
+                          ThousandsSeparatorInputFormatter(),
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Đến số tiền',
                           suffixText: '₫',
@@ -1134,8 +1141,12 @@ class _FilterSheetState extends State<_FilterSheet> {
                           dateRange: _dateRange,
                           categoryId: _categoryId,
                           priorityId: _priorityId,
-                          minAmount: double.tryParse(_minController.text),
-                          maxAmount: double.tryParse(_maxController.text),
+                          minAmount: CurrencyFormatter.parseInput(
+                            _minController.text,
+                          ),
+                          maxAmount: CurrencyFormatter.parseInput(
+                            _maxController.text,
+                          ),
                         ),
                       ),
                       child: const Text('Áp dụng'),

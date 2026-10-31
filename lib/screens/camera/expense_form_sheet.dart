@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/utils/amount_input_formatter.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/utils/storage_paths.dart';
 import '../../data/models/expense.dart';
@@ -40,7 +42,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     final expense = widget.expense;
     _captionController = TextEditingController(text: expense?.caption ?? '');
     _amountController = TextEditingController(
-      text: expense?.amount.toInt().toString() ?? '',
+      text: expense == null
+          ? ''
+          : CurrencyFormatter.toEditableText(expense.amount),
     );
     _selectedCategoryId = expense?.categoryId;
     _selectedPriority = expense?.priority ?? 2;
@@ -64,9 +68,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       return;
     }
 
-    final amount = double.tryParse(
-      _amountController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-    );
+    final amount = CurrencyFormatter.parseInput(_amountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(
         context,
@@ -206,16 +208,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                   TextFormField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
+                    inputFormatters: const [ThousandsSeparatorInputFormatter()],
                     decoration: const InputDecoration(
                       labelText: 'Số tiền (VND)',
-                      hintText: '35000',
+                      hintText: '35.000',
                       suffixText: '₫',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
-                      final amount = double.tryParse(
-                        (value ?? '').replaceAll(RegExp(r'[^0-9]'), ''),
-                      );
+                      final amount = CurrencyFormatter.parseInput(value ?? '');
                       return amount == null || amount <= 0
                           ? 'Nhập số tiền lớn hơn 0'
                           : null;

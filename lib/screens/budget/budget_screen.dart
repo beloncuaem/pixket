@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/budget_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../data/models/category.dart';
+import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../widgets/glass_card.dart';
@@ -39,16 +40,16 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
 
     if (budgetState.totalBudget != null &&
         budgetState.totalBudget!.amount > 0) {
-      _totalBudgetController.text = budgetState.totalBudget!.amount
-          .toInt()
-          .toString();
+      _totalBudgetController.text = CurrencyFormatter.toEditableText(
+        budgetState.totalBudget!.amount,
+      );
     }
 
     for (var cat in categoryState.categories) {
       if (cat.id != null) {
         final amount = budgetState.categoryBudgets[cat.id];
         _categoryControllers[cat.id!] = TextEditingController(
-          text: amount != null && amount > 0 ? amount.toInt().toString() : '',
+          text: CurrencyFormatter.toEditableText(amount ?? 0),
         );
       }
     }
@@ -71,15 +72,14 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     try {
       if (_isTotalBudget) {
         final total =
-            double.tryParse(_totalBudgetController.text.replaceAll(',', '')) ??
-            0.0;
+            CurrencyFormatter.parseInput(_totalBudgetController.text) ?? 0.0;
         await ref
             .read(budgetProvider.notifier)
             .setTotalBudget(month: currentMonth, amount: total);
       } else {
         final Map<int, double> catBudgets = {};
         _categoryControllers.forEach((id, controller) {
-          final val = double.tryParse(controller.text.replaceAll(',', ''));
+          final val = CurrencyFormatter.parseInput(controller.text);
           if (val != null && val > 0) {
             catBudgets[id] = val;
           }
@@ -227,9 +227,10 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           TextField(
             controller: _totalBudgetController,
             keyboardType: TextInputType.number,
+            inputFormatters: const [ThousandsSeparatorInputFormatter()],
             decoration: const InputDecoration(
               labelText: 'Ngân sách tổng (VND)',
-              hintText: '5000000',
+              hintText: '5.000.000',
               suffixText: '₫',
               border: OutlineInputBorder(),
             ),
@@ -337,6 +338,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               TextField(
                 controller: _categoryControllers[cat.id!],
                 keyboardType: TextInputType.number,
+                inputFormatters: const [ThousandsSeparatorInputFormatter()],
                 decoration: const InputDecoration(
                   labelText: 'Ngân sách',
                   suffixText: '₫',
