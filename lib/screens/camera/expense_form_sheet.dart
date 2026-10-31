@@ -4,14 +4,17 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_palette.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/expense_date_limits.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/utils/storage_paths.dart';
 import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/priority_provider.dart';
+import 'expense_datetime_field.dart';
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final String? imagePath;
@@ -30,6 +33,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   late final TextEditingController _amountController;
   int? _selectedCategoryId;
   late int _selectedPriority;
+  late DateTime _occurredAt;
+  String? _dateError;
   bool _isSaving = false;
   bool _didSave = false;
 
@@ -48,6 +53,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
     _selectedCategoryId = expense?.categoryId;
     _selectedPriority = expense?.priority ?? 2;
+    _occurredAt = expense?.createdAt ?? DateTime.now();
   }
 
   Future<void> _saveExpense() async {
@@ -76,6 +82,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       return;
     }
 
+    final dateError = ExpenseDateLimits.validate(_occurredAt, DateTime.now());
+    if (dateError != null) {
+      setState(() => _dateError = dateError);
+      return;
+    }
+    setState(() => _dateError = null);
+
     setState(() => _isSaving = true);
     try {
       if (_isEditing) {
@@ -84,6 +97,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           amount: amount,
           categoryId: categoryId,
           priority: _selectedPriority,
+          createdAt: _occurredAt,
         );
         await ref.read(expenseProvider.notifier).updateExpense(updated);
       } else {
@@ -97,7 +111,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           categoryId: categoryId,
           priority: _selectedPriority,
           imagePath: sourceImagePath,
-          createdAt: DateTime.now(),
+          createdAt: _occurredAt,
         );
         await ref.read(expenseProvider.notifier).addExpense(newExpense);
         _didSave = true;
@@ -222,6 +236,27 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           : null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  ExpenseDateTimeField(
+                    value: _occurredAt,
+                    onChanged: (value) => setState(() {
+                      _occurredAt = value;
+                      _dateError = ExpenseDateLimits.validate(
+                        value,
+                        DateTime.now(),
+                      );
+                    }),
+                  ),
+                  if (_dateError != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      _dateError!,
+                      style: TextStyle(
+                        color: context.palette.danger,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   Text(
                     'Danh mục',
