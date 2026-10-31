@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:chi_tieu/core/utils/amount_input_formatter.dart';
 import 'package:chi_tieu/core/utils/currency_formatter.dart';
 import 'package:chi_tieu/core/utils/date_formatter.dart';
+import 'package:chi_tieu/core/utils/expense_date_limits.dart';
 
 void main() {
   group('CurrencyFormatter Tests', () {
@@ -124,6 +125,57 @@ void main() {
         // '1.234.567': sau chu so thu 4 ('4') la offset 5, ke do dau cham.
         ThousandsSeparatorInputFormatter.offsetAfterDigitCount('1.234.567', 4),
         5,
+      );
+    });
+  });
+
+  group('ExpenseDateLimits', () {
+    final now = DateTime(2026, 10, 26, 14, 30);
+
+    test('firstDate is ten years back', () {
+      expect(ExpenseDateLimits.firstDate(now), DateTime(2016, 10, 26));
+    });
+
+    test('lastDate is now', () {
+      expect(ExpenseDateLimits.lastDate(now), now);
+    });
+
+    test('future beyond one minute tolerance is rejected', () {
+      expect(
+        ExpenseDateLimits.validate(now.add(const Duration(seconds: 30)), now),
+        isNull,
+      );
+      expect(
+        ExpenseDateLimits.validate(now.add(const Duration(minutes: 5)), now),
+        'Không thể ghi nhận khoản chi trong tương lai.',
+      );
+    });
+
+    test('dates before firstDate are rejected', () {
+      expect(
+        ExpenseDateLimits.validate(DateTime(2000, 1, 1), now),
+        'Khoản chi không thể cũ hơn 10 năm.',
+      );
+    });
+
+    test('combine keeps the calendar day but swaps the clock', () {
+      expect(
+        ExpenseDateLimits.combine(DateTime(2026, 5, 20, 9, 5), 21, 45),
+        DateTime(2026, 5, 20, 21, 45),
+      );
+    });
+
+    test('clamp pulls an out-of-range value back inside', () {
+      expect(
+        ExpenseDateLimits.clampToAllowedRange(
+          now.add(const Duration(hours: 2)),
+          now,
+        ),
+        now,
+      );
+      expect(
+        ExpenseDateLimits.clampToAllowedRange(DateTime(1999, 1, 1), now),
+        ExpenseDateLimits.firstDate(now),
       );
     });
   });
