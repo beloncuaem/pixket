@@ -19,7 +19,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pages = const [
     _OnboardingPage(
       icon: Icons.attach_money_rounded,
-      title: 'Chào mừng đến với Chi Tiêu',
+      title: 'Chào mừng đến với Piket',
       description: 'Ghi lại khoản chi bằng ảnh và theo dõi ngân sách của bạn mọi lúc, mọi nơi.',
     ),
     _OnboardingPage(

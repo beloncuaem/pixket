@@ -9,9 +9,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Chi Tiêu cần dùng camera để lưu ảnh cho mỗi khoản chi.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Chi Tiêu cần truy cập thư viện ảnh để đính kèm ảnh cho mỗi khoản chi.</string>
+	<string>Piket cần truy cập thư viện ảnh để đính kèm ảnh cho mỗi khoản chi.</string>
 	<key>CFBundleDisplayName</key>
-	<string>Chi Tieu</string>
+	<string>Piket</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

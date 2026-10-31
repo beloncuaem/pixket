@@ -1,5 +1,5 @@
 class AppStrings {
-  static const String appName = 'Chi Tiêu';
+  static const String appName = 'Piket';
 
   static const List<String> priorityLabels = [
     'Thiết yếu',

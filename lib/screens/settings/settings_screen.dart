@@ -56,7 +56,7 @@ class SettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Chi Tiêu App',
+                        'Piket',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

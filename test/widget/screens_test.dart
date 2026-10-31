@@ -38,7 +38,7 @@ void main() {
       );
 
       expect(find.text('Bỏ qua'), findsOneWidget);
-      expect(find.text('Chào mừng đến với Chi Tiêu'), findsOneWidget);
+      expect(find.text('Chào mừng đến với Piket'), findsOneWidget);
       expect(find.text('Tiếp tục'), findsOneWidget);
     });
   });

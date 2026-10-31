@@ -371,7 +371,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'Chi Tiêu',
+                        'Piket',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
