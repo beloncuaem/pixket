@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/app_colors.dart';
 
@@ -19,7 +18,7 @@ class AppTheme {
     );
 
     return base.copyWith(
-      textTheme: GoogleFonts.beVietnamProTextTheme(base.textTheme),
+      textTheme: base.textTheme.apply(fontFamily: 'BeVietnamPro'),
       cardTheme: CardThemeData(
         color: AppColors.surfaceLight,
         elevation: 0,
@@ -94,7 +93,7 @@ class AppTheme {
     );
 
     return base.copyWith(
-      textTheme: GoogleFonts.beVietnamProTextTheme(base.textTheme),
+      textTheme: base.textTheme.apply(fontFamily: 'BeVietnamPro'),
       cardTheme: CardThemeData(
         color: AppColors.surfaceDark,
         elevation: 0,
