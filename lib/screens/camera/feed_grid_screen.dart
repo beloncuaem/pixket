@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/storage_paths.dart';
 import '../../data/models/expense.dart';
 
 class FeedGridScreen extends StatelessWidget {
@@ -88,7 +89,7 @@ class _GridTile extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _buildImage(expense.imagePath!),
+              _buildImage(expense),
               const Positioned(
                 left: 0,
                 right: 0,
@@ -131,10 +132,12 @@ class _GridTile extends StatelessWidget {
     );
   }
 
-  Widget _buildImage(String path) {
-    if (path.startsWith('http://') || path.startsWith('https://')) {
+  Widget _buildImage(Expense expense) {
+    final url = expense.displayImageUrl;
+    if (url != null) {
       return CachedNetworkImage(
-        imageUrl: path,
+        imageUrl: url,
+        cacheKey: storagePathOf(expense.imagePath),
         fit: BoxFit.cover,
         placeholder: (_, __) => const ColoredBox(
           color: AppColors.surfaceDark,
@@ -153,13 +156,19 @@ class _GridTile extends StatelessWidget {
       );
     }
 
-    final file = File(path);
-    if (!file.existsSync()) return _errorTile();
-    return Image.file(
-      file,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _errorTile(),
-    );
+    // Chỉ ảnh chưa kịp lên Cloud mới còn là đường dẫn tệp cục bộ.
+    final path = expense.imagePath;
+    if (path != null && storagePathOf(path) == null) {
+      final file = File(path);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _errorTile(),
+        );
+      }
+    }
+    return _errorTile();
   }
 
   Widget _errorTile() {

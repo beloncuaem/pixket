@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../core/constants/app_colors.dart';
 import '../core/utils/currency_formatter.dart';
 import '../core/utils/icon_helper.dart';
+import '../core/utils/storage_paths.dart';
 import '../data/models/category.dart';
 import '../data/models/expense.dart';
 import 'category_icon_badge.dart';
@@ -107,7 +108,7 @@ class ExpenseCard extends StatelessWidget {
               if (expense.imagePath != null &&
                   expense.imagePath!.isNotEmpty) ...[
                 GestureDetector(
-                  onTap: () => _showImagePreview(context, expense.imagePath!),
+                  onTap: () => _showImagePreview(context, expense),
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 6),
                     width: 38,
@@ -122,7 +123,7 @@ class ExpenseCard extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(9),
-                      child: _buildThumbnailImage(expense.imagePath!),
+                      child: _buildThumbnailImage(expense),
                     ),
                   ),
                 ),
@@ -143,10 +144,12 @@ class ExpenseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildThumbnailImage(String path) {
-    if (path.startsWith('http://') || path.startsWith('https://')) {
+  Widget _buildThumbnailImage(Expense expense) {
+    final url = expense.displayImageUrl;
+    if (url != null) {
       return CachedNetworkImage(
-        imageUrl: path,
+        imageUrl: url,
+        cacheKey: storagePathOf(expense.imagePath),
         fit: BoxFit.cover,
         placeholder: (_, __) => const Center(
           child: SizedBox(
@@ -160,15 +163,34 @@ class ExpenseCard extends StatelessWidget {
       );
     }
 
-    final file = File(path);
-    if (file.existsSync()) {
-      return Image.file(file, fit: BoxFit.cover);
+    // Chỉ ảnh chưa kịp lên Cloud mới còn là đường dẫn tệp cục bộ.
+    final path = expense.imagePath;
+    if (path != null && storagePathOf(path) == null) {
+      final file = File(path);
+      if (file.existsSync()) {
+        return Image.file(file, fit: BoxFit.cover);
+      }
     }
 
     return const Center(child: Icon(Icons.image_rounded, size: 18));
   }
 
-  void _showImagePreview(BuildContext context, String path) {
+  void _showImagePreview(BuildContext context, Expense expense) {
+    final url = expense.displayImageUrl;
+    final path = expense.imagePath;
+    final Widget preview;
+    if (url != null) {
+      preview = CachedNetworkImage(
+        imageUrl: url,
+        cacheKey: storagePathOf(path),
+        fit: BoxFit.contain,
+      );
+    } else if (path != null && storagePathOf(path) == null) {
+      preview = Image.file(File(path), fit: BoxFit.contain);
+    } else {
+      preview = const Icon(Icons.image_rounded, color: Colors.white);
+    }
+
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -178,12 +200,7 @@ class ExpenseCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: AspectRatio(
             aspectRatio: 1,
-            child: Container(
-              color: Colors.black,
-              child: path.startsWith('http')
-                  ? CachedNetworkImage(imageUrl: path, fit: BoxFit.contain)
-                  : Image.file(File(path), fit: BoxFit.contain),
-            ),
+            child: Container(color: Colors.black, child: preview),
           ),
         ),
       ),

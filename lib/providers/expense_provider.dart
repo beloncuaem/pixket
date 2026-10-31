@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/utils/storage_paths.dart';
 import '../data/models/expense.dart';
 import '../data/repositories/expense_repository.dart';
 import '../data/repositories/supabase_storage_service.dart';
@@ -152,12 +155,23 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
 
   Future<void> permanentlyDeleteExpense(Expense expense) async {
     if (expense.id == null) return;
-    final imagePath = expense.imagePath;
-    if (imagePath != null && imagePath.isNotEmpty) {
-      await SupabaseStorageService().deleteReceiptImage(imagePath);
-      await CachedNetworkImage.evictFromCache(imagePath);
+
+    final storedPath = storagePathOf(expense.imagePath);
+    if (storedPath != null) {
+      await SupabaseStorageService().deleteByPath(storedPath);
+      final url = expense.displayImageUrl;
+      if (url != null) {
+        await CachedNetworkImage.evictFromCache(url, cacheKey: storedPath);
+      }
+    } else {
+      final local = expense.imagePath;
+      if (local != null) {
+        final file = File(local);
+        if (await file.exists()) await file.delete();
+      }
     }
-    // Ảnh phải xóa xong trước để không còn URL công khai mồ côi.
+
+    // Ảnh phải xóa xong trước để không còn object mồ côi.
     await _repository.permanentlyDeleteExpense(expense.id!);
   }
 

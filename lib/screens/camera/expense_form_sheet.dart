@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/icon_helper.dart';
+import '../../core/utils/storage_paths.dart';
 import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/expense_provider.dart';
@@ -132,7 +133,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (!_didSave &&
         !_isEditing &&
         draftPath != null &&
-        !draftPath.startsWith('http')) {
+        storagePathOf(draftPath) == null) {
       final file = File(draftPath);
       if (file.existsSync()) file.delete();
     }
@@ -310,23 +311,33 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       child: const Icon(Icons.broken_image_outlined, size: 56),
     );
 
+    final storedPath = storagePathOf(path);
     Widget image;
     if (path == null || path.isEmpty) {
       image = placeholder;
-    } else if (path.startsWith('http://') || path.startsWith('https://')) {
-      image = CachedNetworkImage(
-        imageUrl: path,
-        fit: BoxFit.cover,
-        placeholder: (_, __) =>
-            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        errorWidget: (_, __, ___) => placeholder,
-      );
+    } else if (storedPath != null) {
+      // Ảnh đã nằm trên Cloud: chỉ hiển thị được qua signed URL.
+      final url = widget.expense?.displayImageUrl;
+      image = url == null
+          ? placeholder
+          : CachedNetworkImage(
+              imageUrl: url,
+              cacheKey: storedPath,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              errorWidget: (_, __, ___) => placeholder,
+            );
     } else {
-      image = Image.file(
-        File(path),
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => placeholder,
-      );
+      final file = File(path);
+      image = file.existsSync()
+          ? Image.file(
+              file,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => placeholder,
+            )
+          : placeholder;
     }
 
     return Semantics(

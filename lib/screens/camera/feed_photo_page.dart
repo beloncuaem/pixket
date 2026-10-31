@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/icon_helper.dart';
+import '../../core/utils/storage_paths.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/priority_level.dart';
@@ -30,13 +31,12 @@ class FeedPhotoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = expense.imagePath!;
     final caption = expense.caption.trim();
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        _buildImage(imagePath),
+        _buildImage(expense),
         const Positioned(
           top: 0,
           left: 0,
@@ -173,10 +173,12 @@ class FeedPhotoPage extends StatelessWidget {
     );
   }
 
-  Widget _buildImage(String path) {
-    if (path.startsWith('http://') || path.startsWith('https://')) {
+  Widget _buildImage(Expense expense) {
+    final url = expense.displayImageUrl;
+    if (url != null) {
       return CachedNetworkImage(
-        imageUrl: path,
+        imageUrl: url,
+        cacheKey: storagePathOf(expense.imagePath),
         fit: BoxFit.cover,
         placeholder: (_, __) => const ColoredBox(
           color: AppColors.feedBackground,
@@ -188,13 +190,19 @@ class FeedPhotoPage extends StatelessWidget {
       );
     }
 
-    final file = File(path);
-    if (!file.existsSync()) return _errorPlaceholder();
-    return Image.file(
-      file,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _errorPlaceholder(),
-    );
+    // Chỉ ảnh chưa kịp lên Cloud mới còn là đường dẫn tệp cục bộ.
+    final path = expense.imagePath;
+    if (path != null && storagePathOf(path) == null) {
+      final file = File(path);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _errorPlaceholder(),
+        );
+      }
+    }
+    return _errorPlaceholder();
   }
 
   Widget _errorPlaceholder() {

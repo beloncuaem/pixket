@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/icon_helper.dart';
+import '../../core/utils/storage_paths.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/priority_level.dart';
@@ -98,14 +99,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _loadFilteredExpenses();
   }
 
-  void _showImageDialog(String imagePath) {
+  void _showImageDialog(Expense expense) {
     showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Xem ảnh',
       barrierColor: Colors.black.withValues(alpha: 0.94),
       transitionDuration: const Duration(milliseconds: 180),
-      pageBuilder: (_, __, ___) => _PhotoPreviewDialog(imagePath: imagePath),
+      pageBuilder: (_, __, ___) => _PhotoPreviewDialog(expense: expense),
     );
   }
 
@@ -392,7 +393,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onTap: () => _showEditSheet(expense),
             onImageTap: expense.imagePath == null
                 ? null
-                : () => _showImageDialog(expense.imagePath!),
+                : () => _showImageDialog(expense),
             onMoveToTrash: () async {
               if (expense.id == null) return;
               await ref.read(expenseProvider.notifier).moveToTrash(expense.id!);
@@ -421,9 +422,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _PhotoPreviewDialog extends StatelessWidget {
-  final String imagePath;
+  final Expense expense;
 
-  const _PhotoPreviewDialog({required this.imagePath});
+  const _PhotoPreviewDialog({required this.expense});
 
   @override
   Widget build(BuildContext context) {
@@ -463,9 +464,11 @@ class _PhotoPreviewDialog extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    final url = expense.displayImageUrl;
+    if (url != null) {
       return CachedNetworkImage(
-        imageUrl: imagePath,
+        imageUrl: url,
+        cacheKey: storagePathOf(expense.imagePath),
         fit: BoxFit.contain,
         width: double.infinity,
         placeholder: (_, __) => const Center(
@@ -479,15 +482,19 @@ class _PhotoPreviewDialog extends StatelessWidget {
       );
     }
 
-    final file = File(imagePath);
-    if (!file.existsSync()) {
-      return const Icon(
-        Icons.broken_image_rounded,
-        color: Colors.white38,
-        size: 64,
-      );
+    // Chỉ ảnh chưa kịp lên Cloud mới còn là đường dẫn tệp cục bộ.
+    final path = expense.imagePath;
+    if (path != null && storagePathOf(path) == null) {
+      final file = File(path);
+      if (file.existsSync()) {
+        return Image.file(file, fit: BoxFit.contain, width: double.infinity);
+      }
     }
-    return Image.file(file, fit: BoxFit.contain, width: double.infinity);
+    return const Icon(
+      Icons.broken_image_rounded,
+      color: Colors.white38,
+      size: 64,
+    );
   }
 }
 
@@ -863,25 +870,28 @@ class _ExpenseTile extends StatelessWidget {
   }
 
   Widget _buildLeadingWidget(BuildContext context) {
+    final url = expense.displayImageUrl;
+    if (url != null) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        cacheKey: storagePathOf(expense.imagePath),
+        fit: BoxFit.cover,
+        placeholder: (_, __) => const Center(
+          child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+        errorWidget: (_, __, ___) => CategoryIconBadge(
+          iconKey: category?.icon ?? 'dotsThreeOutline',
+          size: 48,
+        ),
+      );
+    }
+
     final img = expense.imagePath;
-    if (img != null && img.isNotEmpty) {
-      if (img.startsWith('http')) {
-        return CachedNetworkImage(
-          imageUrl: img,
-          fit: BoxFit.cover,
-          placeholder: (_, __) => const Center(
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-          errorWidget: (_, __, ___) => CategoryIconBadge(
-            iconKey: category?.icon ?? 'dotsThreeOutline',
-            size: 48,
-          ),
-        );
-      }
+    if (img != null && img.isNotEmpty && storagePathOf(img) == null) {
       final file = File(img);
       if (file.existsSync()) {
         return Image.file(file, fit: BoxFit.cover);

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/icon_helper.dart';
+import '../../core/utils/storage_paths.dart';
 import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/expense_provider.dart';
@@ -73,17 +74,17 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     }
   }
 
-  Widget _buildThumbnail(String? imagePath) {
-    if (imagePath == null || imagePath.isEmpty) {
-      return const ColoredBox(
-        color: Colors.black12,
-        child: Icon(Icons.broken_image_outlined),
-      );
-    }
+  Widget _buildThumbnail(Expense expense) {
+    const empty = ColoredBox(
+      color: Colors.black12,
+      child: Icon(Icons.broken_image_outlined),
+    );
 
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    final url = expense.displayImageUrl;
+    if (url != null) {
       return CachedNetworkImage(
-        imageUrl: imagePath,
+        imageUrl: url,
+        cacheKey: storagePathOf(expense.imagePath),
         fit: BoxFit.cover,
         placeholder: (_, __) => const ColoredBox(
           color: Colors.black12,
@@ -95,22 +96,20 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             ),
           ),
         ),
-        errorWidget: (_, __, ___) => const ColoredBox(
-          color: Colors.black12,
-          child: Icon(Icons.broken_image_outlined),
-        ),
+        errorWidget: (_, __, ___) => empty,
       );
     }
 
-    final file = File(imagePath);
-    if (file.existsSync()) {
-      return Image.file(file, fit: BoxFit.cover);
+    // Chỉ ảnh chưa kịp lên Cloud mới còn là đường dẫn tệp cục bộ.
+    final path = expense.imagePath;
+    if (path != null && path.isNotEmpty && storagePathOf(path) == null) {
+      final file = File(path);
+      if (file.existsSync()) {
+        return Image.file(file, fit: BoxFit.cover);
+      }
     }
 
-    return const ColoredBox(
-      color: Colors.black12,
-      child: Icon(Icons.broken_image_outlined),
-    );
+    return empty;
   }
 
   @override
@@ -146,7 +145,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                     child: SizedBox(
                       height: 56,
                       width: 56,
-                      child: _buildThumbnail(expense.imagePath),
+                      child: _buildThumbnail(expense),
                     ),
                   ),
                   title: Text(
