@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/supabase_config.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import 'forgot_password_sheet.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -318,6 +319,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => showForgotPasswordSheet(context),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                      ),
+                      child: const Text('Quên mật khẩu?'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
                   // Navigate to Register
                   Row(
