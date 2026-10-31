@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_info.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../categories/manage_categories_screen.dart';
@@ -154,7 +155,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 30),
           const Center(
             child: Text(
-              'Phiên bản 2.1.0 • Locket Journal',
+              AppInfo.aboutLabel,
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ),

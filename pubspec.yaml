@@ -1,7 +1,7 @@
 name: chi_tieu
 description: "Chi Tiêu - Quản lý chi tiêu cá nhân"
 publish_to: 'none'
-version: 1.0.0+1
+version: 2.2.0+3
 
 environment:
   sdk: ^3.13.5

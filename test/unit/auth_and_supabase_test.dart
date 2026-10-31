@@ -74,11 +74,15 @@ void main() {
     });
   });
 
-  group('Fintech Colors Tests', () {
-    test('AppColors brand constants are defined', () {
-      expect(AppColors.primary, const Color(0xFF10B981));
-      expect(AppColors.backgroundDark, const Color(0xFF0B0F19));
+  group('Legacy Colors', () {
+    test('AppColors trỏ tới hex pixel', () {
+      expect(AppColors.primary, const Color(0xFF2F9E6E));
+      expect(AppColors.backgroundDark, const Color(0xFF1A130D));
       expect(AppColors.cardGradientDark.colors.length, 2);
+      expect(
+        AppColors.cardGradientDark.colors.first,
+        const Color(0xFF241A12),
+      );
     });
   });
 

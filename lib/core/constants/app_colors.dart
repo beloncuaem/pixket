@@ -1,91 +1,71 @@
 import 'package:flutter/material.dart';
 
+/// LEGACY: chỉ dành cho các màn hình chưa chuyển sang `context.palette`.
+/// Plan 4 Task 14 xóa toàn bộ file. Không thêm tham chiếu mới.
+@Deprecated('Dùng context.palette (AppPalette) thay vì AppColors')
 class AppColors {
-  // Brand & Accent Colors (Fintech Neo-Bank)
-  static const Color primary = Color(0xFF10B981); // Emerald Green
-  static const Color primaryDark = Color(0xFF059669);
-  static const Color primaryLight = Color(0xFF34D399);
-  static const Color secondary = Color(0xFF06B6D4); // Cyan
-  static const Color accentPurple = Color(0xFF8B5CF6);
+  // Brand & Accent Colors (Pixel)
+  static const Color primary = Color(0xFF2F9E6E); // mintStrong
+  static const Color primaryLight = Color(0xFF7BD8A8); // mint
 
   // Backgrounds & Surfaces (Dark Mode)
-  static const Color backgroundDark = Color(0xFF0B0F19); // Deep Slate
-  static const Color surfaceDark = Color(0xFF161F30);
-  static const Color surfaceDarkLight = Color(0xFF1E293B);
-  static const Color borderDark = Color(0xFF334155);
+  static const Color backgroundDark = Color(0xFF1A130D);
+  static const Color surfaceDark = Color(0xFF241A12);
+  static const Color surfaceDarkLight = Color(0xFF302318);
+  static const Color borderDark = Color(0xFF6B553F);
 
-  // Locket-inspired glass surfaces
-  static const Color feedBackground = Color(0xFF05070C);
-  static const Color glassSurfaceDark = Color(0xCC131B2C);
-  static const Color glassSurfaceLight = Color(0xE6FFFFFF);
-  static const Color glassBorderDark = Color(0x1FFFFFFF);
-  static const Color glassBorderLight = Color(0x14000000);
-  static const Color accentCyan = Color(0xFF22D3EE);
-  static const Color accentAmber = Color(0xFFFBBF24);
-  static const Color accentRose = Color(0xFFFB7185);
+  // Feed (nền tối kiểu Locket)
+  static const Color feedBackground = Color(0xFF14100B);
+  static const Color glassSurfaceDark = Color(0xCC241A12);
+  static const Color glassBorderDark = Color(0x33FFF6E3);
 
   // Backgrounds & Surfaces (Light Mode)
-  static const Color backgroundLight = Color(0xFFF8FAFC);
-  static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color surfaceLightDark = Color(0xFFF1F5F9);
-  static const Color borderLight = Color(0xFFE2E8F0);
+  static const Color backgroundLight = Color(0xFFFFF6E3);
+  static const Color surfaceLight = Color(0xFFFFFDF6);
+  static const Color surfaceLightDark = Color(0xFFFFF1D6);
+  static const Color borderLight = Color(0xFF1B140E);
 
   // Text Colors
-  static const Color textPrimaryDark = Color(0xFFF8FAFC);
-  static const Color textSecondaryDark = Color(0xFF94A3B8);
-  static const Color textPrimaryLight = Color(0xFF0F172A);
-  static const Color textSecondaryLight = Color(0xFF64748B);
+  static const Color textPrimaryDark = Color(0xFFFFF6E3);
+  static const Color textSecondaryDark = Color(0xFFC9B79E);
+  static const Color textPrimaryLight = Color(0xFF2B2118);
+  static const Color textSecondaryLight = Color(0xFF6E5F4E);
 
-  // Priority Colors
-  static const Color priority0 = Color(0xFF10B981); // P0: Thiết yếu (Emerald)
-  static const Color priority1 = Color(0xFF3B82F6); // P1: Cao (Blue)
-  static const Color priority2 = Color(0xFFF59E0B); // P2: Trung bình (Amber)
-  static const Color priority3 = Color(
-    0xFFEF4444,
-  ); // P3: Thấp/Lãng phí (Rose Red)
-
-  // Backward-compatible aliases
-  static const Color priorityEssential = priority0;
-  static const Color priorityHigh = priority1;
-  static const Color priorityMedium = priority2;
-  static const Color priorityLow = priority3;
-
-  // Budget Warnings
-  static const Color budgetSafe = Color(0xFF10B981);
-  static const Color budgetWarning80 = Color(0xFFF59E0B);
-  static const Color budgetWarning100 = Color(0xFFEF4444);
-
-  static const Color categoryDefault = primary;
+  // Priority Colors: màu chữ/nét/chart trên nền kem nên dùng biến thể ink đậm
+  static const Color priority0 = Color(0xFF1F7A52); // P0: Thiết yếu
+  static const Color priority1 = Color(0xFF0F4A63); // P1: Cao
+  static const Color priority2 = Color(0xFF6E4A00); // P2: Trung bình
+  static const Color priority3 = Color(0xFFB3261E); // P3: Thấp/Lãng phí
 
   // Gradients for Cards
   static const LinearGradient cardGradientDark = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+    colors: [Color(0xFF241A12), Color(0xFF1A130D)],
   );
 
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF10B981), Color(0xFF059669)],
+    colors: [Color(0xFF7BD8A8), Color(0xFF2F9E6E)],
   );
 
   static const LinearGradient balanceCardGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1E293B), Color(0xFF0D1526), Color(0xFF064E3B)],
+    colors: [Color(0xFF241A12), Color(0xFF1A130D), Color(0xFF1F7A52)],
   );
 
   static const LinearGradient pageGradientDark = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0B0F19), Color(0xFF0E1624), Color(0xFF071C18)],
+    colors: [Color(0xFF1A130D), Color(0xFF241A12), Color(0xFF14100B)],
   );
 
   static const LinearGradient pageGradientLight = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9), Color(0xFFECFDF5)],
+    colors: [Color(0xFFFFFDF6), Color(0xFFFFF6E3), Color(0xFFFFF1D6)],
   );
 
   static const LinearGradient feedTopGradient = LinearGradient(
@@ -103,7 +83,7 @@ class AppColors {
   static const LinearGradient captureButtonGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF34D399), Color(0xFF059669)],
+    colors: [Color(0xFF7BD8A8), Color(0xFF2F9E6E)],
   );
 
   static Color getPriorityColor(int priority) {

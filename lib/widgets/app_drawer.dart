@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_colors.dart';
+import '../core/constants/app_info.dart';
 import '../core/navigation/app_section.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -166,7 +167,7 @@ class AppDrawer extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.fromLTRB(24, 10, 24, 18),
                 child: Text(
-                  'PHIÊN BẢN 2.1 • LOCKET JOURNAL',
+                  AppInfo.aboutLabel,
                   style: TextStyle(
                     color: Color(0xFF5C6B82),
                     fontSize: 10,
