@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:chi_tieu/core/utils/storage_paths.dart';
+import 'package:chi_tieu/data/repositories/supabase_storage_service.dart';
 
 void main() {
   group('storagePathOf', () {
@@ -83,6 +84,13 @@ void main() {
         signer: (batch) async => {for (final p in batch) p: 'u:$p'},
       );
       expect(result.keys, ['a/1.jpg']);
+    });
+  });
+
+  group('Hợp đồng service', () {
+    test('bucket name và TTL dùng chung một nguồn cấu hình', () {
+      expect(SupabaseStorageService.bucketName, receiptBucket);
+      expect(SupabaseStorageService.signedUrlTtlSeconds, 86400);
     });
   });
 }

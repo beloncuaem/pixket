@@ -1,12 +1,17 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/utils/storage_paths.dart';
 
+/// Ảnh hóa đơn lưu trong bucket private; mọi hiển thị đi qua signed URL.
 class SupabaseStorageService {
-  static const String bucketName = 'expense-receipts';
+  static const String bucketName = receiptBucket;
+  static const int signedUrlTtlSeconds = 86400;
 
+  /// Tải ảnh lên storage, trả về path dạng `<user_id>/<file>` (không trả URL).
   Future<String> uploadReceiptImage(String localFilePath) async {
     final client = SupabaseConfig.client;
     final user = client?.auth.currentUser;
@@ -36,24 +41,57 @@ class SupabaseStorageService {
       fileOptions: FileOptions(contentType: contentType, upsert: false),
     );
 
-    return client.storage.from(bucketName).getPublicUrl(storagePath);
+    return storagePath;
   }
 
-  Future<void> deleteReceiptImage(String imageUrl) async {
-    final path = storagePathFromUrl(imageUrl);
-    if (path == null) return;
+  /// Ký URL cho một lô path; path thất bại bị bỏ qua (UI sẽ hiện placeholder).
+  Future<Map<String, String>> signPaths(
+    List<String> paths, {
+    int expiresIn = signedUrlTtlSeconds,
+  }) async {
+    if (paths.isEmpty) return const {};
     final client = SupabaseConfig.client;
     if (client == null) {
       throw StateError('Chưa cấu hình Supabase.');
     }
-    await client.storage.from(bucketName).remove([path]);
+
+    final results = await client.storage
+        .from(bucketName)
+        .createSignedUrlsResult(paths, expiresIn);
+
+    final signed = <String, String>{};
+    for (final result in results) {
+      switch (result) {
+        case SignedUrlSuccess(:final path, :final signedUrl):
+          signed[path] = signedUrl;
+        case SignedUrlFailure(:final path, :final error):
+          debugPrint('Không ký được ảnh $path: $error');
+      }
+    }
+    return signed;
   }
 
-  static String? storagePathFromUrl(String imageUrl) {
-    final segments = Uri.tryParse(imageUrl)?.pathSegments;
-    if (segments == null) return null;
-    final bucketIndex = segments.indexOf(bucketName);
-    if (bucketIndex < 0 || bucketIndex == segments.length - 1) return null;
-    return segments.sublist(bucketIndex + 1).join('/');
+  Future<Map<String, String>> signPathsInBatches(
+    Iterable<String> paths, {
+    int chunkSize = 50,
+  }) => signPathsInChunks(
+    paths,
+    chunkSize: chunkSize,
+    signer: (batch) => signPaths(batch),
+  );
+
+  Future<void> deleteByPath(String storagePath) async {
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      throw StateError('Chưa cấu hình Supabase.');
+    }
+    await client.storage.from(bucketName).remove([storagePath]);
+  }
+
+  /// Xóa object từ bất kỳ giá trị nào từng lưu trong `image_url`.
+  Future<void> deleteReceiptImage(String storedValue) async {
+    final path = storagePathOf(storedValue);
+    if (path == null) return;
+    await deleteByPath(path);
   }
 }

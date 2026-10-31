@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:chi_tieu/core/constants/app_colors.dart';
 import 'package:chi_tieu/core/utils/icon_helper.dart';
-import 'package:chi_tieu/data/repositories/supabase_storage_service.dart';
 import 'package:chi_tieu/providers/auth_provider.dart';
 import 'package:chi_tieu/widgets/category_icon_badge.dart';
 
@@ -50,40 +49,6 @@ void main() {
 
       expect(signedOut.user, isNull);
       expect(signedOut.status, AuthStatus.unauthenticated);
-    });
-  });
-
-  group('Storage Path Tests', () {
-    test('Extracts object path from public and signed URLs', () {
-      expect(
-        SupabaseStorageService.storagePathFromUrl(
-          'https://abc.supabase.co/storage/v1/object/public/'
-          'expense-receipts/user-1/123_45.jpg',
-        ),
-        'user-1/123_45.jpg',
-      );
-      expect(
-        SupabaseStorageService.storagePathFromUrl(
-          'https://abc.supabase.co/storage/v1/object/sign/'
-          'expense-receipts/user-1/123_45.jpg?token=xyz',
-        ),
-        'user-1/123_45.jpg',
-      );
-    });
-
-    test('Returns null for URLs without a bucket object', () {
-      expect(
-        SupabaseStorageService.storagePathFromUrl(
-          'https://example.com/image.jpg',
-        ),
-        isNull,
-      );
-      expect(
-        SupabaseStorageService.storagePathFromUrl(
-          'https://abc.supabase.co/storage/v1/object/public/expense-receipts',
-        ),
-        isNull,
-      );
     });
   });
 

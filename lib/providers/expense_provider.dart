@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -156,14 +154,8 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
     if (expense.id == null) return;
     final imagePath = expense.imagePath;
     if (imagePath != null && imagePath.isNotEmpty) {
-      if (imagePath.startsWith('http://') ||
-          imagePath.startsWith('https://')) {
-        await SupabaseStorageService().deleteReceiptImage(imagePath);
-        await CachedNetworkImage.evictFromCache(imagePath);
-      } else {
-        final file = File(imagePath);
-        if (await file.exists()) await file.delete();
-      }
+      await SupabaseStorageService().deleteReceiptImage(imagePath);
+      await CachedNetworkImage.evictFromCache(imagePath);
     }
     // Ảnh phải xóa xong trước để không còn URL công khai mồ côi.
     await _repository.permanentlyDeleteExpense(expense.id!);
