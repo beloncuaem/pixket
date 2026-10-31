@@ -26,9 +26,7 @@ Future<T?> showPixelDialog<T>({
           children: [
             Text(
               title,
-              style: Theme.of(dialogContext)
-                  .textTheme
-                  .headlineSmall
+              style: Theme.of(dialogContext).textTheme.headlineSmall
                   ?.copyWith(letterSpacing: 0.9),
             ),
             const SizedBox(height: 12),

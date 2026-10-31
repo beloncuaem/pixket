@@ -21,7 +21,8 @@ class PixelGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final rows = PixelGlyphData.rowsOf(name) ??
+    final rows =
+        PixelGlyphData.rowsOf(name) ??
         PixelGlyphData.rowsOf(PixelGlyphData.fallbackKey)!;
     final main = color ?? palette.ink;
     final sub = secondary ?? main.withValues(alpha: 0.55);

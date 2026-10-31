@@ -69,9 +69,7 @@ class PixelSegmented<T> extends StatelessWidget {
                         child: Text(
                           item.label.toUpperCase(),
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
+                          style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 color: item.value == selected
                                     ? palette.onAccent

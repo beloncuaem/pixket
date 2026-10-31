@@ -24,7 +24,8 @@ Future<R?> showPixelSheet<R>({
         top: false,
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height *
+            maxHeight:
+                MediaQuery.sizeOf(sheetContext).height *
                 (fullScreen ? 0.92 : 0.8),
           ),
           child: PixelPanel(
@@ -38,9 +39,7 @@ Future<R?> showPixelSheet<R>({
               children: [
                 Text(
                   title,
-                  style: Theme.of(sheetContext)
-                      .textTheme
-                      .headlineSmall
+                  style: Theme.of(sheetContext).textTheme.headlineSmall
                       ?.copyWith(letterSpacing: 0.9),
                 ),
                 const SizedBox(height: 12),

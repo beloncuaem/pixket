@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_palette.dart';
+import 'pixel/app_icon.dart';
+
 class HamburgerButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool light;
@@ -8,24 +11,23 @@ class HamburgerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return IconButton(
       tooltip: 'Mở menu',
       onPressed: onTap,
       style: IconButton.styleFrom(
         backgroundColor: light
-            ? Colors.black.withValues(alpha: 0.28)
-            : Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
+            ? palette.feedBg.withValues(alpha: 0.5)
+            : palette.surface,
         side: BorderSide(
-          color: light
-              ? Colors.white.withValues(alpha: 0.22)
-              : Theme.of(context).dividerColor.withValues(alpha: 0.5),
+          color: light ? palette.feedInk.withValues(alpha: 0.3) : palette.line,
         ),
         padding: const EdgeInsets.all(10),
       ),
-      icon: Icon(
-        Icons.menu_rounded,
-        size: 24,
-        color: light ? Colors.white : null,
+      icon: AppIcon(
+        name: 'menu',
+        size: 32,
+        color: light ? palette.feedInk : palette.ink,
       ),
     );
   }

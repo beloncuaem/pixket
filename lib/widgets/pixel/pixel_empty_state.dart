@@ -44,9 +44,8 @@ class PixelEmptyState extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: palette.inkMuted),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: palette.inkMuted),
               ),
               if (actionLabel != null && onAction != null) ...[
                 const SizedBox(height: 16),

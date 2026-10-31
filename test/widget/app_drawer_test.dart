@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chi_tieu/core/navigation/app_section.dart';
 import 'package:chi_tieu/widgets/app_drawer.dart';
+import 'package:chi_tieu/widgets/pixel/app_icon.dart';
 
 AppDrawer _drawer({
   AppSection selected = AppSection.feed,
@@ -103,10 +104,27 @@ void main() {
       var toggled = false;
       await _openDrawer(tester, _drawer(onToggleTheme: () => toggled = true));
 
-      await tester.tap(find.text('Chuyển giao diện sáng'));
+      expect(find.text('Giao diện tối'), findsOneWidget);
+      await tester.tap(find.byType(Switch));
       await tester.pumpAndSettle();
 
       expect(toggled, isTrue);
+    });
+
+    testWidgets('Drawer không còn gradient tối cố định', (tester) async {
+      await _openDrawer(tester, _drawer());
+
+      for (final d in tester.widgetList<DecoratedBox>(
+        find.descendant(
+          of: find.byType(Drawer),
+          matching: find.byType(DecoratedBox),
+        ),
+      )) {
+        final dec = d.decoration;
+        if (dec is BoxDecoration) expect(dec.gradient, isNull);
+      }
+      expect(find.byIcon(Icons.menu_rounded), findsNothing);
+      expect(find.byType(AppIcon), findsWidgets);
     });
 
     testWidgets('Hiển thị hồ sơ cloud và nút đăng xuất', (tester) async {

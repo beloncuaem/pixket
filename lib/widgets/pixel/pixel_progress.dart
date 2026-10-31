@@ -38,9 +38,7 @@ class PixelProgress extends StatelessWidget {
                 Expanded(
                   child: Container(
                     height: 14,
-                    margin: EdgeInsets.only(
-                      right: i == segments - 1 ? 0 : 3,
-                    ),
+                    margin: EdgeInsets.only(right: i == segments - 1 ? 0 : 3),
                     color: i < filled
                         ? (fillColor ?? palette.mintStrong)
                         : (emptyColor ?? palette.surfaceAlt),

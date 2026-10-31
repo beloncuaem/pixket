@@ -41,7 +41,7 @@ void main() {
     'check', 'edit', 'trash', 'search', 'filter', 'calendar', 'clock',
     'refresh', 'undo', 'eye', 'eyeOff', 'mail', 'lock', 'logout', 'user',
     'sun', 'moon', 'alert', 'info', 'settings', 'cloud', 'cloudOff', 'grid',
-    'share', 'download', 'sparkle',
+    'share', 'download', 'sparkle', 'camera', 'chart', 'tag',
   ];
 
   test('có glyph cho nhóm điều hướng và UI', () {

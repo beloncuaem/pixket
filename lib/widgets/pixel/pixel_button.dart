@@ -74,10 +74,8 @@ class _PixelButtonState extends State<PixelButton> {
         Expanded(
           child: Text(
             widget.label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: colors.fg,
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(color: colors.fg, fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
         ),
@@ -103,16 +101,15 @@ class _PixelButtonState extends State<PixelButton> {
               color: colors.bg,
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: colors.border, width: 2),
-              boxShadow:
-                  widget.variant == PixelButtonVariant.ghost || !enabled
+              boxShadow: widget.variant == PixelButtonVariant.ghost || !enabled
                   ? null
                   : [
-                    BoxShadow(
-                      color: palette.shadow.withValues(alpha: 0.9),
-                      offset: const Offset(2, 3),
-                      blurRadius: 0,
-                    ),
-                  ],
+                      BoxShadow(
+                        color: palette.shadow.withValues(alpha: 0.9),
+                        offset: const Offset(2, 3),
+                        blurRadius: 0,
+                      ),
+                    ],
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(

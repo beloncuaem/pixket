@@ -47,9 +47,8 @@ class PixelBadge extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(color: ink ?? palette.ink),
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(color: ink ?? palette.ink),
         ),
       ],
     );

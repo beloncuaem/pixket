@@ -35,9 +35,8 @@ class PixelStatTile extends StatelessWidget {
                 child: Text(
                   label.toUpperCase(),
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(color: palette.inkMuted),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(color: palette.inkMuted),
                 ),
               ),
             ],

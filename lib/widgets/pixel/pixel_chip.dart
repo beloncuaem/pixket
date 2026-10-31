@@ -57,17 +57,12 @@ class PixelChip extends StatelessWidget {
               ],
               Text(
                 label,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(color: fg),
+                style: Theme.of(context).textTheme.labelLarge
+                    ?.copyWith(color: fg),
               ),
               if (selected && showCheck && onTap != null) ...[
                 const SizedBox(width: 6),
-                AppIcon(
-                  name: 'check',
-                  size: 16,
-                  color: palette.onAccent,
-                ),
+                AppIcon(name: 'check', size: 16, color: palette.onAccent),
               ],
             ],
           ),
