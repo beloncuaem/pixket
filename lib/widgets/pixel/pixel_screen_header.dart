@@ -91,22 +91,6 @@ class PixelScreenHeader extends StatelessWidget {
   }
 }
 
-/// Đặt header không-phải-AppBar vào `Scaffold.appBar:` và giữ chỗ cho status bar.
-Widget pixelAppBar(Widget header) {
-  return Builder(
-    builder: (context) {
-      final top = MediaQuery.paddingOf(context).top;
-      return PreferredSize(
-        preferredSize: Size(0, 64 + top),
-        child: Padding(
-          padding: EdgeInsets.only(top: top),
-          child: header,
-        ),
-      );
-    },
-  );
-}
-
 Widget pixelGroupHeader(String label) {
   return Builder(
     builder: (context) {

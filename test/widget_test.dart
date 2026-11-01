@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:chi_tieu/core/utils/currency_formatter.dart';
-import 'package:chi_tieu/core/constants/app_colors.dart';
 import 'package:chi_tieu/data/models/expense.dart';
 import 'package:chi_tieu/data/models/category.dart';
 
@@ -66,15 +65,6 @@ void main() {
       expect(fromMap.name, 'Ăn uống');
       expect(fromMap.icon, '🍜');
       expect(fromMap.isDefault, true);
-    });
-  });
-
-  group('AppColors Tests', () {
-    test('Priority colors mapping', () {
-      expect(AppColors.getPriorityColor(0), AppColors.priority0);
-      expect(AppColors.getPriorityColor(1), AppColors.priority1);
-      expect(AppColors.getPriorityColor(2), AppColors.priority2);
-      expect(AppColors.getPriorityColor(3), AppColors.priority3);
     });
   });
 }

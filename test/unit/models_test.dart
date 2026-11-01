@@ -4,7 +4,6 @@ import 'package:chi_tieu/data/models/expense.dart';
 import 'package:chi_tieu/data/models/category.dart';
 import 'package:chi_tieu/data/models/budget.dart';
 import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/core/constants/app_colors.dart';
 
 void main() {
   group('Expense Model Tests', () {
@@ -243,16 +242,6 @@ void main() {
       expect(updated.name, 'Cực kỳ cần');
       expect(updated.sortOrder, 5);
       expect(updated.colorValue, 0xFF1E88E5);
-    });
-  });
-
-  group('AppColors Priority Mapping Tests', () {
-    test('Returns correct priority colors for each level', () {
-      expect(AppColors.getPriorityColor(0), AppColors.priority0);
-      expect(AppColors.getPriorityColor(1), AppColors.priority1);
-      expect(AppColors.getPriorityColor(2), AppColors.priority2);
-      expect(AppColors.getPriorityColor(3), AppColors.priority3);
-      expect(AppColors.getPriorityColor(999), AppColors.priority3);
     });
   });
 

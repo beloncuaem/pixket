@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
-import 'package:chi_tieu/core/constants/app_colors.dart';
 import 'package:chi_tieu/core/utils/icon_helper.dart';
 import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/widgets/category_icon_badge.dart';
 import 'package:chi_tieu/widgets/pixel/app_icon.dart';
 
 void main() {
@@ -93,27 +91,6 @@ void main() {
 
       final fallback = IconHelper.parseColor('invalid_color');
       expect(fallback.toARGB32(), const Color(0xFF10B981).toARGB32());
-    });
-  });
-
-  group('Legacy Colors', () {
-    test('AppColors trỏ tới hex pixel', () {
-      expect(AppColors.primary, const Color(0xFF2F9E6E));
-      expect(AppColors.backgroundDark, const Color(0xFF1A130D));
-      expect(AppColors.cardGradientDark.colors.length, 2);
-      expect(AppColors.cardGradientDark.colors.first, const Color(0xFF241A12));
-    });
-  });
-
-  group('CategoryIconBadge Widget Tests', () {
-    testWidgets('Renders CategoryIconBadge without throwing', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: CategoryIconBadge(iconKey: 'forkKnife')),
-        ),
-      );
-
-      expect(find.byType(CategoryIconBadge), findsOneWidget);
     });
   });
 }
