@@ -23,11 +23,14 @@ void main() {
         ),
       );
 
-      expect(find.text('Cài đặt'), findsOneWidget);
+      expect(find.text('CÀI ĐẶT'), findsOneWidget);
       expect(find.text('Chế độ tối'), findsOneWidget);
       expect(find.text('Quản lý danh mục'), findsOneWidget);
       expect(find.text('Thùng rác'), findsOneWidget);
-      expect(find.byType(SwitchListTile), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('darkModeToggle')),
+        findsOneWidget,
+      ); // PixelChip thay SwitchListTile
     });
   });
 
@@ -76,8 +79,8 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(find.text('Thùng rác'), findsOneWidget);
-      expect(find.text('Thùng rác đang trống.'), findsOneWidget);
+      expect(find.text('THÙNG RÁC'), findsOneWidget);
+      expect(find.text('THÙNG RÁC ĐANG TRỐNG'), findsOneWidget);
     });
   });
 }

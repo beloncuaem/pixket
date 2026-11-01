@@ -72,67 +72,80 @@ class _PixelButtonState extends State<PixelButton> {
           ?.copyWith(color: colors.fg, fontWeight: FontWeight.w600),
     );
 
-    // `Row` không cho con non-flex biết bề rộng tối đa, nên chỉ bọc
-    // `Expanded` khi nút thực sự chiếm hết hàng (parent có bề rộng hữu hạn).
-    Widget content = Row(
-      mainAxisSize: widget.expanded ? MainAxisSize.max : MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (glyph != null) ...[
-          AppIcon(name: glyph, size: 16, color: colors.fg),
-          const SizedBox(width: 8),
-        ],
-        if (widget.expanded) Expanded(child: label) else label,
-      ],
-    );
+    // `Row` không cho con non-flex biết bề rộng tối đa, nên nhãn chỉ được co lại
+    // (ellipsis) khi parent có bề rộng hữu hạn; nhãn tiếng Việt dài sẽ tràn ô
+    // 124dp của một hàng hai nút trên màn 360dp nếu không bọc `Flexible`.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final Widget content = Row(
+          mainAxisSize: widget.expanded ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (glyph != null) ...[
+              AppIcon(name: glyph, size: 16, color: colors.fg),
+              const SizedBox(width: 8),
+            ],
+            if (widget.expanded)
+              Expanded(child: label)
+            else if (constraints.hasBoundedWidth)
+              Flexible(child: label)
+            else
+              label,
+          ],
+        );
 
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: widget.label,
-      child: GestureDetector(
-        onTap: enabled ? widget.onPressed : null,
-        onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
-        onTapUp: enabled ? (_) => setState(() => _pressed = false) : null,
-        onTapCancel: enabled ? () => setState(() => _pressed = false) : null,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedSlide(
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          offset: _pressed ? const Offset(0.03, 0.05) : Offset.zero,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.bg,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: colors.border, width: 2),
-              boxShadow: widget.variant == PixelButtonVariant.ghost || !enabled
-                  ? null
-                  : [
-                      BoxShadow(
-                        color: palette.shadow.withValues(alpha: 0.9),
-                        offset: const Offset(2, 3),
-                        blurRadius: 0,
-                      ),
-                    ],
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth:
-                    widget.minWidth ??
-                    (widget.variant == PixelButtonVariant.ghost ? 48 : 64),
-                minHeight: 48,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
+        return Semantics(
+          button: true,
+          enabled: enabled,
+          label: widget.label,
+          child: GestureDetector(
+            onTap: enabled ? widget.onPressed : null,
+            onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
+            onTapUp: enabled ? (_) => setState(() => _pressed = false) : null,
+            onTapCancel: enabled
+                ? () => setState(() => _pressed = false)
+                : null,
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedSlide(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOut,
+              offset: _pressed ? const Offset(0.03, 0.05) : Offset.zero,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.bg,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: colors.border, width: 2),
+                  boxShadow:
+                      widget.variant == PixelButtonVariant.ghost || !enabled
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: palette.shadow.withValues(alpha: 0.9),
+                            offset: const Offset(2, 3),
+                            blurRadius: 0,
+                          ),
+                        ],
                 ),
-                child: content,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth:
+                        widget.minWidth ??
+                        (widget.variant == PixelButtonVariant.ghost ? 48 : 64),
+                    minHeight: 48,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: content,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

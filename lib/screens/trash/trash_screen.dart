@@ -1,15 +1,22 @@
-import 'dart:io';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../core/utils/icon_helper.dart';
-import '../../core/utils/storage_paths.dart';
 import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/expense_provider.dart';
+import '../../widgets/pixel/app_icon.dart';
+import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_dialog.dart';
+import '../../widgets/pixel/pixel_empty_state.dart';
+import '../../widgets/pixel/pixel_loading.dart';
+import '../../widgets/pixel/pixel_panel.dart';
+import '../../widgets/pixel/pixel_receipt_image.dart';
+import '../../widgets/pixel/pixel_screen_header.dart';
+import '../../widgets/pixel/pixel_snack_bar.dart';
 
 class TrashScreen extends ConsumerStatefulWidget {
   const TrashScreen({super.key});
@@ -33,172 +40,257 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
 
   Future<void> _restore(Expense expense) async {
     await ref.read(expenseProvider.notifier).restoreExpense(expense.id!);
+    if (!mounted) return;
     setState(_reload);
+    showPixelSnackBar(
+      context,
+      'Đã khôi phục “${expense.caption}”.',
+      tone: PixelTone.success,
+    );
   }
 
   Future<void> _deleteForever(Expense expense) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xóa vĩnh viễn?'),
-        content: const Text(
-          'Khoản chi và ảnh đính kèm sẽ không thể khôi phục.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa vĩnh viễn'),
-          ),
-        ],
-      ),
+    final confirm = await showPixelConfirm(
+      context,
+      title: 'XÓA VĨNH VIỄN?',
+      message: 'Khoản chi và ảnh đính kèm sẽ không thể khôi phục.',
+      confirmLabel: 'XÓA VĨNH VIỄN',
+      cancelLabel: 'HỦY',
     );
-    if (confirm != true) return;
+    if (!confirm) return;
     try {
       await ref
           .read(expenseProvider.notifier)
           .permanentlyDeleteExpense(expense);
-      if (mounted) setState(_reload);
+      if (!mounted) return;
+      setState(_reload);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Không thể xóa vĩnh viễn. Kiểm tra kết nối và thử lại.',
-          ),
-        ),
+      showPixelSnackBar(
+        context,
+        'Không thể xóa vĩnh viễn. Kiểm tra kết nối và thử lại.',
+        tone: PixelTone.danger,
       );
     }
-  }
-
-  Widget _buildThumbnail(Expense expense) {
-    const empty = ColoredBox(
-      color: Colors.black12,
-      child: Icon(Icons.broken_image_outlined),
-    );
-
-    final url = expense.displayImageUrl;
-    if (url != null) {
-      return CachedNetworkImage(
-        imageUrl: url,
-        cacheKey: storagePathOf(expense.imagePath),
-        fit: BoxFit.cover,
-        placeholder: (_, __) => const ColoredBox(
-          color: Colors.black12,
-          child: Center(
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        ),
-        errorWidget: (_, __, ___) => empty,
-      );
-    }
-
-    // Chỉ ảnh chưa kịp lên Cloud mới còn là đường dẫn tệp cục bộ.
-    final path = expense.imagePath;
-    if (path != null && path.isNotEmpty && storagePathOf(path) == null) {
-      final file = File(path);
-      if (file.existsSync()) {
-        return Image.file(file, fit: BoxFit.cover);
-      }
-    }
-
-    return empty;
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
     final categoryMap = {
       for (final category in ref.watch(categoryProvider).categories)
         category.id: category,
     };
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Thùng rác')),
-      body: FutureBuilder<List<Expense>>(
-        future: _deletedExpenses,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final expenses = snapshot.data ?? const <Expense>[];
-          if (expenses.isEmpty) {
-            return const Center(child: Text('Thùng rác đang trống.'));
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: expenses.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final expense = expenses[index];
-              final category = categoryMap[expense.categoryId];
-              return Card(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(10),
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      height: 56,
-                      width: 56,
-                      child: _buildThumbnail(expense),
-                    ),
-                  ),
-                  title: Text(
-                    expense.caption.isEmpty
-                        ? 'Không có ghi chú'
-                        : expense.caption,
-                  ),
-                  subtitle: Row(
+      backgroundColor: palette.canvas,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: PixelScreenHeader(
+              title: 'THÙNG RÁC',
+              subtitle: 'Hoàn tác hoặc xóa hẳn khoản chi khỏi cloud',
+              onBackTap: () => Navigator.of(context).pop(),
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Expense>>(
+              future: _deletedExpenses,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(
+                    child: PixelLoading(label: 'Đang tải thùng rác…'),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return ListView(
+                    padding: const EdgeInsets.all(12),
                     children: [
-                      IconHelper.getIconWidget(
-                        category?.icon ?? 'dotsThreeOutline',
-                        size: 14,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          category?.name ?? 'Khác',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      PixelPanel(
+                        background: palette.butter,
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                AppIcon(
+                                  name: 'alert',
+                                  size: 32,
+                                  color: palette.butterInk,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Không tải được thùng rác. Kiểm tra kết nối.',
+                                    style: text.bodyMedium?.copyWith(
+                                      color: palette.butterInk,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            PixelButton(
+                              label: 'THỬ LẠI',
+                              icon: 'refresh',
+                              variant: PixelButtonVariant.secondary,
+                              onPressed: () => setState(_reload),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    tooltip: 'Thao tác',
-                    padding: EdgeInsets.zero,
-                    onSelected: (value) {
-                      if (value == 'restore') _restore(expense);
-                      if (value == 'delete') _deleteForever(expense);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'restore', child: Text('Khôi phục')),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Xóa vĩnh viễn'),
+                  );
+                }
+                final expenses = snapshot.data ?? const <Expense>[];
+                if (expenses.isEmpty) {
+                  return const PixelEmptyState(
+                    glyph: 'trash',
+                    title: 'Thùng rác đang trống',
+                    message: 'Xóa khoản chi trong nhật ký để đưa vào đây trước khi xóa hẳn.',
+                  );
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: expenses.length,
+                  itemBuilder: (context, index) {
+                    final expense = expenses[index];
+                    final category = categoryMap[expense.categoryId];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _TrashRow(
+                        expense: expense,
+                        categoryName: category?.name ?? 'Khác',
+                        categoryIcon: IconHelper.normalizeIconKey(
+                          category?.icon ?? 'dotsThreeOutline',
+                        ),
+                        onRestore: () => _restore(expense),
+                        onPurge: () => _deleteForever(expense),
                       ),
-                    ],
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrashRow extends StatelessWidget {
+  final Expense expense;
+  final String categoryName;
+  final String categoryIcon;
+  final VoidCallback onRestore;
+  final VoidCallback onPurge;
+
+  const _TrashRow({
+    required this.expense,
+    required this.categoryName,
+    required this.categoryIcon,
+    required this.onRestore,
+    required this.onPurge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
+    final deletedAt = expense.deletedAt ?? expense.createdAt;
+
+    return PixelPanel(
+      key: ValueKey('trash-row-${expense.id}'),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              PixelReceiptImage.fromExpense(
+                expense,
+                width: 52,
+                height: 52,
+                semanticLabel: 'Ảnh khoản chi ${expense.caption}',
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        CurrencyFormatter.format(expense.amount),
+                        style: text.titleLarge,
+                      ),
+                    ),
+                    Text(
+                      expense.caption.isEmpty
+                          ? 'Không có ghi chú'
+                          : expense.caption,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodyMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
                       children: [
-                        Text(CurrencyFormatter.format(expense.amount)),
-                        const SizedBox(height: 2),
-                        const Icon(Icons.more_vert_rounded, size: 20),
+                        AppIcon(
+                          name: categoryIcon,
+                          size: 16,
+                          color: palette.accentForCategory(categoryName),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            categoryName,
+                            style: text.bodySmall?.copyWith(
+                              color: palette.inkMuted,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
-                  ),
+                    Text(
+                      'Xóa ngày ${DateFormatter.formatDate(deletedAt)}',
+                      style: text.bodySmall?.copyWith(color: palette.inkMuted),
+                    ),
+                  ],
                 ),
-              );
-            },
-          );
-        },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Xếp chồng thay vì đặt cạnh nhau: nhãn tiếng Việt dài không vừa nửa
+          // bề rộng của màn 360dp và sẽ bị cắt bớt.
+          PixelButton(
+            key: ValueKey('trash-restore-${expense.id}'),
+            label: 'KHÔI PHỤC',
+            icon: 'undo',
+            variant: PixelButtonVariant.secondary,
+            expanded: true,
+            onPressed: onRestore,
+          ),
+          const SizedBox(height: 8),
+          PixelButton(
+            key: ValueKey('trash-purge-${expense.id}'),
+            label: 'XÓA VĨNH VIỄN',
+            icon: 'trash',
+            variant: PixelButtonVariant.danger,
+            expanded: true,
+            onPressed: onPurge,
+          ),
+        ],
       ),
     );
   }
