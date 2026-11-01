@@ -95,6 +95,7 @@ class PixelReceiptImage extends StatelessWidget {
     double? height,
     String? semanticLabel,
     BoxFit fit = BoxFit.cover,
+    double radius = 12,
     VoidCallback? onTap,
   }) {
     final target = resolveReceiptImage(
@@ -108,6 +109,7 @@ class PixelReceiptImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
+      radius: radius,
       onTap: onTap,
       semanticLabel:
           semanticLabel ??
