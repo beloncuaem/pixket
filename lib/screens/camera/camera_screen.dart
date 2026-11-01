@@ -7,12 +7,14 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/priority_provider.dart';
 import '../../widgets/hamburger_button.dart';
 import '../../widgets/pixel/app_icon.dart';
+import '../../widgets/pixel/feed_hud.dart';
 import '../../widgets/pixel/pixel_badge.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_loading.dart';
@@ -21,25 +23,6 @@ import 'expense_form_sheet.dart';
 import 'feed_grid_screen.dart';
 import 'feed_helpers.dart';
 import 'feed_photo_page.dart';
-
-/// Viền chuyển sáng cho HUD trên/dưới, chỉ dùng token nền tối của palette.
-LinearGradient hudTopGradient(AppPalette palette) => LinearGradient(
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
-  colors: [
-    palette.feedBg.withValues(alpha: 0.92),
-    palette.feedBg.withValues(alpha: 0),
-  ],
-);
-
-LinearGradient hudBottomGradient(AppPalette palette) => LinearGradient(
-  begin: Alignment.bottomCenter,
-  end: Alignment.topCenter,
-  colors: [
-    palette.feedBg.withValues(alpha: 0.95),
-    palette.feedBg.withValues(alpha: 0),
-  ],
-);
 
 class CameraScreen extends ConsumerStatefulWidget {
   final VoidCallback? onMenuTap;
@@ -280,10 +263,15 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     final photos = buildFeedPhotos(ref.read(expenseProvider).expenses);
     if (photos.isEmpty) return;
 
+    final categoriesById = <int, Category>{
+      for (final category in ref.read(categoryProvider).categories)
+        if (category.id != null) category.id!: category,
+    };
     final selectedIndex = await Navigator.of(context).push<int>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => FeedGridScreen(photos: photos),
+        builder: (_) =>
+            FeedGridScreen(expenses: photos, categoriesById: categoriesById),
       ),
     );
     if (!mounted || selectedIndex == null || !_pageController.hasClients) {
