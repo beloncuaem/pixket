@@ -3,18 +3,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_palette.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/priority_provider.dart';
 import '../../widgets/hamburger_button.dart';
+import '../../widgets/pixel/app_icon.dart';
+import '../../widgets/pixel/pixel_badge.dart';
+import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_loading.dart';
+import '../../widgets/pixel/pixel_panel.dart';
 import 'expense_form_sheet.dart';
 import 'feed_grid_screen.dart';
 import 'feed_helpers.dart';
 import 'feed_photo_page.dart';
+
+/// Viền chuyển sáng cho HUD trên/dưới, chỉ dùng token nền tối của palette.
+LinearGradient hudTopGradient(AppPalette palette) => LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    palette.feedBg.withValues(alpha: 0.92),
+    palette.feedBg.withValues(alpha: 0),
+  ],
+);
+
+LinearGradient hudBottomGradient(AppPalette palette) => LinearGradient(
+  begin: Alignment.bottomCenter,
+  end: Alignment.topCenter,
+  colors: [
+    palette.feedBg.withValues(alpha: 0.95),
+    palette.feedBg.withValues(alpha: 0),
+  ],
+);
 
 class CameraScreen extends ConsumerStatefulWidget {
   final VoidCallback? onMenuTap;
@@ -294,7 +319,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.feedBackground,
+      backgroundColor: context.palette.feedBg,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: Stack(
@@ -339,6 +364,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   }
 
   Widget _buildTopBar(List<Expense> photos) {
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
     final isCameraPage = _pageIndex == 0;
     final currentPhoto = !isCameraPage && _pageIndex - 1 < photos.length
         ? photos[_pageIndex - 1]
@@ -352,7 +379,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       left: 0,
       right: 0,
       child: DecoratedBox(
-        decoration: const BoxDecoration(gradient: AppColors.feedTopGradient),
+        decoration: BoxDecoration(gradient: hudTopGradient(palette)),
         child: SafeArea(
           bottom: false,
           child: Padding(
@@ -360,29 +387,29 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
             child: Row(
               children: [
                 HamburgerButton(onTap: widget.onMenuTap, light: true),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Piket',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.2,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'NHẬT KÝ ${DateFormat('MM/yyyy').format(DateTime.now())}',
+                          style: text.titleMedium?.copyWith(
+                            color: palette.feedInk,
+                            letterSpacing: 0.9,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 2),
                       AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
+                        duration: const Duration(milliseconds: 120),
                         child: Text(
                           subtitle,
                           key: ValueKey(subtitle),
-                          style: const TextStyle(
-                            color: Colors.white60,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
+                          style: text.bodySmall?.copyWith(
+                            color: palette.feedMuted,
                           ),
                         ),
                       ),
@@ -390,15 +417,28 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   ),
                 ),
                 if (photos.isNotEmpty)
-                  _CountBadge(
-                    label: isCameraPage
-                        ? '${photos.length} ảnh'
-                        : '$_pageIndex/${photos.length}',
-                    icon: Icons.grid_view_rounded,
-                    onTap: _openPhotoGrid,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PixelBadge(
+                        glyph: 'filmStrip',
+                        label: isCameraPage
+                            ? '${photos.length} ảnh'
+                            : '$_pageIndex/${photos.length}',
+                        ink: palette.feedInk,
+                      ),
+                      PixelIconButton(
+                        icon: 'grid',
+                        tooltip: 'Xem lưới ảnh',
+                        onPressed: _openPhotoGrid,
+                        background: palette.feedPanel,
+                        borderColor: palette.feedInk,
+                        iconColor: palette.feedInk,
+                      ),
+                    ],
                   )
                 else
-                  const SizedBox(width: 44),
+                  const SizedBox(width: 48),
               ],
             ),
           ),
@@ -408,67 +448,74 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   }
 
   Widget _buildCameraControls({required List<Expense> photos}) {
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
     final canShoot = _isCameraInitialized && !_isCapturing;
     return Positioned(
       left: 0,
       right: 0,
       bottom: 0,
-      child: Container(
-        padding: const EdgeInsets.only(bottom: 26),
-        decoration: const BoxDecoration(gradient: AppColors.feedBottomGradient),
+      child: DecoratedBox(
+        decoration: BoxDecoration(gradient: hudBottomGradient(palette)),
         child: SafeArea(
           top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                photos.isEmpty
-                    ? 'Chụp khoảnh khắc chi tiêu đầu tiên'
-                    : 'Vuốt lên để xem ${photos.length} khoảnh khắc',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  photos.isEmpty
+                      ? 'Chụp khoảnh khắc chi tiêu đầu tiên'
+                      : 'Vuốt lên để xem ${photos.length} khoảnh khắc',
+                  textAlign: TextAlign.center,
+                  style: text.labelLarge?.copyWith(color: palette.feedMuted),
                 ),
-              ),
-              if (photos.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                const Icon(
-                  Icons.keyboard_arrow_up_rounded,
-                  color: Colors.white54,
-                  size: 18,
+                if (photos.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  AppIcon(
+                    name: 'chevronDown',
+                    size: 18,
+                    color: palette.feedMuted,
+                    semanticLabel: 'Vuốt lên',
+                  ),
+                ],
+                const SizedBox(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    PixelIconButton(
+                      icon: 'filmStrip',
+                      tooltip: 'Chọn ảnh từ thư viện',
+                      onPressed: _pickFromGallery,
+                      background: palette.feedPanel,
+                      borderColor: palette.feedInk,
+                      iconColor: palette.feedInk,
+                    ),
+                    _ShutterButton(onPressed: _takePicture, enabled: canShoot),
+                    if (_cameras.length > 1)
+                      PixelIconButton(
+                        icon: 'refresh',
+                        tooltip: 'Đổi camera',
+                        onPressed: _switchCamera,
+                        background: palette.feedPanel,
+                        borderColor: palette.feedInk,
+                        iconColor: palette.feedInk,
+                      )
+                    else
+                      PixelIconButton(
+                        icon: 'plus',
+                        tooltip: 'Chọn ảnh từ thư viện',
+                        onPressed: _pickFromGallery,
+                        background: palette.feedPanel,
+                        borderColor: palette.feedInk,
+                        iconColor: palette.feedInk,
+                      ),
+                  ],
                 ),
               ],
-              const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _RoundOverlayButton(
-                    icon: Icons.photo_library_rounded,
-                    tooltip: 'Chọn ảnh từ thư viện',
-                    onTap: _pickFromGallery,
-                  ),
-                  _ShutterButton(
-                    enabled: canShoot,
-                    busy: _isCapturing,
-                    onTap: _takePicture,
-                  ),
-                  if (_cameras.length > 1)
-                    _RoundOverlayButton(
-                      icon: Icons.flip_camera_ios_rounded,
-                      tooltip: 'Đổi camera',
-                      onTap: _switchCamera,
-                    )
-                  else
-                    _RoundOverlayButton(
-                      icon: Icons.add_a_photo_rounded,
-                      tooltip: 'Chọn ảnh từ thư viện',
-                      onTap: _pickFromGallery,
-                    ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -493,30 +540,28 @@ class _CameraFeedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return ColoredBox(
-      color: Colors.black,
+      color: palette.feedBg,
       child: Stack(
         fit: StackFit.expand,
         children: [
           if (controller != null)
             _FullScreenCameraPreview(controller: controller!)
           else
-            const DecoratedBox(
-              decoration: BoxDecoration(gradient: AppColors.pageGradientDark),
-            ),
+            ColoredBox(color: palette.feedPanel),
+          if (controller != null) const _ViewfinderCorners(),
           if (isInitializing && controller == null)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white54),
-            ),
+            const Center(child: PixelLoading(label: 'Đang mở camera…')),
           if (errorMessage != null)
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 36),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: _FeedNoticeCard(
-                  icon: Icons.no_photography_rounded,
+                  glyph: 'cloudOff',
                   title: 'Camera chưa sẵn sàng',
                   message: errorMessage!,
-                  actionLabel: 'Chọn ảnh từ thư viện',
+                  actionLabel: 'CHỌN ẢNH TỪ THƯ VIỆN',
                   onAction: onPickFromGallery,
                 ),
               ),
@@ -525,10 +570,13 @@ class _CameraFeedPage extends StatelessWidget {
             const Align(
               alignment: Alignment(0, -0.08),
               child: IgnorePointer(
-                child: _FeedNoticeCard(
-                  icon: Icons.auto_awesome_rounded,
-                  title: 'Bắt đầu nhật ký chi tiêu',
-                  message: 'Mỗi bức ảnh là một khoảnh khắc. Chụp hóa đơn hoặc chọn ảnh để lưu lại khoản chi.',
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  child: _FeedNoticeCard(
+                    glyph: 'sparkle',
+                    title: 'Bắt đầu nhật ký chi tiêu',
+                    message: 'Mỗi bức ảnh là một khoảnh khắc. Chụp hóa đơn hoặc chọn ảnh để lưu lại khoản chi.',
+                  ),
                 ),
               ),
             ),
@@ -566,14 +614,14 @@ class _FullScreenCameraPreview extends StatelessWidget {
 }
 
 class _FeedNoticeCard extends StatelessWidget {
-  final IconData icon;
+  final String glyph;
   final String title;
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
 
   const _FeedNoticeCard({
-    required this.icon,
+    required this.glyph,
     required this.title,
     required this.message,
     this.actionLabel,
@@ -582,54 +630,37 @@ class _FeedNoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
+    return PixelPanel(
+      background: palette.feedPanel,
+      borderColor: palette.feedInk,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: AppColors.primaryLight, size: 23),
-          ),
+          AppIcon(name: glyph, size: 32, color: palette.feedInk),
           const SizedBox(height: 12),
           Text(
-            title,
+            title.toUpperCase(),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+            style: text.titleMedium?.copyWith(color: palette.feedInk),
           ),
           const SizedBox(height: 6),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white60,
-              fontSize: 12,
+            style: text.bodyMedium?.copyWith(
+              color: palette.feedMuted,
               height: 1.4,
             ),
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 14),
-            TextButton.icon(
+            PixelButton(
+              label: actionLabel!,
+              icon: 'filmStrip',
+              variant: PixelButtonVariant.secondary,
               onPressed: onAction,
-              icon: const Icon(Icons.photo_library_rounded, size: 17),
-              label: Text(actionLabel!),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primaryLight,
-              ),
             ),
           ],
         ],
@@ -638,144 +669,73 @@ class _FeedNoticeCard extends StatelessWidget {
   }
 }
 
-class _CountBadge extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
+/// Khung ngắm pixel: 4 góc vuông đậm, không áp filter hay làm mờ ảnh xem trước.
+class _ViewfinderCorners extends StatelessWidget {
+  const _ViewfinderCorners();
 
-  const _CountBadge({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
+  static const double _inset = 20;
+  static const double _side = 24;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.14),
-      borderRadius: BorderRadius.circular(30),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: Colors.white, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
+    final edge = BorderSide(color: context.palette.feedInk, width: 3);
+    Widget bracket(bool left, bool top) => Container(
+      width: _side,
+      height: _side,
+      decoration: BoxDecoration(
+        border: Border(
+          left: left ? edge : BorderSide.none,
+          top: top ? edge : BorderSide.none,
+          right: left ? BorderSide.none : edge,
+          bottom: top ? BorderSide.none : edge,
         ),
       ),
     );
-  }
-}
 
-class _RoundOverlayButton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  const _RoundOverlayButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.white.withValues(alpha: 0.13),
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(top: _inset, left: _inset, child: bracket(true, true)),
+          Positioned(top: _inset, right: _inset, child: bracket(false, true)),
+          Positioned(bottom: _inset, left: _inset, child: bracket(true, false)),
+          Positioned(
+            bottom: _inset,
+            right: _inset,
+            child: bracket(false, false),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
 class _ShutterButton extends StatelessWidget {
-  final bool enabled;
-  final bool busy;
-  final VoidCallback onTap;
+  const _ShutterButton({required this.onPressed, required this.enabled});
 
-  const _ShutterButton({
-    required this.enabled,
-    required this.busy,
-    required this.onTap,
-  });
+  final VoidCallback? onPressed;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 180),
-        opacity: enabled ? 1 : 0.55,
+    final palette = context.palette;
+    return Semantics(
+      button: true,
+      label: 'Chụp khoản chi',
+      child: GestureDetector(
+        onTap: enabled ? onPressed : null,
         child: Container(
-          width: 86,
-          height: 86,
-          padding: const EdgeInsets.all(7),
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3.5),
-            color: Colors.black.withValues(alpha: 0.18),
+            color: enabled ? palette.mint : palette.feedPanel,
+            border: Border.all(color: palette.feedInk, width: 4),
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppColors.captureButtonGradient,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.45),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                ),
-              ],
+          child: Center(
+            child: AppIcon(
+              name: 'camera',
+              size: 32,
+              color: enabled ? palette.onAccent : palette.feedMuted,
             ),
-            child: busy
-                ? const Center(
-                    child: SizedBox(
-                      width: 26,
-                      height: 26,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : const Icon(
-                    Icons.camera_alt_rounded,
-                    color: Colors.white,
-                    size: 32,
-                  ),
           ),
         ),
       ),
