@@ -3,7 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/services/notification_service.dart';
+import '../../core/theme/app_palette.dart';
 import '../../providers/app_settings_provider.dart';
+import '../../widgets/pixel/app_icon.dart';
+import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_panel.dart';
+
+/// Ba glyph mở màn, lấy từ registry đã có (không thêm glyph mới).
+const List<String> onboardingGlyphs = ['wallet', 'cloud', 'chart'];
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -18,17 +25,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   final _pages = const [
     _OnboardingPage(
-      icon: Icons.attach_money_rounded,
+      glyph: 'wallet',
       title: 'Chào mừng đến với Piket',
       description: 'Ghi lại khoản chi bằng ảnh và theo dõi ngân sách của bạn mọi lúc, mọi nơi.',
     ),
     _OnboardingPage(
-      icon: Icons.cloud_done_outlined,
+      glyph: 'cloud',
       title: 'Đồng bộ an toàn trên Cloud',
       description: 'Mỗi khoản chi cần một ảnh từ camera hoặc thư viện. Ảnh và dữ liệu được đồng bộ trên Cloud; máy chỉ giữ bản đệm tạm để xem nhanh.',
     ),
     _OnboardingPage(
-      icon: Icons.notifications_active_outlined,
+      glyph: 'chart',
       title: 'Không vượt quá ngân sách',
       description: 'Bạn có thể nhận cảnh báo một lần ở các mốc 80%, 90% và 100% ngân sách tháng.',
     ),
@@ -48,16 +55,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     final isLastPage = _page == _pages.length - 1;
     return Scaffold(
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: Column(
           children: [
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _finish,
-                child: const Text('Bỏ qua'),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8, top: 8),
+                child: PixelButton(
+                  label: 'BỎ QUA',
+                  variant: PixelButtonVariant.ghost,
+                  onPressed: _finish,
+                ),
               ),
             ),
             Expanded(
@@ -73,16 +86,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               children: List.generate(
                 _pages.length,
                 (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: index == _page ? 24 : 8,
+                  duration: const Duration(milliseconds: 120),
+                  width: 8,
                   height: 8,
                   margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: index == _page
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  color: index == _page ? palette.ink : palette.line,
                 ),
               ),
             ),
@@ -90,14 +98,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.all(24),
               child: SizedBox(
                 width: double.infinity,
-                child: FilledButton(
+                child: PixelButton(
+                  key: const ValueKey('onboarding-next'),
+                  label: isLastPage ? 'BẮT ĐẦU' : 'TIẾP TỤC',
+                  icon: isLastPage ? 'check' : 'chevronRight',
+                  expanded: true,
                   onPressed: isLastPage
                       ? _finish
                       : () => _pageController.nextPage(
                           duration: const Duration(milliseconds: 250),
                           curve: Curves.easeOut,
                         ),
-                  child: Text(isLastPage ? 'Bắt đầu' : 'Tiếp tục'),
                 ),
               ),
             ),
@@ -109,36 +120,55 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 class _OnboardingPage extends StatelessWidget {
-  final IconData icon;
+  final String glyph;
   final String title;
   final String description;
 
   const _OnboardingPage({
-    required this.icon,
+    required this.glyph,
     required this.title,
     required this.description,
   });
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
+    final panelColor = switch (glyph) {
+      'wallet' => palette.mint,
+      'cloud' => palette.sky,
+      _ => palette.butter,
+    };
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 112, color: Theme.of(context).colorScheme.primary),
+          PixelPanel(
+            background: panelColor,
+            padding: const EdgeInsets.all(28),
+            child: AppIcon(
+              name: glyph,
+              size: 64,
+              color: palette.onAccent,
+              secondary: palette.mintInk,
+            ),
+          ),
           const SizedBox(height: 32),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: text.headlineSmall?.copyWith(
+              color: palette.ink,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: text.bodyLarge?.copyWith(color: palette.inkMuted),
           ),
         ],
       ),

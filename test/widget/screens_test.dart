@@ -37,9 +37,9 @@ void main() {
         const ProviderScope(child: MaterialApp(home: OnboardingScreen())),
       );
 
-      expect(find.text('Bỏ qua'), findsOneWidget);
+      expect(find.text('BỎ QUA'), findsOneWidget);
       expect(find.text('Chào mừng đến với Piket'), findsOneWidget);
-      expect(find.text('Tiếp tục'), findsOneWidget);
+      expect(find.text('TIẾP TỤC'), findsOneWidget);
     });
   });
 

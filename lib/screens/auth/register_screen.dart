@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_palette.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/pixel/app_icon.dart';
+import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_panel.dart';
+import '../../widgets/pixel/pixel_snack_bar.dart';
+import '../../widgets/pixel/pixel_text_field.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -17,7 +22,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -40,13 +44,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!success && mounted) {
       final error = ref.read(authProvider).errorMessage;
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.priority3,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showPixelSnackBar(context, error, tone: PixelTone.danger);
       }
     } else if (mounted) {
       Navigator.pop(context);
@@ -56,155 +54,122 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
+    final busy = authState.status == AuthStatus.loading;
 
     return Scaffold(
+      backgroundColor: palette.canvas,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+        backgroundColor: palette.canvas,
+        leading: PixelIconButton(
+          icon: 'back',
+          tooltip: 'Quay lại',
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
                     'Tạo tài khoản mới',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    style: text.headlineSmall?.copyWith(
+                      color: palette.ink,
                       fontWeight: FontWeight.bold,
-                      color: isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimaryLight,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Bắt đầu quản lý tài chính thông minh và đồng bộ đám mây',
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Bắt đầu ghi chi tiêu và đồng bộ ảnh hóa đơn lên Cloud',
+                  style: text.bodySmall?.copyWith(color: palette.inkMuted),
+                ),
+                const SizedBox(height: 24),
 
-                  // Full Name
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Họ và tên',
-                      prefixIcon: Icon(Icons.person_outline_rounded),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Vui lòng nhập họ tên';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Email
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Vui lòng nhập email';
-                      }
-                      if (!v.contains('@')) return 'Email không hợp lệ';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Password
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Mật khẩu',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+                PixelPanel(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        PixelTextField(
+                          key: const Key('registerNameField'),
+                          label: 'Họ và tên',
+                          controller: _nameController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Vui lòng nhập họ tên';
+                            }
+                            return null;
+                          },
                         ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
+                        const SizedBox(height: 12),
+                        PixelTextField(
+                          key: const Key('registerEmailField'),
+                          label: 'Email',
+                          hint: 'you@example.com',
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Vui lòng nhập email';
+                            }
+                            if (!value.contains('@')) {
+                              return 'Email không hợp lệ';
+                            }
+                            return null;
+                          },
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        PixelTextField(
+                          key: const Key('registerPasswordField'),
+                          label: 'Mật khẩu',
+                          controller: _passwordController,
+                          obscureToggle: true,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng nhập mật khẩu';
+                            }
+                            if (value.length < 6) {
+                              return 'Mật khẩu từ 6 ký tự trở lên';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        PixelTextField(
+                          key: const Key('registerConfirmField'),
+                          label: 'Xác nhận mật khẩu',
+                          controller: _confirmPasswordController,
+                          obscureToggle: true,
+                          validator: (value) {
+                            if (value != _passwordController.text) {
+                              return 'Mật khẩu xác nhận không khớp';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        PixelButton(
+                          key: const Key('registerSubmitButton'),
+                          label: 'ĐĂNG KÝ',
+                          icon: 'check',
+                          expanded: true,
+                          isLoading: busy,
+                          onPressed: busy ? null : _handleRegister,
+                        ),
+                      ],
                     ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return 'Vui lòng nhập mật khẩu';
-                      }
-                      if (v.length < 6) return 'Mật khẩu từ 6 ký tự trở lên';
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 16),
-
-                  // Confirm Password
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: _obscurePassword,
-                    decoration: const InputDecoration(
-                      labelText: 'Xác nhận mật khẩu',
-                      prefixIcon: Icon(Icons.lock_reset_rounded),
-                    ),
-                    validator: (v) {
-                      if (v != _passwordController.text) {
-                        return 'Mật khẩu xác nhận không khớp';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 28),
-
-                  // Register Button
-                  ElevatedButton(
-                    onPressed: authState.status == AuthStatus.loading
-                        ? null
-                        : _handleRegister,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: authState.status == AuthStatus.loading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Đăng ký tài khoản',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
