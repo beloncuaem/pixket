@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_chart/fl_chart.dart';
 
-import '../../providers/statistics_provider.dart';
-import '../../providers/category_provider.dart';
+import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
-import '../../core/utils/icon_helper.dart';
-import '../../core/constants/app_colors.dart';
-import '../../widgets/glass_card.dart';
-import '../../widgets/hamburger_button.dart';
-import '../../widgets/screen_background.dart';
+import '../../core/utils/date_formatter.dart';
+import '../../providers/statistics_provider.dart';
+import '../../widgets/pixel/app_icon.dart';
+import '../../widgets/pixel/pixel_loading.dart';
+import '../../widgets/pixel/pixel_screen_header.dart';
+import '../../widgets/pixel/pixel_segmented.dart';
+import '../../widgets/pixel/pixel_stat_tile.dart';
+import 'statistics_charts.dart';
+
+enum StatRange { today, week, month, year, custom }
+
+String statRangeLabel(StatRange range) => switch (range) {
+  StatRange.today => 'Hôm nay',
+  StatRange.week => 'Tuần này',
+  StatRange.month => 'Tháng này',
+  StatRange.year => 'Năm nay',
+  StatRange.custom => 'Tùy chọn',
+};
 
 class StatisticsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onMenuTap;
@@ -21,7 +32,7 @@ class StatisticsScreen extends ConsumerStatefulWidget {
 }
 
 class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
-  String _selectedRange = 'Tháng này';
+  StatRange _selectedRange = StatRange.month;
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _endDate = DateTime.now();
 
@@ -35,7 +46,33 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     ref.read(statisticsProvider.notifier).loadStatistics(_startDate, _endDate);
   }
 
-  Future<void> _selectCustomDateRange() async {
+  void _setRange(StatRange range) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+    setState(() {
+      _selectedRange = range;
+      switch (range) {
+        case StatRange.today:
+          _startDate = startOfToday;
+          _endDate = endOfToday;
+        case StatRange.week:
+          _startDate = startOfToday.subtract(Duration(days: now.weekday - 1));
+          _endDate = endOfToday;
+        case StatRange.month:
+          _startDate = DateTime(now.year, now.month, 1);
+          _endDate = endOfToday;
+        case StatRange.year:
+          _startDate = DateTime(now.year, 1, 1);
+          _endDate = endOfToday;
+        case StatRange.custom:
+          break;
+      }
+    });
+    if (range != StatRange.custom) _loadData();
+  }
+
+  Future<void> _pickCustomRange() async {
     final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
@@ -44,7 +81,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     );
     if (picked != null) {
       setState(() {
-        _selectedRange = 'Tùy chọn';
+        _selectedRange = StatRange.custom;
         _startDate = picked.start;
         _endDate = DateTime(
           picked.end.year,
@@ -60,369 +97,75 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     }
   }
 
-  void _setRange(String range) {
-    final now = DateTime.now();
-    final startOfToday = DateTime(now.year, now.month, now.day);
-    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
-    setState(() {
-      _selectedRange = range;
-      if (range == 'Hôm nay') {
-        _startDate = startOfToday;
-        _endDate = endOfToday;
-      } else if (range == 'Tuần này') {
-        _startDate = startOfToday.subtract(Duration(days: now.weekday - 1));
-        _endDate = endOfToday;
-      } else if (range == 'Tháng này') {
-        _startDate = DateTime(now.year, now.month, 1);
-        _endDate = endOfToday;
-      } else if (range == 'Năm nay') {
-        _startDate = DateTime(now.year, 1, 1);
-        _endDate = endOfToday;
-      }
-    });
-    if (range != 'Tùy chọn') _loadData();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final statsState = ref.watch(statisticsProvider);
-    final categoryState = ref.watch(categoryProvider);
-    final categoriesById = {
-      for (final category in categoryState.categories) category.id: category,
-    };
+    final palette = context.palette;
+    final stats = ref.watch(statisticsProvider);
+    final subtitle = _selectedRange == StatRange.custom
+        ? '${DateFormatter.formatDate(_startDate)} – ${DateFormatter.formatDate(_endDate)}'
+        : statRangeLabel(_selectedRange);
 
     return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: HamburgerButton(onTap: widget.onMenuTap),
-        ),
-        leadingWidth: 64,
-        title: const Text('Thống kê'),
-      ),
-      body: ScreenBackground(
-        child: Column(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children:
-                    [
-                      'Hôm nay',
-                      'Tuần này',
-                      'Tháng này',
-                      'Năm nay',
-                      'Tùy chọn',
-                    ].map((r) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(r),
-                          selected: _selectedRange == r,
-                          onSelected: (_) {
-                            if (r == 'Tùy chọn') {
-                              _selectCustomDateRange();
-                            } else {
-                              _setRange(r);
-                            }
-                          },
-                        ),
-                      );
-                    }).toList(),
+      backgroundColor: palette.canvas,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: PixelScreenHeader(
+              title: 'THỐNG KÊ',
+              subtitle: subtitle,
+              onMenuTap: widget.onMenuTap,
+              trailing: PixelIconButton(
+                icon: 'calendar',
+                tooltip: 'Chọn khoảng ngày',
+                onPressed: _pickCustomRange,
               ),
             ),
-            Expanded(
-              child: statsState.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : statsState.totalSpending == 0
-                  ? const Center(
-                      child: Text(
-                        'Không có dữ liệu trong khoảng thời gian này',
-                        style: TextStyle(color: Colors.grey),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                // 'Tùy chọn' nằm ở nút lịch trên header để 4 phân đoạn còn lại
+                // đủ chỗ đọc được trên màn ngang 360 dp.
+                PixelSegmented<StatRange>(
+                  items: [
+                    for (final range in [
+                      StatRange.today,
+                      StatRange.week,
+                      StatRange.month,
+                      StatRange.year,
+                    ])
+                      PixelSegmentItem(
+                        value: range,
+                        label: statRangeLabel(range),
                       ),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          GlassCard(
-                            gradient: AppColors.balanceCardGradient,
-                            borderRadius: 26,
-                            padding: const EdgeInsets.all(22),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Tổng chi tiêu',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.72),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  CurrencyFormatter.format(
-                                    statsState.totalSpending,
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -0.6,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _selectedRange,
-                                  style: const TextStyle(
-                                    color: AppColors.primaryLight,
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Theo danh mục',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: 200,
-                            child: PieChart(
-                              PieChartData(
-                                sectionsSpace: 2,
-                                centerSpaceRadius: 40,
-                                sections: statsState.spendingByCategory.entries
-                                    .toList()
-                                    .asMap()
-                                    .entries
-                                    .map((e) {
-                                      final index = e.key;
-                                      final entry = e.value;
-                                      final colors = [
-                                        Colors.blue,
-                                        Colors.orange,
-                                        Colors.green,
-                                        Colors.purple,
-                                        Colors.red,
-                                        Colors.teal,
-                                      ];
-                                      final percent =
-                                          (entry.value /
-                                          statsState.totalSpending *
-                                          100);
-                                      return PieChartSectionData(
-                                        color: colors[index % colors.length],
-                                        value: entry.value,
-                                        title: '${percent.toStringAsFixed(1)}%',
-                                        radius: 50,
-                                        titleStyle: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      );
-                                    })
-                                    .toList(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ...statsState.spendingByCategory.entries
-                              .toList()
-                              .asMap()
-                              .entries
-                              .map((e) {
-                                final index = e.key;
-                                final entry = e.value;
-                                final colors = [
-                                  Colors.blue,
-                                  Colors.orange,
-                                  Colors.green,
-                                  Colors.purple,
-                                  Colors.red,
-                                  Colors.teal,
-                                ];
-                                final percent =
-                                    (entry.value /
-                                    statsState.totalSpending *
-                                    100);
-                                final cat = categoriesById[entry.key];
-
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4.0,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: colors[index % colors.length],
-                                          borderRadius: BorderRadius.circular(
-                                            2,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      IconHelper.getIconWidget(
-                                        cat?.icon ?? 'dotsThreeOutline',
-                                        size: 16,
-                                        color: colors[index % colors.length],
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          cat?.name ?? 'Danh mục #${entry.key}',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${CurrencyFormatter.format(entry.value)} (${percent.toStringAsFixed(1)}%)',
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-                          const SizedBox(height: 32),
-                          Text(
-                            'Theo mức độ cần thiết',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: 200,
-                            child: BarChart(
-                              BarChartData(
-                                alignment: BarChartAlignment.spaceAround,
-                                maxY: (statsState.totalSpending > 0)
-                                    ? statsState.totalSpending
-                                    : 100,
-                                barTouchData: BarTouchData(enabled: false),
-                                titlesData: FlTitlesData(
-                                  show: true,
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      getTitlesWidget:
-                                          (double value, TitleMeta meta) {
-                                            final labels = [
-                                              'Thiết yếu',
-                                              'Rất cần',
-                                              'Cần vừa',
-                                              'Chưa cần',
-                                            ];
-                                            final val = value.toInt();
-                                            if (val < 0 ||
-                                                val >= labels.length) {
-                                              return const SizedBox.shrink();
-                                            }
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 8.0,
-                                              ),
-                                              child: Text(
-                                                labels[val],
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                    ),
-                                  ),
-                                  leftTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  topTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  rightTitles: const AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                ),
-                                borderData: FlBorderData(show: false),
-                                barGroups: [
-                                  _buildBar(
-                                    0,
-                                    statsState.spendingByPriority[0] ?? 0,
-                                    AppColors.priority0,
-                                  ),
-                                  _buildBar(
-                                    1,
-                                    statsState.spendingByPriority[1] ?? 0,
-                                    AppColors.priority1,
-                                  ),
-                                  _buildBar(
-                                    2,
-                                    statsState.spendingByPriority[2] ?? 0,
-                                    AppColors.priority2,
-                                  ),
-                                  _buildBar(
-                                    3,
-                                    statsState.spendingByPriority[3] ?? 0,
-                                    AppColors.priority3,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          Text(
-                            'Gợi ý & Nhận xét',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          if (statsState.insights.isEmpty)
-                            const Card(
-                              child: Padding(
-                                padding: EdgeInsets.all(12.0),
-                                child: Text('Chưa đủ dữ liệu để tạo nhận xét'),
-                              ),
-                            )
-                          else
-                            ...statsState.insights.map(
-                              (insight) => Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: ListTile(
-                                  leading: const Icon(
-                                    Icons.lightbulb,
-                                    color: Colors.amber,
-                                  ),
-                                  title: Text(insight),
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 32),
-                        ],
-                      ),
+                  ],
+                  selected: _selectedRange,
+                  onChanged: _setRange,
+                ),
+                const SizedBox(height: 12),
+                if (stats.isLoading && stats.totalAmount == 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 48),
+                    child: Center(
+                      child: PixelLoading(label: 'Đang tải thống kê…'),
                     ),
+                  )
+                else ...[
+                  PixelStatTile(
+                    label: 'Tổng chi',
+                    value: CurrencyFormatter.format(stats.totalAmount),
+                    glyph: 'wallet',
+                  ),
+                  const SizedBox(height: 12),
+                  const StatisticsCharts(),
+                ],
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  BarChartGroupData _buildBar(int x, double value, Color color) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: value,
-          color: color,
-          width: 22,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-        ),
-      ],
     );
   }
 }
