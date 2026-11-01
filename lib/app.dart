@@ -14,11 +14,31 @@ import 'providers/theme_provider.dart';
 import 'providers/app_settings_provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/reset_password_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 
-bool shouldShowLoginScreen({required AuthStatus status}) {
-  return status != AuthStatus.authenticated;
+enum HomeTarget { loading, onboarding, login, resetPassword, main }
+
+/// Routing ưu tiên: onboarding > đặt lại mật khẩu > đăng nhập > app chính.
+HomeTarget decideHomeTarget({
+  required bool onboardingComplete,
+  required AppAuthState auth,
+}) {
+  if (!onboardingComplete) return HomeTarget.onboarding;
+  if (auth.recoveryMode && auth.status == AuthStatus.authenticated) {
+    return HomeTarget.resetPassword;
+  }
+  if (auth.status != AuthStatus.authenticated) return HomeTarget.login;
+  return HomeTarget.main;
+}
+
+class HomeTargetLoading extends StatelessWidget {
+  const HomeTargetLoading({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
 
 class ChiTieuApp extends ConsumerWidget {
@@ -74,17 +94,20 @@ class _AppHome extends ConsumerWidget {
     });
 
     if (settings.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const HomeTargetLoading();
     }
 
-    if (!settings.onboardingComplete) {
-      return const OnboardingScreen();
-    }
+    final target = decideHomeTarget(
+      onboardingComplete: settings.onboardingComplete,
+      auth: authState,
+    );
 
-    if (shouldShowLoginScreen(status: authState.status)) {
-      return const LoginScreen();
-    }
-
-    return const MainScreen();
+    return switch (target) {
+      HomeTarget.onboarding => const OnboardingScreen(),
+      HomeTarget.resetPassword => const ResetPasswordScreen(),
+      HomeTarget.login => const LoginScreen(),
+      HomeTarget.main => const MainScreen(),
+      HomeTarget.loading => const HomeTargetLoading(),
+    };
   }
 }
