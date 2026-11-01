@@ -54,8 +54,8 @@ void main() {
         ),
       );
 
-      expect(find.text('Quản lý danh mục'), findsOneWidget);
-      expect(find.text('Thêm danh mục'), findsOneWidget);
+      expect(find.text('QUẢN LÝ DANH MỤC'), findsOneWidget);
+      expect(find.text('THÊM DANH MỤC'), findsOneWidget);
       expect(find.text('Ăn uống'), findsOneWidget);
       expect(find.text('Nhà ở'), findsOneWidget);
     });
