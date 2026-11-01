@@ -10,8 +10,10 @@ import 'package:chi_tieu/widgets/pixel/pixel_divider.dart';
 import 'package:chi_tieu/widgets/pixel/pixel_panel.dart';
 import 'package:chi_tieu/widgets/pixel/pixel_progress.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(
+  theme: AppTheme.light,
+  home: Scaffold(body: child),
+);
 
 void main() {
   testWidgets('PixelButton vo hieu hoa van hien nhan va khong bat cham', (
@@ -29,7 +31,9 @@ void main() {
     await tester.tap(find.text('Luu'), warnIfMissed: false);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(
-      _wrap(PixelButton(label: 'Luu', onPressed: () => taps++, isLoading: true)),
+      _wrap(
+        PixelButton(label: 'Luu', onPressed: () => taps++, isLoading: true),
+      ),
     );
     await tester.tap(find.text('Luu'), warnIfMissed: false);
     expect(taps, 1);
@@ -41,6 +45,29 @@ void main() {
     await tester.pumpWidget(_wrap(PixelButton(label: 'Luu', onPressed: () {})));
     final size = tester.getSize(find.byType(PixelButton));
     expect(size.height, greaterThanOrEqualTo(48));
+  });
+
+  testWidgets('PixelButton thu gon nam trong Row khong nan vi bien vo han', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        Row(
+          children: [
+            PixelButton(
+              label: 'Xoa',
+              icon: 'trash',
+              variant: PixelButtonVariant.ghost,
+              onPressed: () {},
+            ),
+            const Spacer(),
+            PixelButton(label: 'Ap dung', icon: 'check', onPressed: () {}),
+          ],
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.text('Xoa')).width, lessThan(200));
   });
 
   testWidgets('PixelChip chon/ bo chon doi trang thai', (tester) async {
@@ -63,10 +90,14 @@ void main() {
   });
 
   testWidgets('PixelProgress clamp value va ve dung so khoi', (tester) async {
-    await tester.pumpWidget(_wrap(const SizedBox(
-      width: 200,
-      child: PixelProgress(value: 1.7, segments: 10),
-    )));
+    await tester.pumpWidget(
+      _wrap(
+        const SizedBox(
+          width: 200,
+          child: PixelProgress(value: 1.7, segments: 10),
+        ),
+      ),
+    );
     expect(find.byType(PixelProgress), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

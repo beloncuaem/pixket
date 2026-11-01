@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_palette.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../data/models/category.dart';
 import '../../data/models/priority_level.dart';
+import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_chip.dart';
+import '../../widgets/pixel/pixel_divider.dart';
+import '../../widgets/pixel/pixel_sheet.dart';
+import '../../widgets/pixel/pixel_text_field.dart';
 
 /// Bộ lọc khoản chi trên màn Tổng quan.
 class ExpenseFilter {
@@ -55,16 +61,16 @@ class ExpenseFilter {
   );
 }
 
-/// Mở sheet lọc và trả bộ lọc mới; null khi người dùng đóng giữa chừng.
-Future<ExpenseFilter?> showExpenseFilterSheet(
+/// Mở sheet lọc; trả bộ lọc mới, null khi người dùng đóng giữa chừng.
+Future<ExpenseFilter?> openExpenseFilterSheet(
   BuildContext context, {
   required ExpenseFilter initial,
   required List<Category> categories,
   required List<PriorityLevel> priorities,
-}) => showModalBottomSheet<ExpenseFilter>(
+}) => showPixelSheet<ExpenseFilter>(
   context: context,
-  isScrollControlled: true,
-  builder: (context) => ExpenseFilterSheet(
+  title: 'Lọc giao dịch',
+  builder: (_) => ExpenseFilterSheet(
     initial: initial,
     categories: categories,
     priorities: priorities,
@@ -126,156 +132,146 @@ class _ExpenseFilterSheetState extends State<ExpenseFilterSheet> {
     if (result != null) setState(() => _dateRange = result);
   }
 
+  void _apply() {
+    Navigator.pop(
+      context,
+      ExpenseFilter(
+        search: widget.initial.search,
+        dateRange: _dateRange,
+        categoryId: _categoryId,
+        priorityId: _priorityId,
+        minAmount: CurrencyFormatter.parseInput(_minController.text),
+        maxAmount: CurrencyFormatter.parseInput(_maxController.text),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Lọc giao dịch',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: _pickDateRange,
-                  icon: const Icon(Icons.calendar_today_rounded),
-                  label: Text(
-                    _dateRange == null
-                        ? 'Chọn khoảng thời gian'
-                        : '${DateFormatter.formatDate(_dateRange!.start)} – ${DateFormatter.formatDate(_dateRange!.end)}',
-                  ),
-                ),
-                if (_dateRange != null)
-                  TextButton.icon(
-                    onPressed: () => setState(() => _dateRange = null),
-                    icon: const Icon(Icons.close_rounded),
-                    label: const Text('Bỏ lọc thời gian'),
-                  ),
-                const SizedBox(height: 12),
-                Text('Danh mục', style: Theme.of(context).textTheme.titleSmall),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Tất cả'),
-                      selected: _categoryId == null,
-                      onSelected: (_) => setState(() => _categoryId = null),
-                    ),
-                    ...widget.categories.map(
-                      (category) => ChoiceChip(
-                        avatar: IconHelper.getIconWidget(
-                          category.icon,
-                          size: 15,
-                        ),
-                        label: Text(category.name),
-                        selected: _categoryId == category.id,
-                        onSelected: (selected) => setState(
-                          () => _categoryId = selected ? category.id : null,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Mức độ cần thiết',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Tất cả'),
-                      selected: _priorityId == null,
-                      onSelected: (_) => setState(() => _priorityId = null),
-                    ),
-                    ...widget.priorities.map(
-                      (priority) => ChoiceChip(
-                        label: Text(priority.name),
-                        selected: _priorityId == priority.id,
-                        onSelected: (selected) => setState(
-                          () => _priorityId = selected ? priority.id : null,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _minController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: const [
-                          ThousandsSeparatorInputFormatter(),
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Từ số tiền',
-                          suffixText: '₫',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _maxController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: const [
-                          ThousandsSeparatorInputFormatter(),
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: 'Đến số tiền',
-                          suffixText: '₫',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pop(context, const ExpenseFilter()),
-                      child: const Text('Xóa bộ lọc'),
-                    ),
-                    const Spacer(),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(
-                        context,
-                        ExpenseFilter(
-                          search: widget.initial.search,
-                          dateRange: _dateRange,
-                          categoryId: _categoryId,
-                          priorityId: _priorityId,
-                          minAmount: CurrencyFormatter.parseInput(
-                            _minController.text,
-                          ),
-                          maxAmount: CurrencyFormatter.parseInput(
-                            _maxController.text,
-                          ),
-                        ),
-                      ),
-                      child: const Text('Áp dụng'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Khoảng thời gian', style: text.titleSmall),
+        const SizedBox(height: 8),
+        PixelButton(
+          label: _dateRange == null
+              ? 'CHỌN KHOẢNG NGÀY'
+              : '${DateFormatter.formatDate(_dateRange!.start)} – '
+                    '${DateFormatter.formatDate(_dateRange!.end)}',
+          icon: 'calendar',
+          variant: PixelButtonVariant.secondary,
+          expanded: true,
+          onPressed: _pickDateRange,
         ),
-      ),
+        if (_dateRange != null) ...[
+          const SizedBox(height: 8),
+          PixelButton(
+            key: const ValueKey('clear-date'),
+            label: 'Bỏ lọc thời gian',
+            icon: 'close',
+            variant: PixelButtonVariant.ghost,
+            onPressed: () => setState(() => _dateRange = null),
+          ),
+        ],
+        const SizedBox(height: 16),
+        Text('Danh mục', style: text.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            PixelChip(
+              label: 'Tất cả',
+              icon: 'dotsThreeOutline',
+              selected: _categoryId == null,
+              showCheck: false,
+              onTap: () => setState(() => _categoryId = null),
+            ),
+            for (final category in widget.categories)
+              PixelChip(
+                label: category.name,
+                icon: IconHelper.normalizeIconKey(category.icon),
+                selected: _categoryId == category.id,
+                onTap: () => setState(
+                  () => _categoryId = _categoryId == category.id
+                      ? null
+                      : category.id,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text('Mức độ cần thiết', style: text.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            PixelChip(
+              label: 'Tất cả',
+              icon: 'dotsThreeOutline',
+              selected: _priorityId == null,
+              showCheck: false,
+              onTap: () => setState(() => _priorityId = null),
+            ),
+            for (final priority in widget.priorities)
+              PixelChip(
+                label: priority.name,
+                accent: palette.priorityColor(priority.id),
+                selected: _priorityId == priority.id,
+                onTap: () => setState(
+                  () => _priorityId = _priorityId == priority.id
+                      ? null
+                      : priority.id,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: PixelTextField(
+                key: const Key('filterMin'),
+                label: 'Từ số tiền',
+                controller: _minController,
+                keyboardType: TextInputType.number,
+                textCapitalization: TextCapitalization.none,
+                inputFormatters: const [ThousandsSeparatorInputFormatter()],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: PixelTextField(
+                key: const Key('filterMax'),
+                label: 'Đến số tiền',
+                controller: _maxController,
+                keyboardType: TextInputType.number,
+                textCapitalization: TextCapitalization.none,
+                inputFormatters: const [ThousandsSeparatorInputFormatter()],
+              ),
+            ),
+          ],
+        ),
+        const PixelDivider(),
+        Row(
+          children: [
+            PixelButton(
+              key: const ValueKey('clear-filter'),
+              label: 'XÓA BỘ LỌC',
+              icon: 'undo',
+              variant: PixelButtonVariant.ghost,
+              onPressed: () => Navigator.pop(context, const ExpenseFilter()),
+            ),
+            const Spacer(),
+            PixelButton(label: 'ÁP DỤNG', icon: 'check', onPressed: _apply),
+          ],
+        ),
+      ],
     );
   }
 }

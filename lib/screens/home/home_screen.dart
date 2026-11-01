@@ -97,7 +97,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _showFilters() async {
-    final selected = await showExpenseFilterSheet(
+    final selected = await openExpenseFilterSheet(
       context,
       initial: _filter,
       categories: ref.read(categoryProvider).categories,
@@ -203,7 +203,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           variant: PixelButtonVariant.ghost,
                           onPressed: _resetFilters,
                           icon: 'undo',
-                          minWidth: 0,
                         ),
                     ],
                   ),
@@ -233,7 +232,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             label: 'THỬ LẠI',
                             onPressed: _refresh,
                             icon: 'refresh',
-                            minWidth: 0,
                           ),
                         ],
                       ),

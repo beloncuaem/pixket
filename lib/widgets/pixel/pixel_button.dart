@@ -63,6 +63,17 @@ class _PixelButtonState extends State<PixelButton> {
 
     final glyph = widget.isLoading ? 'dotsThreeOutline' : widget.icon;
 
+    final Text label = Text(
+      widget.label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.labelLarge
+          ?.copyWith(color: colors.fg, fontWeight: FontWeight.w600),
+    );
+
+    // `Row` không cho con non-flex biết bề rộng tối đa, nên chỉ bọc
+    // `Expanded` khi nút thực sự chiếm hết hàng (parent có bề rộng hữu hạn).
     Widget content = Row(
       mainAxisSize: widget.expanded ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -71,14 +82,7 @@ class _PixelButtonState extends State<PixelButton> {
           AppIcon(name: glyph, size: 16, color: colors.fg),
           const SizedBox(width: 8),
         ],
-        Expanded(
-          child: Text(
-            widget.label,
-            style: Theme.of(context).textTheme.labelLarge
-                ?.copyWith(color: colors.fg, fontWeight: FontWeight.w600),
-            textAlign: TextAlign.center,
-          ),
-        ),
+        if (widget.expanded) Expanded(child: label) else label,
       ],
     );
 
