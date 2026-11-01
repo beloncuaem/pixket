@@ -22,4 +22,19 @@ class CurrencyFormatter {
     if (rounded <= 0) return '';
     return ThousandsSeparatorInputFormatter.groupDigits(rounded.toString());
   }
+
+  /// '1,2 Tr' / '950 K' — dùng trong stat tile hẹp.
+  static String short(double amount) {
+    if (amount.abs() >= 1e9) {
+      return '${(amount / 1e9).toStringAsFixed(1).replaceAll('.', ',')} T';
+    }
+    if (amount.abs() >= 1e6) {
+      final millions = (amount / 1e6).toStringAsFixed(1);
+      return '${millions.replaceAll('.', ',')} Tr';
+    }
+    if (amount.abs() >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(0)} K';
+    }
+    return format(amount);
+  }
 }

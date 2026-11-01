@@ -48,6 +48,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       AppSection.dashboard => HomeScreen(
         key: const ValueKey('section-dashboard'),
         onMenuTap: _openDrawer,
+        onOpenBudget: () => _selectSection(AppSection.budget),
+        onOpenFeed: () => _selectSection(AppSection.feed),
       ),
       AppSection.statistics => StatisticsScreen(
         key: const ValueKey('section-statistics'),
@@ -89,7 +91,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             (themeMode == ThemeMode.system && isDark),
       ),
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
+        duration: const Duration(milliseconds: 160),
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
         child: _buildSection(_section),

@@ -63,6 +63,15 @@ void main() {
     });
   });
 
+  group('CurrencyFormatter.short', () {
+    test('rút gọn theo bậc nghìn, triệu, tỷ', () {
+      expect(CurrencyFormatter.short(950000), '950 K');
+      expect(CurrencyFormatter.short(1500000), '1,5 Tr');
+      expect(CurrencyFormatter.short(2000000000), '2,0 T');
+      expect(CurrencyFormatter.short(900), CurrencyFormatter.format(900));
+    });
+  });
+
   group('ThousandsSeparatorInputFormatter', () {
     const formatter = ThousandsSeparatorInputFormatter();
 
