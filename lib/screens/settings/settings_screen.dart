@@ -5,8 +5,10 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_info.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../widgets/pixel/app_icon.dart';
 import '../categories/manage_categories_screen.dart';
 import '../trash/trash_screen.dart';
+import 'csv_export_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -84,7 +86,10 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               children: [
                 const ListTile(
-                  leading: Icon(Icons.cloud_done_outlined, color: AppColors.primary),
+                  leading: Icon(
+                    Icons.cloud_done_outlined,
+                    color: AppColors.primary,
+                  ),
                   title: Text('Dữ liệu trên Cloud'),
                   subtitle: Text(
                     'Mọi khoản chi, danh mục và ngân sách được lưu trực tiếp trên Supabase.',
@@ -134,6 +139,13 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     );
                   },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text('Xuất CSV (sao lưu)'),
+                  leading: const AppIcon(name: 'download', size: 32),
+                  trailing: const AppIcon(name: 'chevronRight', size: 16),
+                  onTap: () => showCsvExportSheet(context),
                 ),
                 const Divider(height: 1),
                 ListTile(
