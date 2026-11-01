@@ -42,6 +42,10 @@ khách hay ngoại tuyến.
 | FR-21 | Ảnh hóa đơn lưu bucket private, hiển thị qua signed URL hạn 24h. | Đã có |
 | FR-22 | Keep-alive Supabase bằng GitHub Actions (kèm cron-job.org dự phòng). | Đã có, cần người dùng cấu hình secrets |
 | FR-23 | Rollback ảnh đã upload khi ghi DB thất bại. | Đã có |
+| FR-24 | Ô nhập tiền tự chèn dấu chấm nhóm nghìn, chặn ký tự lạ, tối đa 12 chữ số; toàn bộ chỗ đọc số dùng `CurrencyFormatter.parseInput`. | Đã có |
+| FR-25 | Khoản chi chọn được ngày giờ, không nhận tương lai và không quá 10 năm, có nút "Bây giờ". | Đã có |
+| FR-26 | Quên mật khẩu qua email (PKCE + deep link), màn đặt lại mật khẩu trong app, thông báo trung tính. | Đã có, cần xác minh trên thiết bị |
+| FR-27 | Xuất CSV có BOM UTF-8, phân trang 1000 dòng, chia sẻ qua share sheet hệ thống. | Đã có, cần xác minh trên thiết bị |
 
 ## 4. Quy tắc dữ liệu
 
@@ -73,7 +77,7 @@ khách hay ngoại tuyến.
 - OCR/nhận diện hóa đơn; ảnh chỉ là tệp đính kèm.
 - Thay ảnh của khoản chi đã lưu (hiện chỉ sửa được ghi chú, số tiền, danh mục, mức độ).
 - Đồng bộ hai chiều tự động theo thời gian thực và xử lý xung đột nâng cao.
-- Xuất báo cáo CSV/PDF hoặc chia sẻ dữ liệu.
+- Nhập lại dữ liệu từ file CSV đã xuất (CSV hiện chỉ là bản sao lưu để đọc).
 - Đăng nhập Apple/Facebook và các provider OAuth khác.
 
 ## 7. Điều kiện cấu hình bên ngoài
@@ -89,7 +93,7 @@ khách hay ngoại tuyến.
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
 - `flutter analyze`: không có issue nào.
-- `flutter test`: 89/89 bài pass.
+- `flutter test`: 181/181 bài pass.
 - `flutter build apk --debug`: **không chạy được trong phiên này** vì máy phát triển chưa có
   Android SDK/JDK (`flutter doctor` báo "Unable to locate Android SDK"). APK sẽ được build
   bởi workflow GitHub Actions.
@@ -103,5 +107,8 @@ khách hay ngoại tuyến.
     app báo rõ trước khi mở trình duyệt.
 - Chưa xác minh bằng tay (không có thiết bị/emulator trong phiên): tải ảnh thật lên
   bucket private, xem ảnh qua signed URL trên thiết bị, ảnh legacy còn hiển thị.
+- Chưa xác minh bằng tay cho FR-26/FR-27: email đặt lại mật khẩu và deep link mở lại app,
+  `updateUser(password:)` có đòi reauthentication hay không, share sheet Android với file
+  `.csv`, hiệu năng phân trang khi > 5000 khoản chi.
 - Người dùng cần: chạy lại `supabase_setup.sql`, thêm GitHub Secrets, chạy workflow tay
   một lần và xác nhận `HTTP 200`.

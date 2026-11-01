@@ -184,11 +184,25 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
+## 💾 Sao lưu & khôi phục dữ liệu
+
+- **Xuất CSV**: Cài đặt → Xuất CSV (sao lưu). File `piket_YYYYMMDD_HHmm.csv` mở bằng
+  Excel/LibreOffice/Google Sheets; cột `ảnh` ghi đường dẫn trong bucket `expense-receipts`,
+  không chứa ảnh nhúng.
+- **Khôi phục ảnh**: muốn mang ảnh theo sang project Supabase khác phải tải riêng từng object
+  qua Storage API; CSV không tự tải ảnh.
+- **Nhập lại CSV**: chưa hỗ trợ. CSV là bản sao lưu để đọc và để nhập tay vào công cụ khác.
+- **Quên mật khẩu**: Màn hình đăng nhập → "Quên mật khẩu?" → nhập email. Supabase gửi link đặt lại;
+  mở link trên chính thiết bị đã cài app để deep link `io.supabase.chitieu://login-callback/`
+  đưa app về màn đặt mật khẩu mới.
+
+---
+
 ## 🧪 Kiểm thử
 
 ```bash
 flutter analyze     # không có lỗi biên dịch
-flutter test        # 89/89 passed
+flutter test        # 181/181 passed
 ```
 
 - **Unit Tests**: model, formatter VND/ngày, trạng thái ngân sách/thống kê/auth,
@@ -221,6 +235,17 @@ Lỗi phổ biến khi cài APK:
 Nguyên nhân: **Google provider chưa được bật trong Supabase Dashboard**, không phải lỗi APK.
 Chi tiết bằng chứng và các bước sửa:
 [docs/google-oauth-troubleshooting.md](docs/google-oauth-troubleshooting.md).
+
+---
+
+## ❓ Chưa xác minh trong môi trường phát triển này
+
+- Nhận email đặt lại mật khẩu và deep link mở lại app (cần thiết bị + hộp thư thật).
+- `updateUser(password:)` có bị Supabase đòi reauthentication hay không, tùy cấu hình project.
+- Share sheet trên Android và cách từng app xử lý file `.csv` (cần thiết bị).
+- Hiệu năng phân trang CSV khi > 5000 khoản chi (cần dữ liệu thật).
+- `flutter build apk --debug` trên máy phát triển: chưa chạy được vì chưa có Android SDK/JDK;
+  APK do workflow GitHub Actions build.
 
 ---
 
