@@ -1,13 +1,15 @@
-# Yêu cầu và phạm vi dự án Chi Tiêu (v2.2)
+# Yêu cầu và phạm vi dự án Piket (v2.2)
 
-> Cập nhật: 2026-10-26.
+> Cập nhật: 2026-11-01.
 
 ## 1. Mục tiêu
 
 Ứng dụng di động giúp một cá nhân ghi nhận, phân loại và theo dõi chi tiêu hằng ngày.
 Mỗi khoản chi có thể đính kèm ảnh hóa đơn; ảnh được hiển thị thành nhật ký dạng lướt
-giống Locket. Toàn bộ dữ liệu tài chính và ảnh được lưu trực tiếp trên Supabase;
-ứng dụng bắt buộc đăng nhập và không lưu bản sao tài chính trên thiết bị.
+giống Locket trên nền tối. Toàn bộ dữ liệu tài chính và ảnh được lưu trực tiếp trên
+Supabase; ứng dụng bắt buộc đăng nhập và không lưu bản sao tài chính trên thiết bị.
+Giao diện là bộ Pixel tự vẽ (icon 16×16 bằng `CustomPainter`, panel viền cứng, pastel
+xanh mint + nền kem) thay cho Material mặc định.
 
 ## 2. Người dùng
 
@@ -26,7 +28,7 @@ khách hay ngoại tuyến.
 | FR-05 | Quản lý danh mục: mặc định, thêm và xóa danh mục tùy chỉnh. | Đã có |
 | FR-06 | Ngân sách tổng hoặc theo danh mục; hiển thị tiến độ sử dụng. | Đã có |
 | FR-07 | Thống kê theo ngày/tuần/tháng/năm/khoảng ngày tự chọn. | Đã có |
-| FR-08 | Biểu đồ theo danh mục và mức độ cần thiết; nhận xét tổng quan. | Đã có |
+| FR-08 | Biểu đồ pixel theo danh mục, mức độ cần thiết và theo ngày; nhận xét tổng quan. | Đã có |
 | FR-09 | Chuyển giao diện sáng/tối. | Đã có |
 | FR-10 | Nhật ký ảnh kiểu Locket: trang camera đầu tiên, lướt dọc xem ảnh đã chụp. | Đã có |
 | FR-11 | Điều hướng bằng nút 3 gạch + drawer, không dùng thanh tab đáy. | Đã có |
@@ -46,6 +48,13 @@ khách hay ngoại tuyến.
 | FR-25 | Khoản chi chọn được ngày giờ, không nhận tương lai và không quá 10 năm, có nút "Bây giờ". | Đã có |
 | FR-26 | Quên mật khẩu qua email (PKCE + deep link), màn đặt lại mật khẩu trong app, thông báo trung tính. | Đã có, cần xác minh trên thiết bị |
 | FR-27 | Xuất CSV có BOM UTF-8, phân trang 1000 dòng, chia sẻ qua share sheet hệ thống. | Đã có, cần xác minh trên thiết bị |
+| FR-28 | Bộ icon pixel tự vẽ (lưới 16×16, `CustomPainter`) thay Material Icons và emoji; `IconHelper` giữ API cũ, chỉ đổi render sang `AppIcon`. | Đã có |
+| FR-29 | `AppPalette` (ThemeExtension) là nguồn màu duy nhất, tương phản WCAG ở cả hai theme; bỏ gradient và glassmorphism. | Đã có |
+| FR-30 | Component pixel dùng chung cho mọi màn: panel, button, chip, progress, segmented, text field, dialog/sheet/snackbar, empty/loading/stat/badge/divider, expense tile. | Đã có |
+| FR-31 | Biểu đồ tự vẽ bằng khối pixel (tỉ trọng danh mục, mức độ cần thiết, theo ngày) kèm nhãn chữ và `Semantics`; đã gỡ `fl_chart`. | Đã có |
+| FR-32 | Vùng chạm ≥ 48×48 dp, chữ không chỉ dựa vào màu, lỗi hiển thị dưới field, test ở text scale 1.3×. | Đã có, cần xác minh thêm trên thiết bị |
+| FR-33 | Ảnh khoản chi chỉ render qua `PixelReceiptImage` với placeholder "Không tải được ảnh"; feed/lưới/thùng rác/danh mục theo ngôn ngữ Pixel. | Đã có |
+| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.2.0` / build `3`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
 
 ## 4. Quy tắc dữ liệu
 
@@ -66,7 +75,8 @@ khách hay ngoại tuyến.
 - Bắt buộc đăng nhập; dữ liệu tài chính chỉ đọc/ghi trên Supabase.
 - Khi mất mạng hoặc cloud lỗi, app báo lỗi và không lưu khoản chi (không fallback SQLite).
 - Chỉ dùng SQLite cho tùy chọn onboarding và danh sách mức độ cần thiết.
-- Giao diện Material 3, hỗ trợ sáng/tối, phông Be Vietnam Pro.
+- Giao diện Pixel theo `AppPalette` (ThemeExtension), hỗ trợ sáng/tối, font bundle offline
+  VT323 (tiêu đề số) + Be Vietnam Pro (chữ nội dung); không dùng `google_fonts`.
 - Ảnh được upload ngay khi lưu khoản chi và không giữ bản sao trên máy.
 - Không đưa khóa bí mật vào mã nguồn; chỉ dùng `SUPABASE_URL` và anon/publishable key từ `.env`.
 - Deep link OAuth: scheme `io.supabase.chitieu`, host `login-callback`.
@@ -93,9 +103,11 @@ khách hay ngoại tuyến.
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
 - `flutter analyze`: không có issue nào.
-- `flutter test`: 181/181 bài pass.
+- `flutter test`: 274/274 bài pass (gồm 6 bài gate dọn dẹp trong
+  `test/widget/legacy_cleanup_test.dart`: không còn `AppColors`, `Icons.*`, 8 file widget cũ,
+  mọi ảnh render qua `PixelReceiptImage`, `pubspec.yaml` khớp `AppInfo`).
 - `flutter build apk --debug`: **không chạy được trong phiên này** vì máy phát triển chưa có
-  Android SDK/JDK (`flutter doctor` báo "Unable to locate Android SDK"). APK sẽ được build
+  Android SDK/JDK (`flutter build apk --debug` báo "No Android SDK found"). APK sẽ được build
   bởi workflow GitHub Actions.
 - Emulator Android API 35:
   - Onboarding và cấp quyền camera/thông báo hoạt động.
