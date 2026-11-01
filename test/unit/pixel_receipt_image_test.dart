@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:chi_tieu/data/models/expense.dart';
 import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
 
 /// `storagePathOf` chỉ công nhận path có tên tệp UUID thật (36 ký tự hex+dấu),
@@ -39,6 +40,40 @@ void main() {
         resolveReceiptImage(imagePath: '', displayImageUrl: null).source,
         ReceiptImageSource.none,
       );
+    });
+  });
+
+  group('PixelReceiptImage.source', () {
+    test('tệp tạm từ camera thành localPath', () {
+      final widget = PixelReceiptImage.source(
+        '/data/user/0/tmp/IMG_1.jpg',
+        semanticLabel: 'Ảnh khoản chi',
+      );
+      expect(widget.localPath, '/data/user/0/tmp/IMG_1.jpg');
+      expect(widget.displayUrl, isNull);
+      expect(widget.cacheKey, isNull);
+      expect(widget.semanticLabel, 'Ảnh khoản chi');
+    });
+
+    test('không có đường dẫn thì về placeholder', () {
+      final widget = PixelReceiptImage.source(null);
+      expect(widget.localPath, isNull);
+      expect(widget.displayUrl, isNull);
+    });
+
+    test('khi sửa thì lấy signed URL của khoản chi đã lưu', () {
+      final expense = Expense(
+        caption: 'Đồ ăn',
+        amount: 30000,
+        categoryId: 1,
+        createdAt: DateTime(2026, 11, 1, 12),
+        imagePath: _objectPath,
+        displayImageUrl: 'https://x/signed/a.png',
+      );
+      final widget = PixelReceiptImage.source(_objectPath, expense: expense);
+      expect(widget.displayUrl, 'https://x/signed/a.png');
+      expect(widget.cacheKey, _objectPath);
+      expect(widget.localPath, isNull);
     });
   });
 }

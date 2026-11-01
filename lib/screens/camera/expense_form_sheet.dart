@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,13 +13,22 @@ import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/expense_provider.dart';
 import '../../providers/priority_provider.dart';
+import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_chip.dart';
+import '../../widgets/pixel/pixel_loading.dart';
+import '../../widgets/pixel/pixel_receipt_image.dart';
+import '../../widgets/pixel/pixel_sheet.dart';
+import '../../widgets/pixel/pixel_text_field.dart';
 import 'expense_datetime_field.dart';
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final String? imagePath;
   final Expense? expense;
 
-  const ExpenseFormSheet({super.key, this.imagePath, this.expense})
+  @visibleForTesting
+  final DateTime? maxNow;
+
+  const ExpenseFormSheet({super.key, this.imagePath, this.expense, this.maxNow})
     : assert(imagePath != null || expense != null);
 
   @override
@@ -160,229 +168,158 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final text = Theme.of(context).textTheme;
     final categoryState = ref.watch(categoryProvider);
     final priorityState = ref.watch(priorityProvider);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    _isEditing ? 'Chỉnh sửa khoản chi' : 'Thêm khoản chi',
-                    style: Theme.of(context).textTheme.titleLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSquareImage(),
-                  if (_isEditing) ...[
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Ảnh không thể thay đổi sau khi đã lưu.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _captionController,
-                    textCapitalization: TextCapitalization.sentences,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Ghi chú (tùy chọn)',
-                      hintText: 'Ví dụ: Ăn trưa, mua sữa...',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _amountController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: const [ThousandsSeparatorInputFormatter()],
-                    decoration: const InputDecoration(
-                      labelText: 'Số tiền (VND)',
-                      hintText: '35.000',
-                      suffixText: '₫',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      final amount = CurrencyFormatter.parseInput(value ?? '');
-                      return amount == null || amount <= 0
-                          ? 'Nhập số tiền lớn hơn 0'
-                          : null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  ExpenseDateTimeField(
-                    value: _occurredAt,
-                    onChanged: (value) => setState(() {
-                      _occurredAt = value;
-                      _dateError = ExpenseDateLimits.validate(
-                        value,
-                        DateTime.now(),
-                      );
-                    }),
-                  ),
-                  if (_dateError != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      _dateError!,
-                      style: TextStyle(
-                        color: context.palette.danger,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  Text(
-                    'Danh mục',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 4),
-                  const Text('Không chọn tag sẽ tự xếp vào danh mục Khác.'),
-                  const SizedBox(height: 8),
-                  if (categoryState.isLoading &&
-                      categoryState.categories.isEmpty)
-                    const Center(child: CircularProgressIndicator())
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: categoryState.categories.map((category) {
-                        final selected = _selectedCategoryId == category.id;
-                        return ChoiceChip(
-                          avatar: IconHelper.getIconWidget(
-                            category.icon,
-                            size: 16,
-                          ),
-                          label: Text(category.name),
-                          selected: selected,
-                          onSelected: (value) => setState(() {
-                            _selectedCategoryId = value ? category.id : null;
-                          }),
-                        );
-                      }).toList(),
-                    ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Mức độ cần thiết',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  if (priorityState.levels.isEmpty)
-                    const Center(child: CircularProgressIndicator())
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: priorityState.levels.map((level) {
-                        final selected = _selectedPriority == level.id;
-                        return ChoiceChip(
-                          label: Text(level.name),
-                          selected: selected,
-                          selectedColor: level.color.withValues(alpha: 0.25),
-                          labelStyle: TextStyle(
-                            color: selected ? level.color : null,
-                            fontWeight: selected ? FontWeight.bold : null,
-                          ),
-                          onSelected: (value) {
-                            if (value) {
-                              setState(() => _selectedPriority = level.id);
-                            }
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _isSaving ? null : _saveExpense,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(_isEditing ? 'Lưu thay đổi' : 'Lưu khoản chi'),
-                  ),
-                ],
+    // `showPixelSheet` đã bọc SingleChildScrollView, ở đây chỉ cần Column.
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: SizedBox(
+              width: 260,
+              height: 260,
+              child: PixelReceiptImage.source(
+                _sourceImagePath,
+                expense: widget.expense,
+                semanticLabel: 'Ảnh khoản chi',
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSquareImage() {
-    final path = _sourceImagePath;
-    final placeholder = Container(
-      color: Colors.grey.shade200,
-      child: const Icon(Icons.broken_image_outlined, size: 56),
-    );
-
-    final storedPath = storagePathOf(path);
-    Widget image;
-    if (path == null || path.isEmpty) {
-      image = placeholder;
-    } else if (storedPath != null) {
-      // Ảnh đã nằm trên Cloud: chỉ hiển thị được qua signed URL.
-      final url = widget.expense?.displayImageUrl;
-      image = url == null
-          ? placeholder
-          : CachedNetworkImage(
-              imageUrl: url,
-              cacheKey: storedPath,
-              fit: BoxFit.cover,
-              placeholder: (_, __) => const Center(
-                child: CircularProgressIndicator(strokeWidth: 2),
+          if (_isEditing)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Ảnh không thể thay đổi sau khi đã lưu.',
+                textAlign: TextAlign.center,
+                style: text.bodySmall?.copyWith(color: palette.inkMuted),
               ),
-              errorWidget: (_, __, ___) => placeholder,
-            );
-    } else {
-      final file = File(path);
-      image = file.existsSync()
-          ? Image.file(
-              file,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => placeholder,
-            )
-          : placeholder;
-    }
-
-    return Semantics(
-      label: 'Ảnh của khoản chi',
-      image: true,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: AspectRatio(aspectRatio: 1, child: image),
+            ),
+          const SizedBox(height: 16),
+          PixelTextField(
+            label: 'Ghi chú (tùy chọn)',
+            hint: 'Ví dụ: Ăn trưa, mua sữa...',
+            controller: _captionController,
+            maxLines: 2,
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          const SizedBox(height: 16),
+          PixelTextField(
+            key: const Key('expenseAmountField'),
+            label: 'Số tiền (VND)',
+            hint: '35000',
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            textCapitalization: TextCapitalization.none,
+            inputFormatters: const [ThousandsSeparatorInputFormatter()],
+            validator: (value) {
+              final amount = CurrencyFormatter.parseInput(value ?? '');
+              return amount == null || amount <= 0
+                  ? 'Nhập số tiền lớn hơn 0'
+                  : null;
+            },
+          ),
+          const SizedBox(height: 20),
+          ExpenseDateTimeField(
+            value: _occurredAt,
+            maxNow: widget.maxNow,
+            onChanged: (next) => setState(() {
+              _occurredAt = next;
+              _dateError = ExpenseDateLimits.validate(
+                next,
+                widget.maxNow ?? DateTime.now(),
+              );
+            }),
+          ),
+          if (_dateError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                _dateError!,
+                style: text.bodySmall?.copyWith(color: palette.danger),
+              ),
+            ),
+          const SizedBox(height: 20),
+          Text('Danh mục', style: text.titleSmall),
+          const SizedBox(height: 4),
+          Text(
+            'Không chọn danh mục sẽ tự xếp vào Khác.',
+            style: text.bodySmall?.copyWith(color: palette.inkMuted),
+          ),
+          const SizedBox(height: 8),
+          if (categoryState.isLoading && categoryState.categories.isEmpty)
+            const PixelLoading(blocks: 3)
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final category in categoryState.categories)
+                  PixelChip(
+                    label: category.name,
+                    icon: IconHelper.normalizeIconKey(category.icon),
+                    selected: _selectedCategoryId == category.id,
+                    accent: palette.accentForCategory(category.name),
+                    onTap: () => setState(() {
+                      _selectedCategoryId = _selectedCategoryId == category.id
+                          ? null
+                          : category.id;
+                    }),
+                  ),
+              ],
+            ),
+          const SizedBox(height: 20),
+          Text('Mức độ cần thiết', style: text.titleSmall),
+          const SizedBox(height: 8),
+          if (priorityState.levels.isEmpty)
+            const PixelLoading(blocks: 3)
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final level in priorityState.levels)
+                  PixelChip(
+                    label: level.name,
+                    selected: _selectedPriority == level.id,
+                    accent: palette.priorityColor(level.id),
+                    onTap: () => setState(() => _selectedPriority = level.id),
+                  ),
+              ],
+            ),
+          const SizedBox(height: 24),
+          PixelButton(
+            label: _isEditing ? 'LƯU THAY ĐỔI' : 'LƯU KHOẢN CHI',
+            icon: 'check',
+            expanded: true,
+            isLoading: _isSaving,
+            onPressed: _isSaving ? null : _saveExpense,
+          ),
+        ],
       ),
     );
   }
+}
+
+Future<void> openExpenseForm(
+  BuildContext context, {
+  String? imagePath,
+  Expense? expense,
+  DateTime? maxNow,
+}) async {
+  await showPixelSheet<void>(
+    context: context,
+    title: expense == null ? 'Thêm khoản chi' : 'Chỉnh sửa khoản chi',
+    fullScreen: true,
+    builder: (_) => ExpenseFormSheet(
+      imagePath: imagePath,
+      expense: expense,
+      maxNow: maxNow,
+    ),
+  );
 }

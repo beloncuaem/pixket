@@ -109,15 +109,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await _loadFilteredExpenses();
   }
 
-  void _showEditSheet(Expense expense) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ExpenseFormSheet(expense: expense),
-    );
-  }
+  Future<void> _showEditSheet(Expense expense) =>
+      openExpenseForm(context, expense: expense);
 
   Future<void> _moveToTrash(Expense expense) async {
     final id = expense.id;

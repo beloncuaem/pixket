@@ -119,6 +119,28 @@ class PixelReceiptImage extends StatelessWidget {
     );
   }
 
+  /// Ảnh trong form khoản chi: khi sửa thì lấy dữ liệu đã lưu, khi tạo mới thì
+  /// lấy tệp tạm từ camera.
+  factory PixelReceiptImage.source(
+    String? path, {
+    Expense? expense,
+    String? semanticLabel,
+  }) {
+    if (expense != null) {
+      return PixelReceiptImage.fromExpense(
+        expense,
+        semanticLabel: semanticLabel,
+      );
+    }
+    final target = resolveReceiptImage(imagePath: path);
+    return PixelReceiptImage(
+      localPath: target.localPath,
+      displayUrl: target.url,
+      cacheKey: target.cacheKey,
+      semanticLabel: semanticLabel,
+    );
+  }
+
   final String? localPath;
   final String? displayUrl;
   final String? cacheKey;

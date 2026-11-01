@@ -170,13 +170,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   Future<void> _openExpenseForm({String? imagePath, Expense? expense}) async {
     final countBefore = buildFeedPhotos(ref.read(expenseProvider).expenses)
         .length;
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ExpenseFormSheet(imagePath: imagePath, expense: expense),
-    );
+    await openExpenseForm(context, imagePath: imagePath, expense: expense);
     if (!mounted) return;
 
     final photos = buildFeedPhotos(ref.read(expenseProvider).expenses);
