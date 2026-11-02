@@ -19,6 +19,7 @@ import '../../widgets/pixel/pixel_badge.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_panel.dart';
+import '../../widgets/pixel/rainbow_sweep.dart';
 import 'expense_form_sheet.dart';
 import 'feed_grid_screen.dart';
 import 'feed_helpers.dart';
@@ -149,7 +150,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     try {
       final picture = await _controller!.takePicture();
       if (!mounted) return;
-      await _openExpenseForm(imagePath: picture.path);
+      await RainbowSweep.play(
+        context,
+        onCovered: () {
+          if (mounted) _openExpenseForm(imagePath: picture.path);
+        },
+      );
     } catch (error) {
       debugPrint('Error taking picture: $error');
       if (mounted) _showSnackBar('Không thể chụp ảnh. Vui lòng thử lại.');

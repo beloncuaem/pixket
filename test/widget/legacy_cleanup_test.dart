@@ -71,8 +71,8 @@ void main() {
     test('pubspec và AppInfo cùng một phiên bản', () {
       final pubspec = File('pubspec.yaml').readAsStringSync();
       expect(pubspec, contains('version: ${AppInfo.version}+${AppInfo.build}'));
-      expect(AppInfo.version, '2.2.0');
-      expect(AppInfo.build, '3');
+      expect(AppInfo.version, '2.3.0');
+      expect(AppInfo.build, '4');
       expect(AppInfo.tagline, 'PIXEL JOURNAL');
     });
 

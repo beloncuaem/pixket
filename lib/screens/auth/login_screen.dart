@@ -11,6 +11,7 @@ import '../../widgets/pixel/pixel_divider.dart';
 import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_snack_bar.dart';
 import '../../widgets/pixel/pixel_text_field.dart';
+import '../../widgets/pixel/rainbow_rule.dart';
 import 'forgot_password_sheet.dart';
 import 'register_screen.dart';
 
@@ -132,6 +133,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textAlign: TextAlign.center,
                   style: text.bodySmall?.copyWith(color: palette.inkMuted),
                 ),
+                const SizedBox(height: 12),
+                const RainbowRule(),
                 const SizedBox(height: 24),
 
                 if (!authState.isConfigured) ...[

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../providers/app_settings_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_progress.dart';
 
 /// Tiến độ ngân sách tháng bằng các khối pixel; vượt hạn mức đổi sang hoa hồng.
-class BudgetProgressCard extends StatelessWidget {
+class BudgetProgressCard extends ConsumerWidget {
   const BudgetProgressCard({
     super.key,
     required this.spent,
@@ -20,7 +22,7 @@ class BudgetProgressCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final palette = context.palette;
     final text = Theme.of(context).textTheme;
 
@@ -72,7 +74,7 @@ class BudgetProgressCard extends StatelessWidget {
           PixelProgress(
             value: ratio,
             segments: 10,
-            fillColor: isOver ? palette.rose : palette.mint,
+            spendRamp: ref.watch(effectsProvider).chartSpendRamp,
           ),
           const SizedBox(height: 8),
           Text(

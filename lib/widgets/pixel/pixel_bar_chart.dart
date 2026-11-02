@@ -15,6 +15,7 @@ class PixelBarChart extends StatefulWidget {
     this.maxBars = 31,
     this.barColor,
     this.axisLabels = 6,
+    this.reference,
   });
 
   final List<DateTime> dates;
@@ -25,12 +26,25 @@ class PixelBarChart extends StatefulWidget {
   final Color? barColor;
   final int axisLabels;
 
+  /// Mốc tham chiếu (max của kỳ đang xem) để tô từng cột theo bậc mức chi.
+  final double? reference;
+
   @override
   State<PixelBarChart> createState() => _PixelBarChartState();
 }
 
 class _PixelBarChartState extends State<PixelBarChart> {
   int? _selected;
+
+  double? _t(double value) {
+    final ref = widget.reference;
+    return ref == null || ref <= 0 ? null : value / ref;
+  }
+
+  Color _barColor(Color fallback, double value) {
+    final t = _t(value);
+    return t == null ? fallback : context.palette.rampFill(t);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,13 +76,22 @@ class _PixelBarChartState extends State<PixelBarChart> {
     final maxValue = values.fold<double>(0, (a, b) => b > a ? b : a);
     final width = (dates.length * 14).clamp(0, 10000).toDouble();
 
+    // Nằm trong guard index: `_selected` cũ có thể vượt biên sau khi đổi kỳ.
+    String? tooltip;
+    if (_selected != null && _selected! < texts.length) {
+      final t = _t(values[_selected!]);
+      tooltip =
+          '${DateFormatter.formatDate(dates[_selected!])} • ${texts[_selected!]}'
+          '${t == null ? '' : ' • ${palette.rampLabel(t)}'}';
+    }
+
     return Semantics(
       container: true,
       label: pixelBarChartSemantics(dates, values, texts),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_selected != null && _selected! < texts.length)
+          if (tooltip != null)
             Container(
               key: const ValueKey('bar-tooltip'),
               margin: const EdgeInsets.only(bottom: 6),
@@ -78,7 +101,7 @@ class _PixelBarChartState extends State<PixelBarChart> {
                 border: Border.all(color: palette.lineStrong, width: 2),
               ),
               child: Text(
-                '${DateFormatter.formatDate(dates[_selected!])} • ${texts[_selected!]}',
+                tooltip,
                 style: text.labelLarge?.copyWith(color: palette.ink),
               ),
             ),
@@ -98,7 +121,7 @@ class _PixelBarChartState extends State<PixelBarChart> {
                         values[i],
                         texts[i],
                         maxValue,
-                        barColor,
+                        _barColor(barColor, values[i]),
                         palette,
                       ),
                   ],

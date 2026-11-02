@@ -54,7 +54,7 @@ khách hay ngoại tuyến.
 | FR-31 | Biểu đồ tự vẽ bằng khối pixel (tỉ trọng danh mục, mức độ cần thiết, theo ngày) kèm nhãn chữ và `Semantics`; đã gỡ `fl_chart`. | Đã có |
 | FR-32 | Vùng chạm ≥ 48×48 dp, chữ không chỉ dựa vào màu, lỗi hiển thị dưới field, test ở text scale 1.3×. | Đã có, cần xác minh thêm trên thiết bị |
 | FR-33 | Ảnh khoản chi chỉ render qua `PixelReceiptImage` với placeholder "Không tải được ảnh"; feed/lưới/thùng rác/danh mục theo ngôn ngữ Pixel. | Đã có |
-| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.2.0` / build `3`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
+| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.3.0` / build `4`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
 
 ## 4. Quy tắc dữ liệu
 
@@ -103,7 +103,7 @@ khách hay ngoại tuyến.
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
 - `flutter analyze`: không có issue nào.
-- `flutter test`: 289/289 bài pass (gồm 6 bài gate dọn dẹp trong
+- `flutter test`: 369/369 bài pass (gồm 6 bài gate dọn dẹp trong
   `test/widget/legacy_cleanup_test.dart`: không còn `AppColors`, `Icons.*`, 8 file widget cũ,
   mọi ảnh render qua `PixelReceiptImage`, `pubspec.yaml` khớp `AppInfo`).
 - `flutter build apk --debug`: **không chạy được trong phiên này** vì máy phát triển chưa có

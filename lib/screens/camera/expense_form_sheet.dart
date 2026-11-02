@@ -15,6 +15,7 @@ import '../../providers/expense_provider.dart';
 import '../../providers/priority_provider.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_chip.dart';
+import '../../widgets/pixel/pixel_confetti.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_receipt_image.dart';
 import '../../widgets/pixel/pixel_sheet.dart';
@@ -133,6 +134,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
       }
       if (!mounted) return;
+      PixelConfetti.burst(context);
       if (_isEditing) {
         ScaffoldMessenger.of(
           context,

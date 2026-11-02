@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/supabase_config.dart';
 import '../../core/constants/app_info.dart';
 import '../../core/theme/app_palette.dart';
+import '../../providers/app_settings_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
@@ -77,8 +78,44 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  pixelGroupHeader('GIAO DIỆN'),
+                  pixelGroupHeader('GIAO DIỆN & HIỆU ỨNG'),
                   _ThemeRow(isDarkMode: isDarkMode),
+                  const _EffectRow(
+                    settingKey: 'fx_stars',
+                    glyph: 'sparkle',
+                    label: 'Nền sao (chế độ tối)',
+                    hint: 'Chấm sao nhấp nháy trên nền đêm',
+                  ),
+                  const _EffectRow(
+                    settingKey: 'fx_rainbow_rule',
+                    glyph: 'grid',
+                    label: 'Vệt cầu vồng dưới header',
+                    hint: 'Dải 6 màu chạy ngang đầu màn hình',
+                  ),
+                  const _EffectRow(
+                    settingKey: 'fx_capture_sweep',
+                    glyph: 'camera',
+                    label: 'Cầu vồng quét khi chụp',
+                    hint: 'Chuyển cảnh sau khi bấm chụp',
+                  ),
+                  const _EffectRow(
+                    settingKey: 'fx_confetti',
+                    glyph: 'gift',
+                    label: 'Pháo giấy khi lưu',
+                    hint: '24 ô bay lên khi lưu khoản chi',
+                  ),
+                  const _EffectRow(
+                    settingKey: 'fx_mosaic',
+                    glyph: 'grid',
+                    label: 'Lật mosaic khi đổi mục',
+                    hint: 'Lưới ô lật khi chuyển tab',
+                  ),
+                  const _EffectRow(
+                    settingKey: 'chart_spend_ramp',
+                    glyph: 'chart',
+                    label: 'Biểu đồ tô theo mức chi',
+                    hint: 'Tắt để tô theo danh mục như cũ',
+                  ),
                   pixelGroupHeader('TÀI KHOẢN'),
                   _NavRow(
                     glyph: 'logout',
@@ -240,6 +277,70 @@ class _ThemeRow extends ConsumerWidget {
             onTap: () => ref.read(themeProvider.notifier).toggleTheme(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EffectRow extends ConsumerWidget {
+  final String settingKey;
+  final String glyph;
+  final String label;
+  final String hint;
+
+  const _EffectRow({
+    required this.settingKey,
+    required this.glyph,
+    required this.label,
+    required this.hint,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = context.palette;
+    final effects = ref.watch(effectsProvider);
+    final on = switch (settingKey) {
+      'fx_stars' => effects.stars,
+      'fx_rainbow_rule' => effects.rainbowRule,
+      'fx_capture_sweep' => effects.captureSweep,
+      'fx_confetti' => effects.confetti,
+      'fx_mosaic' => effects.mosaic,
+      _ => effects.chartSpendRamp,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: PixelPanel(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            AppIcon(name: glyph, size: 32, color: palette.inkMuted),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    hint,
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: palette.inkMuted),
+                  ),
+                ],
+              ),
+            ),
+            // Chỉ chip mang key: nếu _EffectRow cùng key thì find.byKey trả 2 widget.
+            PixelChip(
+              key: ValueKey(settingKey),
+              label: on ? 'BẬT' : 'TẮT',
+              icon: on ? 'check' : 'close',
+              selected: on,
+              showCheck: false,
+              onTap: () =>
+                  ref.read(effectsProvider.notifier).set(settingKey, !on),
+            ),
+          ],
+        ),
       ),
     );
   }

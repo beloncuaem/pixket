@@ -6,6 +6,7 @@ import '../core/navigation/app_section.dart';
 import '../core/theme/app_palette.dart';
 import 'pixel/app_icon.dart';
 import 'pixel/pixel_divider.dart';
+import 'pixel/pixel_logo.dart';
 
 class AppDrawer extends StatelessWidget {
   final AppSection selected;
@@ -59,7 +60,9 @@ class AppDrawer extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
                 child: Row(
                   children: [
-                    _Avatar(letter: AppInfo.name[0]),
+                    // Mark thương hiệu thay avatar chữ 'P' (cùng cỡ 40 nên không
+                    // đổi layout); avatar của người dùng nằm ở _ProfileCard.
+                    const PixelLogo(size: 40, mono: true),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

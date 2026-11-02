@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Supabase-Cloud%20Database-3ECF8E?logo=supabase&logoColor=white" alt="Supabase" />
   <img src="https://img.shields.io/badge/State-Riverpod%202.6-blue" alt="Riverpod" />
   <img src="https://img.shields.io/badge/Database-PostgreSQL-4169E1" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Tests-289%20Passed%20(100%25)-success" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-369%20Passed%20(100%25)-success" alt="Tests" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
 </p>
 
@@ -59,8 +59,19 @@ không có bản sao dữ liệu tài chính trên thiết bị và không cần
   có phiên bản tối cho nhật ký ảnh.
 - Font **VT323** (tiêu đề, số tiền) + **Be Vietnam Pro** (nội dung), bundle offline trong
   `assets/fonts/` kèm OFL — không dùng `google_fonts`, không tải font lúc chạy.
-- Nút/chip đổi trạng thái trong 120 ms, chuyển trang 160 ms — ngắn và có chủ đích.
+- Nút/chip đổi trạng thái trong 120 ms; chuyển khu vực lật lưới mosaic 260 ms.
 - Mọi mục chạm đều ≥ 48 dp; hỗ trợ text scale 1.3× (đã test ở 360×520).
+- 6 hiệu ứng thương hiệu, bật/tắt trong **Cài đặt → GIAO DIỆN & HIỆU ỨNG**; tất cả đều
+  tôn trọng `MediaQuery.disableAnimations` (giảm bậc, vẫn hoàn tất):
+
+  | Khoá | Mặc định | Hiệu ứng |
+  |---|---|---|
+  | `fx_stars` | bật (chỉ chế độ tối) | Nền sao pixel, nhấp nháy 1400 ms |
+  | `fx_rainbow_rule` | bật | Dải cầu vồng 6 màu phẳng dưới header |
+  | `fx_capture_sweep` | bật | Vệt cầu vồng quét ngang sau khi chụp |
+  | `fx_confetti` | bật | Pháo giấy 24 ô 4×4 khi lưu khoản chi |
+  | `fx_mosaic` | **tắt** | Lật lưới mosaic 8×14 khi đổi khu vực |
+  | `chart_spend_ramp` | bật | Biểu đồ/ngân sách tô theo bậc mức chi, kèm nhãn chữ |
 
 ### 4. 🔐 Xác thực Supabase
 - Đăng nhập/đăng ký **Email & Mật khẩu**.
@@ -108,7 +119,7 @@ không có bản sao dữ liệu tài chính trên thiết bị và không cần
 | **Camera & Ảnh** | `camera`, `image_picker`, `cached_network_image` | Chụp, chọn, cache ảnh cloud |
 | **Chia sẻ** | `share_plus` ^13.3.1 | Gửi file CSV qua share sheet |
 | **Môi trường** | `flutter_dotenv` ^5.2.1 | Đọc `.env` |
-| **Kiểm thử** | `flutter_test` | 289 Unit & Widget tests |
+| **Kiểm thử** | `flutter_test` | 369 Unit & Widget tests |
 
 ---
 
@@ -124,7 +135,7 @@ pixket/
 │   ├── core/
 │   │   ├── icons/             # pixel_glyph_data.dart (42 glyph 16×16)
 │   │   ├── theme/             # app_palette, app_theme, pixel_text_theme
-│   │   ├── constants/         # AppInfo (Pixket, 2.2.0+3), AppStrings
+│   │   ├── constants/         # AppInfo (Pixket, 2.3.0+4), AppStrings
 │   │   ├── config/            # supabase_config.dart
 │   │   └── utils/             # formatter, csv_builder, icon_helper, storage_paths
 │   ├── data/
@@ -144,8 +155,8 @@ pixket/
 │   │   └── onboarding/        # Giới thiệu lần đầu
 │   └── widgets/
 │       ├── app_drawer.dart    # Drawer 3 gạch
-│       └── pixel/             # 23 widget pixel (button, chip, panel, chart, ...)
-├── test/                      # 289 Unit & Widget tests
+│       └── pixel/             # 30 widget pixel (button, chip, panel, chart, star field, ...)
+├── test/                      # 369 Unit & Widget tests
 ├── supabase_setup.sql         # Bảng + RLS + Storage
 ├── .env.example               # Mẫu biến môi trường
 └── pubspec.yaml
@@ -243,7 +254,7 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ```bash
 flutter analyze     # No issues found!
-flutter test        # 289/289 passed
+flutter test        # 369/369 passed
 ```
 
 - **Unit Tests**: model, formatter VND/ngày, `ThousandsSeparatorInputFormatter`,

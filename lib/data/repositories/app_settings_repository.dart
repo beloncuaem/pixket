@@ -23,6 +23,16 @@ class AppSettingsRepository {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<bool> getBool(String key, {required bool fallback}) async {
+    final saved = await getString(key);
+    if (saved == 'true') return true;
+    if (saved == 'false') return false;
+    return fallback;
+  }
+
+  Future<void> setBool(String key, bool value) =>
+      setString(key, value ? 'true' : 'false');
+
   Future<void> remove(String key) async {
     final db = await DatabaseHelper.instance.database;
     await db.delete('app_settings', where: 'key = ?', whereArgs: [key]);

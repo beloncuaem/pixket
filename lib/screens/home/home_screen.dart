@@ -18,6 +18,7 @@ import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_screen_header.dart';
 import '../../widgets/pixel/pixel_snack_bar.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 import '../../widgets/pixel/pixel_text_field.dart';
 import '../camera/expense_form_sheet.dart';
 import 'budget_progress_card.dart';
@@ -141,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : fullName;
 
     return Scaffold(
-      backgroundColor: palette.canvas,
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
           SafeArea(
@@ -177,27 +178,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 14),
                   _buildSearchRow(palette),
                   const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _filter.isActive
-                              ? 'Kết quả lọc'
-                              : 'Giao dịch gần đây',
-                          style: text.titleMedium?.copyWith(
-                            color: palette.ink,
-                            fontWeight: FontWeight.bold,
+                  PixelStarSafe(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _filter.isActive
+                                ? 'Kết quả lọc'
+                                : 'Giao dịch gần đây',
+                            style: text.titleMedium?.copyWith(
+                              color: palette.ink,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      if (_filter.isActive)
-                        PixelButton(
-                          label: 'Xóa lọc',
-                          variant: PixelButtonVariant.ghost,
-                          onPressed: _resetFilters,
-                          icon: 'undo',
-                        ),
-                    ],
+                        if (_filter.isActive)
+                          PixelButton(
+                            label: 'Xóa lọc',
+                            variant: PixelButtonVariant.ghost,
+                            onPressed: _resetFilters,
+                            icon: 'undo',
+                          ),
+                      ],
+                    ),
                   ),
                   if (expenseState.errorMessage != null) ...[
                     const SizedBox(height: 10),
@@ -232,27 +235,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                   const SizedBox(height: 6),
                   if (expenseState.isLoading && expenseState.expenses.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 40),
-                      child: const PixelLoading(blocks: 3, label: 'Đang tải…'),
+                    const PixelStarSafe(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: PixelLoading(blocks: 3, label: 'Đang tải…'),
+                      ),
                     )
                   else if (expenseState.expenses.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: PixelEmptyState(
-                        glyph: 'receipt',
-                        title: _filter.isActive
-                            ? 'Không tìm thấy khoản chi'
-                            : 'Chưa có khoản chi nào',
-                        message: _filter.isActive
-                            ? 'Thử bỏ bớt bộ lọc.'
-                            : 'Mở camera và chụp khoản chi đầu tiên.',
-                        actionLabel: _filter.isActive
-                            ? 'XÓA BỘ LỌC'
-                            : 'MỞ CAMERA',
-                        onAction: _filter.isActive
-                            ? _resetFilters
-                            : widget.onOpenFeed,
+                    PixelStarSafe(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: PixelEmptyState(
+                          glyph: 'receipt',
+                          title: _filter.isActive
+                              ? 'Không tìm thấy khoản chi'
+                              : 'Chưa có khoản chi nào',
+                          message: _filter.isActive
+                              ? 'Thử bỏ bớt bộ lọc.'
+                              : 'Mở camera và chụp khoản chi đầu tiên.',
+                          actionLabel: _filter.isActive
+                              ? 'XÓA BỘ LỌC'
+                              : 'MỞ CAMERA',
+                          onAction: _filter.isActive
+                              ? _resetFilters
+                              : widget.onOpenFeed,
+                        ),
                       ),
                     )
                   else

@@ -101,7 +101,7 @@ void main() {
     expect(find.textContaining('QUÁ NGÂN SÁCH'), findsOneWidget);
     final progress = tester.widget<PixelProgress>(find.byType(PixelProgress));
     expect(progress.value, greaterThanOrEqualTo(1));
-    expect(progress.fillColor, isNotNull);
+    expect(progress.spendRamp, isTrue);
   });
 
   testWidgets('chưa đặt ngân sách hiện hướng dẫn đặt', (tester) async {

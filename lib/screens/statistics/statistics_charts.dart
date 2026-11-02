@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../providers/app_settings_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/statistics_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
@@ -75,6 +76,13 @@ class StatisticsCharts extends ConsumerWidget {
     ];
     final hasPriority = priorityValues.any((v) => v > 0);
 
+    final effects = ref.watch(effectsProvider);
+    // Mốc tham chiếu = max của kỳ đang xem (spec chốt #9).
+    final catMax = catEntries.isEmpty ? 0.0 : catEntries.first.value;
+    final priorityMax = priorityValues.fold<double>(0, (a, b) => b > a ? b : a);
+    final dayMax = series.values.fold<double>(0, (a, b) => b > a ? b : a);
+    final on = effects.chartSpendRamp;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -97,6 +105,8 @@ class StatisticsCharts extends ConsumerWidget {
                     value: entry.value,
                     total: stats.totalAmount,
                     valueText: CurrencyFormatter.format(entry.value),
+                    useSpendRamp: on,
+                    reference: on ? catMax : null,
                   ),
             ],
           ),
@@ -125,6 +135,7 @@ class StatisticsCharts extends ConsumerWidget {
                   valueTexts: [
                     for (final v in priorityValues) CurrencyFormatter.format(v),
                   ],
+                  reference: on ? priorityMax : null,
                 ),
             ],
           ),
@@ -140,6 +151,7 @@ class StatisticsCharts extends ConsumerWidget {
                 dates: series.dates,
                 values: series.values,
                 valueTexts: series.valueTexts,
+                reference: on ? dayMax : null,
               ),
             ],
           ),

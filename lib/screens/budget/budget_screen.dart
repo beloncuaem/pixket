@@ -7,6 +7,7 @@ import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../data/models/category.dart';
+import '../../providers/app_settings_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
@@ -147,7 +148,6 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
     ref.listen<BudgetState>(budgetProvider, (previous, next) {
       if (previous?.isLoading == true && !next.isLoading) _seedControllers();
     });
@@ -157,7 +157,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     final isLoading = budgetState.isLoading && budgetState.totalBudget == null;
 
     return Scaffold(
-      backgroundColor: palette.canvas,
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
           SafeArea(
@@ -272,7 +272,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               children: [
                 PixelProgress(
                   value: rawPercent,
-                  fillColor: isOver ? palette.rose : palette.mint,
+                  spendRamp: ref.watch(effectsProvider).chartSpendRamp,
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -395,7 +395,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               PixelProgress(
                 value: rawPercent,
                 segments: 12,
-                fillColor: isOver ? palette.rose : palette.mint,
+                spendRamp: ref.watch(effectsProvider).chartSpendRamp,
               ),
               const SizedBox(height: 6),
               Text(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/statistics_provider.dart';
@@ -99,14 +98,13 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
     final stats = ref.watch(statisticsProvider);
     final subtitle = _selectedRange == StatRange.custom
         ? '${DateFormatter.formatDate(_startDate)} – ${DateFormatter.formatDate(_endDate)}'
         : statRangeLabel(_selectedRange);
 
     return Scaffold(
-      backgroundColor: palette.canvas,
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
           SafeArea(

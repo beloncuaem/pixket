@@ -1,4 +1,4 @@
-# Cấu trúc dự án Pixket (v2.2 — Pixel Journal)
+# Cấu trúc dự án Pixket (v2.3 — Pixel Journal)
 
 > Cập nhật: 2026-11-01. Tài liệu phản ánh kiến trúc Cloud-only (Supabase), xác thực bắt buộc,
 > giao diện Pixel tự vẽ (icon 16×16, panel viền cứng) và ảnh hóa đơn bucket private + signed URL.
@@ -14,7 +14,7 @@ pixket/
 │   ├── core/
 │   │   ├── config/supabase_config.dart  # Đọc .env, khởi tạo Supabase, isInitialized
 │   │   ├── constants/
-│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.2.0, build 3, tagline
+│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.3.0, build 4, tagline
 │   │   │   └── app_strings.dart         # Nhãn cố định (mức độ cần thiết, v.v.)
 │   │   ├── icons/pixel_glyph_data.dart  # Bảng glyph pixel 16×16 (chuỗi hàng + palette index)
 │   │   ├── navigation/app_section.dart  # enum 4 khu vực: feed / dashboard / statistics / budget
@@ -54,10 +54,10 @@ pixket/
 │   │   ├── budget_provider.dart
 │   │   ├── statistics_provider.dart
 │   │   ├── priority_provider.dart
-│   │   ├── app_settings_provider.dart
+│   │   ├── app_settings_provider.dart          # onboarding, theme + effectsProvider (6 khoá hiệu ứng)
 │   │   └── theme_provider.dart
 │   ├── screens/
-│   │   ├── main_screen.dart                   # Scaffold + Drawer + AnimatedSwitcher 4 khu vực
+│   │   ├── main_screen.dart                   # Scaffold + Drawer + PixelTabBar + MosaicWipe 4 khu vực
 │   │   ├── onboarding/                        # Onboarding 3 bước
 │   │   ├── auth/                              # Login, Register, Quên mật khẩu, Đặt lại mật khẩu
 │   │   ├── camera/
@@ -80,7 +80,7 @@ pixket/
 │   │   │   └── statistics_charts.dart         # dailySeries + biểu đồ pixel
 │   │   ├── budget/budget_screen.dart          # Ngân sách theo tháng (yyyy-MM)
 │   │   ├── settings/
-│   │   │   ├── settings_screen.dart           # 4 nhóm DỮ LIỆU/GIAO DIỆN/TÀI KHOẢN/VỀ APP
+│   │   │   ├── settings_screen.dart           # 4 nhóm DỮ LIỆU/GIAO DIỆN & HIỆU ỨNG/TÀI KHOẢN/VỀ APP
 │   │   │   └── csv_export_sheet.dart          # showCsvExportSheet
 │   │   └── trash/trash_screen.dart            # Hàng khoản đã xóa + khôi phục
 │   └── widgets/
@@ -92,10 +92,17 @@ pixket/
 │           ├── pixel_badge.dart, pixel_button.dart, pixel_chip.dart,
 │           ├── pixel_dialog.dart, pixel_divider.dart, pixel_empty_state.dart,
 │           ├── pixel_expense_tile.dart, pixel_glyph.dart, pixel_loading.dart,
-│           ├── pixel_panel.dart, pixel_progress.dart, pixel_receipt_image.dart,
-│           ├── pixel_screen_header.dart, pixel_segmented.dart, pixel_share_bar.dart,
-│           ├── pixel_sheet.dart, pixel_snack_bar.dart, pixel_stacked_share.dart,
-│           ├── pixel_stat_tile.dart, pixel_bar_chart.dart, pixel_text_field.dart
+│           ├── pixel_logo.dart, pixel_panel.dart, pixel_progress.dart,
+│           ├── pixel_receipt_image.dart, pixel_screen_header.dart,
+│           ├── pixel_segmented.dart, pixel_share_bar.dart, pixel_sheet.dart,
+│           ├── pixel_snack_bar.dart, pixel_stacked_share.dart,
+│           ├── pixel_stat_tile.dart, pixel_bar_chart.dart, pixel_text_field.dart,
+│           ├── pixel_star_field.dart    # Nền sao (chỉ dark) + PixelStarSafe keep-out
+│           ├── rainbow_rule.dart        # Dải cầu vồng 6 drawRect dưới header
+│           ├── pixel_tab_bar.dart       # Tab bar đáy 4 khu vực
+│           ├── rainbow_sweep.dart       # Vệt cầu vồng quét sau khi chụp
+│           ├── pixel_confetti.dart      # Pháo giấy khi lưu khoản chi
+│           └── mosaic_wipe.dart         # Lật lưới mosaic khi đổi khu vực
 ├── test/
 │   ├── unit/                              # Model, formatter, state, palette, glyph, feed helper
 │   └── widget/                            # Screen, kit pixel, drawer, gate dọn dẹp
@@ -160,11 +167,12 @@ main() → SupabaseConfig.initialize() → PixketApp
 
 ## 4. Điều hướng giao diện
 
-`MainScreen` không dùng `NavigationBar` đáy. Mỗi màn hình chính có nút **3 gạch** pixel ở
-góc trên trái (`PixelScreenHeader`), các màn pushed dùng nút back cùng glyph.
+`MainScreen` điều hướng bằng **`PixelTabBar` đáy** (4 khu vực: CHỤP/SỔ/BIỂU/NGÂN) cộng với
+nút **3 gạch** pixel ở góc trên trái mỗi màn (`PixelScreenHeader`); các màn pushed dùng nút
+back cùng glyph. Đổi khu vực thì `MosaicWipe` lật lưới (tắt mặc định, xem bảng hiệu ứng).
 
 ```text
-MainScreen (Scaffold + Drawer)
+MainScreen (Scaffold + Drawer + PixelTabBar + PixelStarField nền)
 ├── AppSection.feed        → CameraScreen (Locket PageView dọc, HUD tối)
 ├── AppSection.dashboard   → HomeScreen (nền kem + pastel pixel)
 ├── AppSection.statistics  → StatisticsScreen
@@ -193,6 +201,23 @@ Drawer → push ManageCategoriesScreen / TrashScreen / SettingsScreen
 - `PixelPanel` viền cứng 2–3px, bóng lệch `(3,4)` không blur; `PixelButton`/`PixelChip`/
   `PixelIconButton` có vùng chạm ≥ 48dp.
 - Tiêu đề và số dùng VT323, chữ nội dung dùng Be Vietnam Pro (bundle trong `assets/fonts/`).
+
+### Hiệu ứng thương hiệu
+
+6 khoá lưu trong bảng `app_settings` (SQLite) qua `effectsProvider`
+(`lib/providers/app_settings_provider.dart`), bật/tắt ở **Cài đặt → GIAO DIỆN & HIỆU ỨNG**.
+Mọi hiệu ứng vẽ bậc rời (`floor`, không tween mượt), `isAntiAlias: false`, seed `20261102`,
+và tôn trọng `MediaQuery.disableAnimations` (giảm bậc nhưng vẫn hoàn tất, callback chạy đúng
+một lần). DB lỗi thì về mặc định, không crash.
+
+| Khoá | Mặc định | Widget | Nội dung |
+|---|---|---|---|
+| `fx_stars` | bật (chỉ dark) | `pixel_star_field.dart` | Nền sao 1 ô/3600px², nhấp nháy 1400 ms; `PixelStarSafe` khai báo vùng keep-out (nở 4 px) cho header/panel |
+| `fx_rainbow_rule` | bật | `rainbow_rule.dart` | Dải 6 `drawRect` màu phẳng dưới header, trượt một lần 1600 ms/14 bậc |
+| `fx_capture_sweep` | bật | `rainbow_sweep.dart` | Vệt cầu vồng nghiêng −12° quét 660 ms sau khi chụp; `onCovered` ở bậc che kín để mở form |
+| `fx_confetti` | bật | `pixel_confetti.dart` | 24 ô 4×4 nổ 480 ms khi lưu khoản chi, gắn vào root overlay |
+| `fx_mosaic` | **tắt** | `mosaic_wipe.dart` | Lưới 8×14 lật 260 ms khi đổi khu vực, đổi con ở mốc 0.5 |
+| `chart_spend_ramp` | bật | `pixel_progress/pixel_bar_chart/pixel_share_bar/pixel_stacked_share` | Tô theo bậc `rampFill(value/mốc)`; mốc = max của kỳ đang xem (progress = hạn mức). Luôn kèm nhãn chữ `rampLabel` (WCAG 1.4.1) |
 
 ## 5. Bảng dữ liệu
 
@@ -225,7 +250,7 @@ Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
 
 ```bash
 flutter analyze          # No issues found!
-flutter test             # 289/289 passed
+flutter test             # 369/369 passed
 ```
 
 - Unit: model, formatter VND/ngày, giới hạn ngày khoản chi, parse số có dấu nghìn,

@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/navigation/app_section.dart';
+import '../core/theme/app_palette.dart';
+import '../providers/app_settings_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/pixel/mosaic_wipe.dart';
+import '../widgets/pixel/pixel_star_field.dart';
+import '../widgets/pixel/pixel_tab_bar.dart';
 import 'budget/budget_screen.dart';
 import 'camera/camera_screen.dart';
 import 'categories/manage_categories_screen.dart';
@@ -76,6 +81,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
+      backgroundColor: context.palette.canvas,
       drawer: AppDrawer(
         selected: _section,
         onSelectSection: _selectSection,
@@ -90,11 +96,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             themeMode == ThemeMode.dark ||
             (themeMode == ThemeMode.system && isDark),
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 160),
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        child: _buildSection(_section),
+      bottomNavigationBar: PixelTabBar(
+        selected: _section,
+        onSelect: _selectSection,
+      ),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: PixelStarField()),
+          MosaicWipe(
+            transitionKey: _section,
+            enabled:
+                ref.watch(effectsProvider).mosaic &&
+                !MediaQuery.of(context).disableAnimations,
+            child: _buildSection(_section),
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pixket/core/theme/app_theme.dart';
@@ -16,9 +17,12 @@ void main() {
     createdAt: DateTime(2026, 11, 1, 13, 25),
   );
 
-  Widget wrap(Widget child) => MaterialApp(
-    theme: AppTheme.light,
-    home: Scaffold(body: SizedBox(width: 420, child: child)),
+  // PixelScreenHeader giờ chứa RainbowRule (Consumer) nên cần ProviderScope.
+  Widget wrap(Widget child) => ProviderScope(
+    child: MaterialApp(
+      theme: AppTheme.light,
+      home: Scaffold(body: SizedBox(width: 420, child: child)),
+    ),
   );
 
   testWidgets('tile hiện tên danh mục, ghi chú, số tiền và giờ', (

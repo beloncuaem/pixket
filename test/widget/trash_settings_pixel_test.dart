@@ -194,7 +194,12 @@ void main() {
     await tester.pumpWidget(_settings());
     await tester.pumpAndSettle();
 
-    for (final label in ['DỮ LIỆU', 'GIAO DIỆN', 'TÀI KHOẢN', 'VỀ APP']) {
+    for (final label in [
+      'DỮ LIỆU',
+      'GIAO DIỆN & HIỆU ỨNG',
+      'TÀI KHOẢN',
+      'VỀ APP',
+    ]) {
       expect(find.text(label), findsOneWidget);
     }
     expect(find.text('CÀI ĐẶT'), findsOneWidget);
@@ -202,7 +207,7 @@ void main() {
     expect(find.text('Quản lý danh mục'), findsOneWidget);
     expect(find.text('Thùng rác'), findsOneWidget);
     expect(find.text('Chế độ tối'), findsOneWidget);
-    expect(find.text('Phiên bản 2.2.0 • PIXEL JOURNAL'), findsOneWidget);
+    expect(find.text('Phiên bản 2.3.0 • PIXEL JOURNAL'), findsOneWidget);
     expect(find.byType(SwitchListTile), findsNothing);
     expect(find.byType(ListTile), findsNothing);
     expect(find.byType(Card), findsNothing);
@@ -228,6 +233,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(theme.toggles, 1);
 
+    // Nhóm hiệu ứng mới đẩy 'Đăng xuất' xuống dưới nếp gấp màn hình.
+    await tester.ensureVisible(find.text('Đăng xuất'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Đăng xuất'));
     await tester.pumpAndSettle();
     expect(find.text('ĐĂNG XUẤT?'), findsOneWidget);

@@ -11,9 +11,10 @@ class PixelStackedShare extends StatelessWidget {
     required this.labels,
     required this.glyphs,
     required this.values,
-    required this.colors,
+    this.colors = const [],
     required this.valueTexts,
     this.cells = 24,
+    this.reference,
   });
 
   final List<String> labels;
@@ -23,12 +24,35 @@ class PixelStackedShare extends StatelessWidget {
   final List<String> valueTexts;
   final int cells;
 
+  /// Mốc tham chiếu (max của kỳ đang xem); khi có thì [colors] bị bỏ qua.
+  final double? reference;
+
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
     final text = Theme.of(context).textTheme;
     final allocation = allocateCells(values, cells);
     final total = values.fold<double>(0, (a, b) => a + (b > 0 ? b : 0));
+
+    double? tOf(int i) => reference != null && reference! > 0 &&
+            i < values.length
+        ? values[i] / reference!
+        : null;
+
+    Color colorOf(int i) {
+      final t = tOf(i);
+      if (t != null) return palette.rampFill(t);
+      return i < colors.length ? colors[i] : palette.surfaceAlt;
+    }
+
+    Widget rampTag(int i) {
+      final t = tOf(i);
+      if (t == null) return const SizedBox.shrink();
+      return Text(
+        palette.rampLabel(t),
+        style: text.labelSmall?.copyWith(color: palette.rampInk(t)),
+      );
+    }
 
     final bars = <Widget>[];
     for (var i = 0; i < allocation.length; i++) {
@@ -38,7 +62,7 @@ class PixelStackedShare extends StatelessWidget {
             width: 8,
             height: 26,
             margin: const EdgeInsets.only(right: 1),
-            color: colors[i % colors.length],
+            color: colorOf(i),
           ),
         );
       }
@@ -67,7 +91,7 @@ class PixelStackedShare extends StatelessWidget {
                 Container(
                   width: 12,
                   height: 12,
-                  color: i < colors.length ? colors[i] : palette.surfaceAlt,
+                  color: colorOf(i),
                 ),
                 const SizedBox(width: 8),
                 AppIcon(
@@ -92,10 +116,21 @@ class PixelStackedShare extends StatelessWidget {
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 44,
-                  child: Text(
-                    sharePercent(i < values.length ? values[i] : 0, total),
-                    textAlign: TextAlign.end,
-                    style: text.labelSmall?.copyWith(color: palette.inkMuted),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        sharePercent(
+                          i < values.length ? values[i] : 0,
+                          total,
+                        ),
+                        textAlign: TextAlign.end,
+                        style: text.labelSmall?.copyWith(
+                          color: palette.inkMuted,
+                        ),
+                      ),
+                      rampTag(i),
+                    ],
                   ),
                 ),
               ],

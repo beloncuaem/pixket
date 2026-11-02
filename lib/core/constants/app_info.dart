@@ -4,8 +4,8 @@ class AppInfo {
   AppInfo._();
 
   static const String name = 'Pixket';
-  static const String version = '2.2.0';
-  static const String build = '3';
+  static const String version = '2.3.0';
+  static const String build = '4';
   static const String tagline = 'PIXEL JOURNAL';
   static const String aboutLabel = 'Phiên bản $version • $tagline';
 }

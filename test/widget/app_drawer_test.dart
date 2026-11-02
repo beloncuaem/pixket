@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pixket/core/navigation/app_section.dart';
 import 'package:pixket/widgets/app_drawer.dart';
 import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_logo.dart';
 
 AppDrawer _drawer({
   AppSection selected = AppSection.feed,
@@ -134,6 +135,8 @@ void main() {
       expect(find.text('Quang'), findsOneWidget);
       expect(find.text('quang@example.com'), findsOneWidget);
       expect(find.text('Cloud Sync'), findsOneWidget);
+      expect(find.byType(PixelLogo), findsOneWidget);
+      expect(tester.widget<PixelLogo>(find.byType(PixelLogo)).mono, isTrue);
 
       await tester.tap(find.byTooltip('Đăng xuất'));
       await tester.pumpAndSettle();

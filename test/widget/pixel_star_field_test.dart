@@ -1,0 +1,86 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/app_settings_provider.dart';
+import 'package:pixket/widgets/pixel/pixel_star_field.dart';
+
+import '../support/memory_settings.dart';
+
+Widget _host({bool dark = true, bool disableAnimations = false}) =>
+    ProviderScope(
+      overrides: [
+        effectsProvider.overrideWith(
+          (ref) =>
+              EffectSettingsNotifier(repository: MemorySettingsRepository()),
+        ),
+      ],
+      child: MaterialApp(
+        theme: dark ? AppTheme.dark : AppTheme.light,
+        // Builder + copyWith: `MediaQueryData(...)` dựng mới sẽ thay toàn bộ
+        // MediaQuery (size/brightness/padding về mặc định). Chỉ sửa một cờ thì
+        // dùng copyWith trên MediaQuery kế thừa.
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              disableAnimations: disableAnimations,
+            ),
+            child: const Scaffold(
+              body: SizedBox.expand(child: PixelStarField()),
+            ),
+          ),
+        ),
+      ),
+    );
+
+Finder _paint() => find.descendant(
+  of: find.byType(PixelStarField),
+  matching: find.byType(CustomPaint),
+);
+
+void main() {
+  test('cùng seed ra cùng vị trí sao', () {
+    const size = Size(360, 640);
+    final a = buildStarField(size);
+    final b = buildStarField(size);
+    expect(a, isNotEmpty);
+    for (var i = 0; i < a.length; i++) {
+      expect(a[i].x, b[i].x);
+      expect(a[i].y, b[i].y);
+      expect(a[i].cell, b[i].cell);
+    }
+  });
+
+  test('mật độ 1 ô / 3600 px2', () {
+    expect(
+      buildStarField(const Size(360, 640)).length,
+      (360 * 640 / 3600).round(),
+    );
+  });
+
+  test('keep-out nở thêm 4 px', () {
+    const rect = Rect.fromLTWH(10, 10, 20, 20);
+    expect(starKeptOut(const Offset(31, 20), [rect]), isTrue);
+    expect(starKeptOut(const Offset(35, 20), [rect]), isFalse);
+  });
+
+  testWidgets('theme light không vẽ sao', (tester) async {
+    await tester.pumpWidget(_host(dark: false));
+    await tester.pump();
+    expect(_paint(), findsNothing);
+  });
+
+  testWidgets('disableAnimations thì không còn controller chạy', (tester) async {
+    await tester.pumpWidget(_host(disableAnimations: true));
+    await tester.pump();
+    expect(_paint(), findsOneWidget, reason: 'sao vẫn vẽ, chỉ ngưng nhấp nháy');
+    expect(tester.binding.hasScheduledFrame, isFalse);
+  });
+
+  testWidgets('dark vẽ sao và nhấp nháy', (tester) async {
+    await tester.pumpWidget(_host());
+    await tester.pump();
+    expect(_paint(), findsOneWidget);
+    expect(tester.binding.hasScheduledFrame, isTrue);
+  });
+}

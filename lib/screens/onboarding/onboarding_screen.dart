@@ -8,6 +8,7 @@ import '../../providers/app_settings_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_panel.dart';
+import '../../widgets/pixel/rainbow_rule.dart';
 
 /// Ba glyph mở màn, lấy từ registry đã có (không thêm glyph mới).
 const List<String> onboardingGlyphs = ['wallet', 'cloud', 'chart'];
@@ -62,6 +63,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            const RainbowRule(),
             Align(
               alignment: Alignment.centerRight,
               child: Padding(
