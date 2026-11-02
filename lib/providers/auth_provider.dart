@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../core/utils/password_policy.dart';
 import '../data/repositories/auth_repository.dart';
 
 enum AuthStatus { initial, authenticated, unauthenticated, loading, error }
@@ -243,10 +245,13 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
       return 'Bạn thử quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.';
     }
     if (raw.contains('User already registered')) {
-      return 'Email này đã được đăng ký tài khoản.';
+      // Không xác nhận email đã tồn tại: message trung tính để chặn
+      // enumerate tài khoản qua form đăng ký.
+      return 'Nếu email còn trống, chúng tôi đã gửi link kích hoạt. '
+          'Nếu bạn đã có tài khoản, hãy đăng nhập hoặc dùng Quên mật khẩu.';
     }
     if (raw.contains('Password should be at least')) {
-      return 'Mật khẩu phải có ít nhất 6 ký tự.';
+      return PasswordPolicy.tooShortMessage;
     }
     if (raw.contains('AuthSessionMissingException') ||
         raw.contains('Session missing') ||
@@ -264,7 +269,7 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
       return 'Google chưa được bật trong Supabase. Hãy bật Google provider trong Authentication > Providers.';
     }
     if (raw.contains('redirect_uri') || raw.contains('redirect_to')) {
-      return 'URL chuyển hướng chưa được cho phép trong Supabase. Thêm io.supabase.chitieu://login-callback/ vào Redirect URLs.';
+      return 'URL chuyển hướng chưa được cho phép trong Supabase. Thêm io.supabase.pixket://login-callback/ vào Redirect URLs.';
     }
     if (raw.contains('canceled') || raw.contains('cancelled')) {
       return 'Bạn đã hủy đăng nhập Google.';
@@ -274,7 +279,14 @@ class AuthNotifier extends StateNotifier<AppAuthState> {
         raw.contains('network')) {
       return 'Không thể kết nối máy chủ. Kiểm tra mạng và thử lại.';
     }
-    return raw.replaceAll('Exception: ', '').replaceAll('AuthException: ', '');
+    // Mặc định không đưa raw exception ra UI: nó lộ chi tiết backend
+    // (AuthException message, stack, cấu hình) cho người dò.
+    if (kDebugMode) {
+      return raw
+          .replaceAll('Exception: ', '')
+          .replaceAll('AuthException: ', '');
+    }
+    return 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.';
   }
 
   @override

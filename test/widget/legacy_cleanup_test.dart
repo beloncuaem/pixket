@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/constants/app_info.dart';
+import 'package:pixket/core/constants/app_info.dart';
 
 List<File> _dartFiles(String root) => Directory(
   root,

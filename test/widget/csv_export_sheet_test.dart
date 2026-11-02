@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/screens/settings/csv_export_sheet.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/screens/settings/csv_export_sheet.dart';
 
 class _FakeCategoryNotifier extends StateNotifier<CategoryState>
     implements CategoryNotifier {

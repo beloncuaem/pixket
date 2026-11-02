@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/repositories/expense_image_mapping.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/repositories/expense_image_mapping.dart';
 
 /// Storage path thật luôn có segment đầu là id người dùng dạng UUID.
 const String u = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';

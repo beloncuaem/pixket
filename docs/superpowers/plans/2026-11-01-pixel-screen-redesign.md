@@ -8,12 +8,12 @@
 
 **Tech Stack:** Flutter 3.47.6 / Dart 3.13.5, Riverpod 2.6.1, `intl`, `cached_network_image` 3.4.1, `flutter_test`. **Không thêm dependency mới.** Bỏ `fl_chart` và `google_fonts`.
 
-**Spec:** `docs/superpowers/specs/2026-11-01-chi-tieu-pixel-redesign-design.md` — mục 3.6 (biểu đồ), 3.7 (feed/camera), 3.8 (chuyển động), 3.9 (accessibility), 5.1–5.12 (thiết kế từng màn), 6 (state rỗng/lỗi/tải), 8 (kiểm thử), 9 (rủi ro).
+**Spec:** `docs/superpowers/specs/2026-11-01-pixket-pixel-redesign-design.md` — mục 3.6 (biểu đồ), 3.7 (feed/camera), 3.8 (chuyển động), 3.9 (accessibility), 5.1–5.12 (thiết kế từng màn), 6 (state rỗng/lỗi/tải), 8 (kiểm thử), 9 (rủi ro).
 
 **Kế hoạch trước (phải xong trước khi chạy plan này):**
 1. `docs/superpowers/plans/2026-11-01-cloud-signed-url-keepalive.md` — `Expense.displayImageUrl`, `storagePathOf`, xoá object theo path.
 2. `docs/superpowers/plans/2026-11-01-pixel-foundation.md` — `AppPalette`, `AppTheme.light`/`AppTheme.dark`, glyph registry + `AppIcon`, component kit `lib/widgets/pixel/*`, `AppInfo`, drawer/`AppSection` pixel.
-3. `docs/superpowers/plans/2026-11-01-chi-tieu-features.md` — `ThousandsSeparatorInputFormatter`, `CurrencyFormatter.parseInput/toEditableText`, `ExpenseDateLimits`, `ExpenseDateTimeField`, quên mật khẩu, `CsvBuilder`/`CsvExportService`.
+3. `docs/superpowers/plans/2026-11-01-pixket-features.md` — `ThousandsSeparatorInputFormatter`, `CurrencyFormatter.parseInput/toEditableText`, `ExpenseDateLimits`, `ExpenseDateTimeField`, quên mật khẩu, `CsvBuilder`/`CsvExportService`.
 
 **Gate bắt buộc trước khi bắt đầu Task 1** (chạy và dán output vào báo cáo):
 
@@ -117,7 +117,7 @@ Tạo `test/unit/pixel_receipt_image_test.dart`:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
 
 void main() {
   group('resolveReceiptImage', () {
@@ -369,10 +369,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
       theme: AppTheme.light,
@@ -475,10 +475,10 @@ Tạo `test/widget/pixel_expense_tile_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_expense_tile.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_screen_header.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/widgets/pixel/pixel_expense_tile.dart';
+import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
 
 void main() {
   Expense makeExpense() => Expense(
@@ -932,7 +932,7 @@ Tạo `test/unit/pixel_allocate_test.dart`:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/utils/pixel_allocate.dart';
+import 'package:pixket/core/utils/pixel_allocate.dart';
 
 void main() {
   group('pixelFilledCells', () {
@@ -1123,10 +1123,10 @@ Tạo `test/widget/pixel_charts_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_bar_chart.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_share_bar.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_stacked_share.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/pixel_bar_chart.dart';
+import 'package:pixket/widgets/pixel/pixel_share_bar.dart';
+import 'package:pixket/widgets/pixel/pixel_stacked_share.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
       theme: AppTheme.light,
@@ -1662,14 +1662,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/app_settings_provider.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/screens/auth/login_screen.dart';
-import 'package:chi_tieu/screens/auth/register_screen.dart';
-import 'package:chi_tieu/screens/onboarding/onboarding_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/app_settings_provider.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/screens/auth/login_screen.dart';
+import 'package:pixket/screens/auth/register_screen.dart';
+import 'package:pixket/screens/onboarding/onboarding_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 class _FakeAppSettingsNotifier extends StateNotifier<AppSettingsState>
     implements AppSettingsNotifier {
@@ -1938,21 +1938,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/budget.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/providers/budget_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/providers/priority_provider.dart';
-import 'package:chi_tieu/screens/home/budget_progress_card.dart';
-import 'package:chi_tieu/screens/home/dashboard_summary.dart';
-import 'package:chi_tieu/screens/home/home_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_expense_tile.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_progress.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/budget.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/providers/budget_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/providers/priority_provider.dart';
+import 'package:pixket/screens/home/budget_progress_card.dart';
+import 'package:pixket/screens/home/dashboard_summary.dart';
+import 'package:pixket/screens/home/home_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_expense_tile.dart';
+import 'package:pixket/widgets/pixel/pixel_progress.dart';
 
 class _FakeExpenseNotifier extends StateNotifier<ExpenseState>
     implements ExpenseNotifier {
@@ -2490,12 +2490,12 @@ Tạo `test/widget/filter_sheet_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/screens/home/expense_filter_sheet.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_chip.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/screens/home/expense_filter_sheet.dart';
+import 'package:pixket/widgets/pixel/pixel_chip.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 void main() {
   final categories = [
@@ -2576,7 +2576,7 @@ void main() {
 }
 ```
 
-Đã chốt bằng cách đọc repo: `Category` **không** có constructor `const` (`lib/data/models/category.dart:8`) nên `categories` là `final`, còn `PriorityLevel` **có** constructor `const` (`lib/data/models/priority_level.dart:9`) nên `const priorities = [...]` giữ nguyên — chỉ cần thêm `colorValue:` và `sortOrder:` vì cả 4 tham số đều required. Thêm `import 'package:chi_tieu/widgets/pixel/pixel_button.dart';` cho nút 'Lọc'.
+Đã chốt bằng cách đọc repo: `Category` **không** có constructor `const` (`lib/data/models/category.dart:8`) nên `categories` là `final`, còn `PriorityLevel` **có** constructor `const` (`lib/data/models/priority_level.dart:9`) nên `const priorities = [...]` giữ nguyên — chỉ cần thêm `colorValue:` và `sortOrder:` vì cả 4 tham số đều required. Thêm `import 'package:pixket/widgets/pixel/pixel_button.dart';` cho nút 'Lọc'.
 
 Run: `flutter test test/widget/filter_sheet_test.dart`
 Expected: FAIL — URI `expense_filter_sheet.dart` không tồn tại.
@@ -2674,18 +2674,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/providers/priority_provider.dart';
-import 'package:chi_tieu/screens/camera/expense_form_sheet.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_chip.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/providers/priority_provider.dart';
+import 'package:pixket/screens/camera/expense_form_sheet.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_chip.dart';
+import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 class _FakeCategoryNotifier extends StateNotifier<CategoryState>
     implements CategoryNotifier {
@@ -2819,7 +2819,7 @@ void main() {
 }
 ```
 
-Thêm `import 'package:chi_tieu/widgets/pixel/pixel_sheet.dart';` vào file test (cho `showPixelSheet`). Kiểm tra `PriorityState` có constructor `const PriorityState({levels, isLoading})` (đã xác minh `lib/providers/priority_provider.dart:10`) và `CategoryState(categories: ...)` **không const** — sửa test theo nếu grep cho kết quả khác.
+Thêm `import 'package:pixket/widgets/pixel/pixel_sheet.dart';` vào file test (cho `showPixelSheet`). Kiểm tra `PriorityState` có constructor `const PriorityState({levels, isLoading})` (đã xác minh `lib/providers/priority_provider.dart:10`) và `CategoryState(categories: ...)` **không const** — sửa test theo nếu grep cho kết quả khác.
 
 Run: `export PATH="$PATH:/c/flutter/bin" && flutter test test/widget/expense_form_pixel_test.dart`
 Expected: FAIL — vẫn là `TextFormField`, chưa có `Key('expenseAmountField')`.
@@ -3068,14 +3068,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/providers/priority_provider.dart';
-import 'package:chi_tieu/screens/camera/camera_screen.dart';
-import 'package:chi_tieu/widgets/hamburger_button.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_badge.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/providers/priority_provider.dart';
+import 'package:pixket/screens/camera/camera_screen.dart';
+import 'package:pixket/widgets/hamburger_button.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_badge.dart';
 
 class _FakeExpenseNotifier extends StateNotifier<ExpenseState>
     implements ExpenseNotifier {
@@ -3247,14 +3247,14 @@ Tạo `test/widget/feed_photo_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_badge.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
-import 'package:chi_tieu/screens/camera/feed_grid_screen.dart';
-import 'package:chi_tieu/screens/camera/feed_photo_page.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/widgets/pixel/pixel_badge.dart';
+import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/screens/camera/feed_grid_screen.dart';
+import 'package:pixket/screens/camera/feed_photo_page.dart';
 
 final photos = [
   Expense(
@@ -3481,16 +3481,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/statistics_provider.dart';
-import 'package:chi_tieu/screens/statistics/statistics_charts.dart';
-import 'package:chi_tieu/screens/statistics/statistics_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_bar_chart.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_screen_header.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_segmented.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_share_bar.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_stacked_share.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/statistics_provider.dart';
+import 'package:pixket/screens/statistics/statistics_charts.dart';
+import 'package:pixket/screens/statistics/statistics_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_bar_chart.dart';
+import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
+import 'package:pixket/widgets/pixel/pixel_segmented.dart';
+import 'package:pixket/widgets/pixel/pixel_share_bar.dart';
+import 'package:pixket/widgets/pixel/pixel_stacked_share.dart';
 
 class _FakeStatsNotifier extends StateNotifier<StatisticsState>
     implements StatisticsNotifier {
@@ -3839,14 +3839,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/budget.dart';
-import 'package:chi_tieu/providers/budget_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/screens/budget/budget_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_progress.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_segmented.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/budget.dart';
+import 'package:pixket/providers/budget_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/screens/budget/budget_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_progress.dart';
+import 'package:pixket/widgets/pixel/pixel_segmented.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 class _FakeBudgetNotifier extends StateNotifier<BudgetState>
     implements BudgetNotifier {
@@ -4087,16 +4087,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/screens/categories/category_glyph_grid.dart';
-import 'package:chi_tieu/screens/categories/manage_categories_screen.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_badge.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_screen_header.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/screens/categories/category_glyph_grid.dart';
+import 'package:pixket/screens/categories/manage_categories_screen.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_badge.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 class _FakeCategoryNotifier extends StateNotifier<CategoryState>
     implements CategoryNotifier {
@@ -4251,7 +4251,7 @@ void main() {
 - [ ] **Step 2: Chạy test, xác nhận fail đúng**
 
 Run: `flutter test test/widget/categories_pixel_test.dart`
-Expected: FAIL — compile error `Target of URI doesn't exist: 'package:chi_tieu/screens/categories/category_glyph_grid.dart'`. Đây là fail dự kiến của Step 1; **không** dùng `@Skip` hay comment test để làm cho fail biến mất.
+Expected: FAIL — compile error `Target of URI doesn't exist: 'package:pixket/screens/categories/category_glyph_grid.dart'`. Đây là fail dự kiến của Step 1; **không** dùng `@Skip` hay comment test để làm cho fail biến mất.
 
 - [ ] **Step 3: Tạo `category_glyph_grid.dart`**
 
@@ -4736,18 +4736,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/providers/theme_provider.dart';
-import 'package:chi_tieu/screens/settings/settings_screen.dart';
-import 'package:chi_tieu/screens/trash/trash_screen.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_screen_header.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/providers/theme_provider.dart';
+import 'package:pixket/screens/settings/settings_screen.dart';
+import 'package:pixket/screens/trash/trash_screen.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
 
 Expense _deleted(int id) => Expense(
   id: id,
@@ -5640,7 +5640,7 @@ git rm lib/widgets/glass_card.dart lib/widgets/screen_background.dart \
 `git rm` chỉ an toàn khi các task trước đã được commit (lịch sử còn giữ được nội dung). Nếu chưa commit gì, dùng `rm` thường rồi `git add -A` ở Step 9: mọi file xóa đều đang nằm trong working tree nên không mất work của user.
 
 Sửa `test/unit/auth_and_supabase_test.dart`:
-- Xóa 2 dòng import `package:chi_tieu/core/constants/app_colors.dart` (dòng 4) và `package:chi_tieu/widgets/category_icon_badge.dart` (dòng 8).
+- Xóa 2 dòng import `package:pixket/core/constants/app_colors.dart` (dòng 4) và `package:pixket/widgets/category_icon_badge.dart` (dòng 8).
 - Xóa nguyên 2 group: `Fintech Colors Tests` (dòng 112-118) và `CategoryIconBadge Widget Tests` (dòng 120-131).
 - Giữ nguyên 3 group còn lại (`Auth State Tests`, `Storage Path Tests`, `IconHelper Tests`) — `IconHelper Tests` đã được plan 2 Task 6 đổi assertion sang `isA<AppIcon>()`; nếu vẫn thấy `isA<Icon>()` thì plan 2 chưa xong, **dừng và hoàn tất plan 2**.
 
@@ -5655,7 +5655,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/constants/app_info.dart';
+import 'package:pixket/core/constants/app_info.dart';
 
 List<File> _dartFiles(String root) => Directory(root)
     .listSync(recursive: true, followLinks: false)

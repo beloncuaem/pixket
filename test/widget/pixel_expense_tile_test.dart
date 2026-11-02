@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_expense_tile.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_screen_header.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_expense_tile.dart';
+import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
 
 void main() {
   Expense makeExpense() => Expense(

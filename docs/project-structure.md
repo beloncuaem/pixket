@@ -1,4 +1,4 @@
-# Cấu trúc dự án Piket (v2.2 — Pixel Journal)
+# Cấu trúc dự án Pixket (v2.2 — Pixel Journal)
 
 > Cập nhật: 2026-11-01. Tài liệu phản ánh kiến trúc Cloud-only (Supabase), xác thực bắt buộc,
 > giao diện Pixel tự vẽ (icon 16×16, panel viền cứng) và ảnh hóa đơn bucket private + signed URL.
@@ -6,7 +6,7 @@
 ## 1. Cây thư mục
 
 ```text
-chi_tieu/
+pixket/
 ├── assets/fonts/                        # VT323 + Be Vietnam Pro bundle offline (kèm OFL)
 ├── lib/
 │   ├── main.dart                        # Entry point: dotenv, Supabase, SQLite, ProviderScope
@@ -14,7 +14,7 @@ chi_tieu/
 │   ├── core/
 │   │   ├── config/supabase_config.dart  # Đọc .env, khởi tạo Supabase, isInitialized
 │   │   ├── constants/
-│   │   │   ├── app_info.dart            # Tên "Piket", version 2.2.0, build 3, tagline
+│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.2.0, build 3, tagline
 │   │   │   └── app_strings.dart         # Nhãn cố định (mức độ cần thiết, v.v.)
 │   │   ├── icons/pixel_glyph_data.dart  # Bảng glyph pixel 16×16 (chuỗi hàng + palette index)
 │   │   ├── navigation/app_section.dart  # enum 4 khu vực: feed / dashboard / statistics / budget
@@ -103,7 +103,7 @@ chi_tieu/
 │   ├── project-structure.md
 │   ├── requirements.md
 │   ├── supabase-keepalive.md
-│   ├── brand/piket_icon_1024.png
+│   ├── brand/pixket_icon_1024.png
 │   └── google-oauth-troubleshooting.md
 ├── .github/workflows/                     # keep-alive Supabase + build APK
 ├── android/                               # Manifest, quyền, OAuth deep link, icon pixel
@@ -140,7 +140,7 @@ PostgreSQL + RLS + Storage bucket private `expense-receipts`
 ## 3. Xác thực và điều hướng
 
 ```text
-main() → SupabaseConfig.initialize() → PiketApp
+main() → SupabaseConfig.initialize() → PixketApp
                                         │
                         chưa hoàn tất onboarding?
                               ├── có → OnboardingScreen
@@ -152,7 +152,7 @@ main() → SupabaseConfig.initialize() → PiketApp
 
 - `AuthStatus`: `initial → loading → authenticated | unauthenticated | error`.
 - Đăng nhập Google dùng OAuth trong trình duyệt hệ thống, quay về app qua deep link
-  `io.supabase.chitieu://login-callback/` (khai báo trong `android/app/src/main/AndroidManifest.xml`).
+  `io.supabase.pixket://login-callback/` (khai báo trong `android/app/src/main/AndroidManifest.xml`).
 - Trước khi mở trình duyệt, `AuthRepository.isGoogleProviderEnabled()` gọi
   `GET /auth/v1/settings`; nếu `external.google = false`, app hiện thông báo ngay.
 - Quên mật khẩu: `resetPasswordForEmail` (PKCE) → link đưa app về `ResetPasswordScreen`.
@@ -225,7 +225,7 @@ Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
 
 ```bash
 flutter analyze          # No issues found!
-flutter test             # 274/274 passed
+flutter test             # 289/289 passed
 ```
 
 - Unit: model, formatter VND/ngày, giới hạn ngày khoản chi, parse số có dấu nghìn,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/icons/pixel_glyph_data.dart';
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/utils/icon_helper.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_glyph.dart';
+import 'package:pixket/core/icons/pixel_glyph_data.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/utils/icon_helper.dart';
+import 'package:pixket/widgets/pixel/pixel_glyph.dart';
 
 void main() {
   test('pixelGlyphValidationError bắt đúng lỗi', () {

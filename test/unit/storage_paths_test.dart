@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/utils/storage_paths.dart';
-import 'package:chi_tieu/data/repositories/supabase_storage_service.dart';
+import 'package:pixket/core/utils/storage_paths.dart';
+import 'package:pixket/data/repositories/supabase_storage_service.dart';
 
 void main() {
   group('storagePathOf', () {
@@ -32,27 +32,31 @@ void main() {
       );
     });
 
-    test('trả null với URL lạ, bucket không có object, tệp cục bộ, giá trị rỗng', () {
-      expect(storagePathOf('https://example.com/image.jpg'), isNull);
-      expect(
-        storagePathOf(
-          'https://abc.supabase.co/storage/v1/object/public/expense-receipts',
-        ),
-        isNull,
-      );
-      expect(storagePathOf('/data/user/0/com.x/app/CACHE/IMG_1.jpg'), isNull);
-      expect(storagePathOf(null), isNull);
-      expect(storagePathOf('   '), isNull);
-    });
+    test(
+      'trả null với URL lạ, bucket không có object, tệp cục bộ, giá trị rỗng',
+      () {
+        expect(storagePathOf('https://example.com/image.jpg'), isNull);
+        expect(
+          storagePathOf(
+            'https://abc.supabase.co/storage/v1/object/public/expense-receipts',
+          ),
+          isNull,
+        );
+        expect(storagePathOf('/data/user/0/com.x/app/CACHE/IMG_1.jpg'), isNull);
+        expect(storagePathOf(null), isNull);
+        expect(storagePathOf('   '), isNull);
+      },
+    );
   });
 
   group('chunkList', () {
     test('chia đúng thứ tự và bỏ rỗng', () {
       expect(chunkList(<int>[], size: 3), isEmpty);
-      expect(
-        chunkList(List.generate(7, (i) => i), size: 3),
-        [[0, 1, 2], [3, 4, 5], [6]],
-      );
+      expect(chunkList(List.generate(7, (i) => i), size: 3), [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6],
+      ]);
     });
   });
 
@@ -79,10 +83,11 @@ void main() {
     });
 
     test('bỏ qua path rỗng', () async {
-      final result = await signPathsInChunks(
-        ['', '  ', 'a/1.jpg'],
-        signer: (batch) async => {for (final p in batch) p: 'u:$p'},
-      );
+      final result = await signPathsInChunks([
+        '',
+        '  ',
+        'a/1.jpg',
+      ], signer: (batch) async => {for (final p in batch) p: 'u:$p'});
       expect(result.keys, ['a/1.jpg']);
     });
   });
@@ -90,7 +95,12 @@ void main() {
   group('Hợp đồng service', () {
     test('bucket name và TTL dùng chung một nguồn cấu hình', () {
       expect(SupabaseStorageService.bucketName, receiptBucket);
-      expect(SupabaseStorageService.signedUrlTtlSeconds, 86400);
+      // Signed URL là bypass RLS: không được dài quá 1 giờ.
+      expect(
+        SupabaseStorageService.signedUrlTtlSeconds,
+        lessThanOrEqualTo(3600),
+      );
+      expect(SupabaseStorageService.signedUrlTtlSeconds, greaterThan(0));
     });
   });
 }

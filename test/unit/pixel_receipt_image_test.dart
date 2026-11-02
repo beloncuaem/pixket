@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
 
 /// `storagePathOf` chỉ công nhận path có tên tệp UUID thật (36 ký tự hex+dấu),
 /// nên fixture phải dùng uuid hợp lệ chứ không phải chuỗi "uuid" rút gọn.

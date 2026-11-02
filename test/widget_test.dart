@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/utils/currency_formatter.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/models/category.dart';
+import 'package:pixket/core/utils/currency_formatter.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/models/category.dart';
 
 void main() {
   group('CurrencyFormatter Tests', () {

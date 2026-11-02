@@ -5,11 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/utils/password_policy.dart';
 
 class AuthRepository {
-  /// Deep link đã khai báo trong AndroidManifest.xml (`io.supabase.chitieu`).
-  static const String recoveryRedirect =
-      'io.supabase.chitieu://login-callback/';
+  /// Deep link đã khai báo trong AndroidManifest.xml (`io.supabase.pixket`).
+  static const String recoveryRedirect = 'io.supabase.pixket://login-callback/';
 
   SupabaseClient? get _client => SupabaseConfig.client;
 
@@ -29,6 +29,11 @@ class AuthRepository {
       throw Exception(
         'Supabase chưa được cấu hình. Vui lòng kiểm tra file .env',
       );
+    }
+
+    final violation = PasswordPolicy.validate(password);
+    if (violation != null) {
+      throw Exception(violation);
     }
 
     return await client.auth.signUp(
@@ -72,7 +77,7 @@ class AuthRepository {
     try {
       return await client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: kIsWeb ? null : 'io.supabase.chitieu://login-callback/',
+        redirectTo: kIsWeb ? null : 'io.supabase.pixket://login-callback/',
       );
     } catch (e) {
       debugPrint('Google Sign-in error: $e');
@@ -144,8 +149,9 @@ class AuthRepository {
         'Supabase chưa được cấu hình. Vui lòng kiểm tra file .env',
       );
     }
-    if (newPassword.length < 6) {
-      throw Exception('Mật khẩu phải có ít nhất 6 ký tự.');
+    final violation = PasswordPolicy.validate(newPassword);
+    if (violation != null) {
+      throw Exception(violation);
     }
     await client.auth.updateUser(UserAttributes(password: newPassword));
   }

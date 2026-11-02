@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_chip.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_divider.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_panel.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_progress.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_chip.dart';
+import 'package:pixket/widgets/pixel/pixel_divider.dart';
+import 'package:pixket/widgets/pixel/pixel_panel.dart';
+import 'package:pixket/widgets/pixel/pixel_progress.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: AppTheme.light,

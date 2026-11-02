@@ -2,10 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
 
 const String _objectPath = '0f1c2b3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d/noon.png';
 

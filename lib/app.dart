@@ -41,8 +41,8 @@ class HomeTargetLoading extends StatelessWidget {
       const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
 
-class ChiTieuApp extends ConsumerWidget {
-  const ChiTieuApp({super.key});
+class PixketApp extends ConsumerWidget {
+  const PixketApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

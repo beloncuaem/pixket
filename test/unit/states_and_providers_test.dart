@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/providers/budget_provider.dart';
-import 'package:chi_tieu/providers/statistics_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/priority_provider.dart';
-import 'package:chi_tieu/providers/app_settings_provider.dart';
-import 'package:chi_tieu/data/models/budget.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
+import 'package:pixket/providers/budget_provider.dart';
+import 'package:pixket/providers/statistics_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/priority_provider.dart';
+import 'package:pixket/providers/app_settings_provider.dart';
+import 'package:pixket/data/models/budget.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/models/priority_level.dart';
 
 void main() {
   group('BudgetState Logic Tests', () {

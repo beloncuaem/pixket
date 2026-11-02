@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_badge.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_empty_state.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_loading.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_segmented.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_snack_bar.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/pixel_badge.dart';
+import 'package:pixket/widgets/pixel/pixel_empty_state.dart';
+import 'package:pixket/widgets/pixel/pixel_loading.dart';
+import 'package:pixket/widgets/pixel/pixel_segmented.dart';
+import 'package:pixket/widgets/pixel/pixel_snack_bar.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 Widget _wrap(Widget child) =>
     MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));

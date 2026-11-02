@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/utils/pixel_allocate.dart';
+import 'package:pixket/core/utils/pixel_allocate.dart';
 
 void main() {
   group('pixelFilledCells', () {

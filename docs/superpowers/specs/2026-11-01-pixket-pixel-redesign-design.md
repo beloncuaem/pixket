@@ -317,7 +317,7 @@ Viết lại theo hướng **idempotent** (chạy lại nhiều lần không l�
 ### 4.5 Quên mật khẩu & đặt lại mật khẩu
 
 - `AuthRepository.resetPassword(email)` gọi
-  `resetPasswordForEmail(email, redirectTo: 'io.supabase.chitieu://login-callback/')`.
+  `resetPasswordForEmail(email, redirectTo: 'io.supabase.pixket://login-callback/')`.
 - `AuthNotifier` lắng nghe `onAuthStateChange`; khi `event == AuthChangeEvent.passwordRecovery`
   bật `recoveryMode = true`.
 - `app.dart` ưu tiên: nếu `recoveryMode` → `ResetPasswordScreen`, không phụ thuộc
@@ -327,7 +327,7 @@ Viết lại theo hướng **idempotent** (chạy lại nhiều lần không l�
 - Link hết hạn/không hợp lệ → màn hình giải thích + nhập email gửi lại.
 - Login: liên kết "Quên mật khẩu?" mở sheet nhập email; sau khi gửi luôn hiện thông báo
   trung tính ("Nếu email tồn tại, bạn sẽ nhận được liên kết đặt lại") để tránh dò tài khoản.
-- Deep link Android đã có (`io.supabase.chitieu://login-callback`), không đổi manifest;
+- Deep link Android đã có (`io.supabase.pixket://login-callback`), không đổi manifest;
   tài liệu hóa việc thêm URL này vào Supabase Redirect URLs.
 
 ### 4.6 Xuất CSV
@@ -340,7 +340,7 @@ Viết lại theo hướng **idempotent** (chạy lại nhiều lần không l�
   - RFC 4180: bọc field chứa `,` `"` `\n`; nhân đôi `"`; luôn escape an toàn.
   - UTF-8 **có BOM** để Excel mở đúng tiếng Việt.
 - Tải dữ liệu: phân trang 1000 bản ghi/lần qua repository cho tới hết, chỉ khoản chưa xóa.
-- Ghi file tạm bằng `path_provider`, tên `chi-tieu_yyyyMMdd_HHmm.csv`, rồi mở share sheet
+- Ghi file tạm bằng `path_provider`, tên `pixket_yyyyMMdd_HHmm.csv`, rồi mở share sheet
   bằng `share_plus`. Xóa file tạm sau khi share (best-effort).
 - Entry: Cài đặt → "Xuất CSV"; loading + lỗi snackbar; không có dữ liệu → empty state.
 - Dependencies thêm: `share_plus`, `path_provider`. Không thêm package CSV.

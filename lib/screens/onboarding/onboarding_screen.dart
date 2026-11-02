@@ -26,7 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pages = const [
     _OnboardingPage(
       glyph: 'wallet',
-      title: 'Chào mừng đến với Piket',
+      title: 'Chào mừng đến với Pixket',
       description: 'Ghi lại khoản chi bằng ảnh và theo dõi ngân sách của bạn mọi lúc, mọi nơi.',
     ),
     _OnboardingPage(

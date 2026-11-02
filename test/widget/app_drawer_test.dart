@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/navigation/app_section.dart';
-import 'package:chi_tieu/widgets/app_drawer.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
+import 'package:pixket/core/navigation/app_section.dart';
+import 'package:pixket/widgets/app_drawer.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
 
 AppDrawer _drawer({
   AppSection selected = AppSection.feed,

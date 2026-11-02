@@ -45,7 +45,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (value == null || value.isEmpty) {
       return 'Vui lòng nhập mật khẩu';
     }
-    if (value.length < 6) return 'Mật khẩu từ 6 ký tự trở lên';
+    // Không áp sàn 8 ký tự ở đây: tài khoản tạo trước đó có thể đang dùng
+    // mật khẩu 6-7 ký tự, chặn ở màn đăng nhập sẽ tự khoá họ ngoài app.
     return null;
   }
 

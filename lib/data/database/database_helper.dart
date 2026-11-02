@@ -10,7 +10,7 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('chi_tieu.db');
+    _database = await _initDB('pixket.db');
     return _database!;
   }
 

@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/utils/amount_input_formatter.dart';
-import 'package:chi_tieu/core/utils/currency_formatter.dart';
-import 'package:chi_tieu/core/utils/date_formatter.dart';
-import 'package:chi_tieu/core/utils/expense_date_limits.dart';
+import 'package:pixket/core/utils/amount_input_formatter.dart';
+import 'package:pixket/core/utils/currency_formatter.dart';
+import 'package:pixket/core/utils/date_formatter.dart';
+import 'package:pixket/core/utils/expense_date_limits.dart';
 
 void main() {
   group('CurrencyFormatter Tests', () {

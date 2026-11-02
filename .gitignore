@@ -52,5 +52,18 @@ app.*.map.json
 .env.*
 !.env.example
 
+# Release signing: keystore và file cấu hình chứa mật khẩu ký app.
+# Không commit. Xem docs/release-signing.md.
+android/keystore.properties
+*.jks
+*.keystore
+
 # Verification screenshots
 .screenshots/
+
+# Báo cáo audit bảo mật: liệt kê lỗ hổng + đường dẫn máy local, giữ ở máy,
+# không đưa lên repo công khai.
+SECURITY_AUDIT_*.md
+
+# Knowledge-graph output (skill graphify), tái sinh được nên không theo dõi
+graphify-out/

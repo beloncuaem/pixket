@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_palette.dart';
+import '../../core/utils/password_policy.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/pixel_button.dart';
@@ -134,13 +135,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           controller: _passwordController,
                           obscureToggle: true,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Vui lòng nhập mật khẩu';
-                            }
-                            if (value.length < 6) {
-                              return 'Mật khẩu từ 6 ký tự trở lên';
-                            }
-                            return null;
+                            return PasswordPolicy.validate(value ?? '');
                           },
                         ),
                         const SizedBox(height: 12),

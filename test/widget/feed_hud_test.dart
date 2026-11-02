@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/providers/priority_provider.dart';
-import 'package:chi_tieu/screens/camera/camera_screen.dart';
-import 'package:chi_tieu/widgets/hamburger_button.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_badge.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/providers/priority_provider.dart';
+import 'package:pixket/screens/camera/camera_screen.dart';
+import 'package:pixket/widgets/hamburger_button.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_badge.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
 
 class _FakeExpenseNotifier extends StateNotifier<ExpenseState>
     implements ExpenseNotifier {

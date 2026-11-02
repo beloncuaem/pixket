@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/utils/csv_builder.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/repositories/csv_export_service.dart';
-import 'package:chi_tieu/data/repositories/expense_repository.dart';
+import 'package:pixket/core/utils/csv_builder.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/repositories/csv_export_service.dart';
+import 'package:pixket/data/repositories/expense_repository.dart';
 
 class _PagedRepo extends ExpenseRepository {
   _PagedRepo(this.pages);
@@ -85,7 +85,7 @@ void main() {
     test('embeds the export timestamp', () {
       expect(
         CsvExportService.buildFileName(DateTime(2026, 11, 1, 9, 4)),
-        'piket_20261101_0904.csv',
+        'pixket_20261101_0904.csv',
       );
     });
 

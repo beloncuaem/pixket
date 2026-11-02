@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/app_settings_provider.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/screens/auth/login_screen.dart';
-import 'package:chi_tieu/screens/auth/register_screen.dart';
-import 'package:chi_tieu/screens/onboarding/onboarding_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/app_settings_provider.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/screens/auth/login_screen.dart';
+import 'package:pixket/screens/auth/register_screen.dart';
+import 'package:pixket/screens/onboarding/onboarding_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 class _FakeAppSettingsNotifier extends StateNotifier<AppSettingsState>
     implements AppSettingsNotifier {
@@ -46,7 +46,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(_wrap(const OnboardingScreen()));
-    expect(find.text('Chào mừng đến với Piket'), findsOneWidget);
+    expect(find.text('Chào mừng đến với Pixket'), findsOneWidget);
     expect(find.text('BỎ QUA'), findsOneWidget);
     expect(find.text('TIẾP TỤC'), findsOneWidget);
     expect(find.byType(PixelButton), findsWidgets);

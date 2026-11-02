@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_palette.dart';
+import '../../core/utils/password_policy.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_panel.dart';
@@ -98,12 +99,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       label: 'Mật khẩu mới',
                       obscureToggle: true,
                       validator: (value) {
-                        final text = value ?? '';
-                        if (text.isEmpty) return 'Vui lòng nhập mật khẩu';
-                        if (text.length < 6) {
-                          return 'Mật khẩu từ 6 ký tự trở lên';
-                        }
-                        return null;
+                        return PasswordPolicy.validate(value ?? '');
                       },
                     ),
                     const SizedBox(height: 12),

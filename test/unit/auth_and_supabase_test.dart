@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
-import 'package:chi_tieu/core/utils/icon_helper.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
+import 'package:pixket/core/utils/icon_helper.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
 
 void main() {
   group('Auth State Tests', () {

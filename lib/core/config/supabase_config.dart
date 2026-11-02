@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'secure_session_storage.dart';
+
 class SupabaseConfig {
   static bool _isInitialized = false;
   static bool get isInitialized => _isInitialized;
@@ -42,7 +44,11 @@ class SupabaseConfig {
       _projectUrl = url;
       _publishableKey = publishableKey;
       try {
-        await Supabase.initialize(url: url, publishableKey: publishableKey);
+        await Supabase.initialize(
+          url: url,
+          publishableKey: publishableKey,
+          authOptions: _authOptions(uri),
+        );
         _isInitialized = true;
         debugPrint('Supabase initialized successfully.');
       } catch (error, stackTrace) {
@@ -65,5 +71,27 @@ class SupabaseConfig {
           'SUPABASE_URL hoặc SUPABASE_ANON_KEY trong .env không hợp lệ.';
       debugPrint('Supabase credentials are not configured correctly.');
     }
+  }
+
+  /// Trên mobile, session và PKCE verifier đi vào Android Keystore / iOS
+  /// Keychain thay vì SharedPreferences plaintext. Web giữ mặc định vì
+  /// localStorage là lựa chọn duy nhất ở đó.
+  static FlutterAuthClientOptions _authOptions(Uri uri) {
+    if (kIsWeb) return const FlutterAuthClientOptions();
+
+    // Trùng đúng key mà supabase_flutter dùng cho SharedPreferences, để
+    // migration trong SecureSessionLocalStorage đọc được bản ghi cũ và người
+    // dùng đang đăng nhập không bị văng ra.
+    final persistSessionKey = 'sb-${uri.host.split('.').first}-auth-token';
+
+    return FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+      persistSession: true,
+      autoRefreshToken: true,
+      localStorage: SecureSessionLocalStorage(
+        persistSessionKey: persistSessionKey,
+      ),
+      pkceAsyncStorage: SecureGotrueAsyncStorage(),
+    );
   }
 }

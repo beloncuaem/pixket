@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/budget.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/providers/budget_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/screens/budget/budget_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_progress.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_screen_header.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_segmented.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/budget.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/providers/budget_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/screens/budget/budget_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_progress.dart';
+import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
+import 'package:pixket/widgets/pixel/pixel_segmented.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 class _FakeBudgetNotifier extends StateNotifier<BudgetState>
     implements BudgetNotifier {

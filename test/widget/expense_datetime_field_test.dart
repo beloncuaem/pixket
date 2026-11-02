@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/screens/camera/expense_datetime_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/screens/camera/expense_datetime_field.dart';
 
 void main() {
   DateTime? captured;

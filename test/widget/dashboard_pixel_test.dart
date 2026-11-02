@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/budget.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/providers/budget_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/providers/priority_provider.dart';
-import 'package:chi_tieu/screens/home/budget_progress_card.dart';
-import 'package:chi_tieu/screens/home/dashboard_summary.dart';
-import 'package:chi_tieu/screens/home/home_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_expense_tile.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_progress.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/budget.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/providers/budget_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/providers/priority_provider.dart';
+import 'package:pixket/screens/home/budget_progress_card.dart';
+import 'package:pixket/screens/home/dashboard_summary.dart';
+import 'package:pixket/screens/home/home_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_expense_tile.dart';
+import 'package:pixket/widgets/pixel/pixel_progress.dart';
 
 class _FakeExpenseNotifier extends StateNotifier<ExpenseState>
     implements ExpenseNotifier {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/utils/amount_input_formatter.dart';
-import 'package:chi_tieu/core/utils/currency_formatter.dart';
+import 'package:pixket/core/utils/amount_input_formatter.dart';
+import 'package:pixket/core/utils/currency_formatter.dart';
 
 void main() {
   Future<TextEditingController> pumpAmountField(

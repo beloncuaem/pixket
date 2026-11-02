@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_bar_chart.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_share_bar.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_stacked_share.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/pixel_bar_chart.dart';
+import 'package:pixket/widgets/pixel/pixel_share_bar.dart';
+import 'package:pixket/widgets/pixel/pixel_stacked_share.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: AppTheme.light,

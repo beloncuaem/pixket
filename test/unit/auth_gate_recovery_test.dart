@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/app.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
+import 'package:pixket/app.dart';
+import 'package:pixket/providers/auth_provider.dart';
 
 void main() {
   test('onboarding wins over everything else', () {

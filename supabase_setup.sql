@@ -74,6 +74,12 @@ JOIN (
    AND k.lname = lower(c.name)
    AND k.id <> c.id;
 
+-- Bảng tạm này không có RLS nhưng nằm trong schema public mà PostgREST expose,
+-- và chứa id của mọi user. Thuộc quyền SELECT của anon/authenticated có thể do
+-- ALTER DEFAULT PRIVILEGES cấp sẵn, nên rút quyền ngay tại đây rồi mới cập nhật
+-- các bảng khác; DROP ở cuối migration vẫn là bước dọn dẹp.
+REVOKE ALL ON public._ct_category_dupes FROM PUBLIC, anon, authenticated;
+
 UPDATE public.expenses e SET category_id = d.keep_id
 FROM public._ct_category_dupes d WHERE e.category_id = d.dup_id;
 

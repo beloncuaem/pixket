@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/screens/settings/settings_screen.dart';
-import 'package:chi_tieu/screens/trash/trash_screen.dart';
-import 'package:chi_tieu/screens/categories/manage_categories_screen.dart';
-import 'package:chi_tieu/screens/onboarding/onboarding_screen.dart';
-import 'package:chi_tieu/providers/theme_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/expense_provider.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
+import 'package:pixket/screens/settings/settings_screen.dart';
+import 'package:pixket/screens/trash/trash_screen.dart';
+import 'package:pixket/screens/categories/manage_categories_screen.dart';
+import 'package:pixket/screens/onboarding/onboarding_screen.dart';
+import 'package:pixket/providers/theme_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/expense_provider.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
 
 void main() {
   group('SettingsScreen Widget Tests', () {
@@ -41,7 +41,7 @@ void main() {
       );
 
       expect(find.text('BỎ QUA'), findsOneWidget);
-      expect(find.text('Chào mừng đến với Piket'), findsOneWidget);
+      expect(find.text('Chào mừng đến với Pixket'), findsOneWidget);
       expect(find.text('TIẾP TỤC'), findsOneWidget);
     });
   });

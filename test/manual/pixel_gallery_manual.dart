@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:chi_tieu/core/icons/pixel_glyph_data.dart';
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
+import 'package:pixket/core/icons/pixel_glyph_data.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
 
 void main() {
   runApp(

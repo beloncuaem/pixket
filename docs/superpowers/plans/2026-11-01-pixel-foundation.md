@@ -8,7 +8,7 @@
 
 **Tech Stack:** Flutter Material 3, Dart 3.13, VT323 + Be Vietnam Pro (variable), `flutter_test`, `CustomPainter`. Bỏ dependency `google_fonts`.
 
-**Spec:** [docs/superpowers/specs/2026-11-01-chi-tieu-pixel-redesign-design.md](../specs/2026-11-01-chi-tieu-pixel-redesign-design.md) — §3.2, §3.3, §3.4, §3.5, §3.9, §4.1, §4.2.
+**Spec:** [docs/superpowers/specs/2026-11-01-pixket-pixel-redesign-design.md](../specs/2026-11-01-pixket-pixel-redesign-design.md) — §3.2, §3.3, §3.4, §3.5, §3.9, §4.1, §4.2.
 
 **Depends on:** Plan 1 đã merge (repository/model ổn định để Plan 4 không xung đột).
 **Blocks:** Plan 4 (redesign màn hình dùng `context.palette`, `AppIcon`, component kit).
@@ -165,7 +165,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_palette.dart';
 
 // Color.r/.g/.b trả double 0.0-1.0 trên Flutter 3.47 (đã đo), nên nhân 255 trước.
 double luminance(Color c) {
@@ -556,8 +556,8 @@ Tạo `test/unit/app_theme_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_theme.dart';
 
 void main() {
   testWidgets('light theme cung cấp AppPalette và font bundle', (tester) async {
@@ -1030,8 +1030,8 @@ Tạo `test/unit/pixel_glyphs_test.dart`:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/icons/pixel_glyph_data.dart';
-import 'package:chi_tieu/core/utils/icon_helper.dart';
+import 'package:pixket/core/icons/pixel_glyph_data.dart';
+import 'package:pixket/core/utils/icon_helper.dart';
 
 void main() {
   test('pixelGlyphValidationError bắt đúng lỗi', () {
@@ -1223,7 +1223,7 @@ class _GlyphPainter extends CustomPainter {
 
 - [ ] **Step 6: Widget test painter**
 
-Thêm vào `test/unit/pixel_glyphs_test.dart` (cần `import 'package:flutter/material.dart';` và `import 'package:chi_tieu/widgets/pixel/pixel_glyph.dart';`):
+Thêm vào `test/unit/pixel_glyphs_test.dart` (cần `import 'package:flutter/material.dart';` và `import 'package:pixket/widgets/pixel/pixel_glyph.dart';`):
 
 ```dart
   testWidgets('PixelGlyph render không ném lỗi với glyph lạ', (tester) async {
@@ -1237,7 +1237,7 @@ Thêm vào `test/unit/pixel_glyphs_test.dart` (cần `import 'package:flutter/ma
     expect(tester.takeException(), isNull);
   });
 ```
-Thêm import `package:chi_tieu/core/theme/app_palette.dart`.
+Thêm import `package:pixket/core/theme/app_palette.dart`.
 
 - [ ] **Step 7: Chạy test**
 
@@ -1597,7 +1597,7 @@ git commit -m "feat(icons): add navigation pixel glyphs and AppIcon widgets"
       expect(IconHelper.getIconWidget('chưa_biết'), isA<AppIcon>());
     });
 ```
-Thêm `import 'package:chi_tieu/widgets/pixel/app_icon.dart';`.
+Thêm `import 'package:pixket/widgets/pixel/app_icon.dart';`.
 
 - [ ] **Step 2: Chạy test, xác nhận fail**
 
@@ -1678,10 +1678,10 @@ Tạo `test/manual/pixel_gallery_manual.dart` (thư mục `test/manual/` không 
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:chi_tieu/core/icons/pixel_glyph_data.dart';
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
+import 'package:pixket/core/icons/pixel_glyph_data.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
 
 void main() {
   runApp(
@@ -1742,13 +1742,13 @@ Tạo `test/widget/pixel_components_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/app_icon.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_chip.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_panel.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_progress.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_chip.dart';
+import 'package:pixket/widgets/pixel/pixel_panel.dart';
+import 'package:pixket/widgets/pixel/pixel_progress.dart';
 
 Widget _wrap(Widget child) =>
     MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
@@ -2243,13 +2243,13 @@ Tạo `test/widget/pixel_components_2_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_empty_state.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_segmented.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_snack_bar.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_loading.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_badge.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/widgets/pixel/pixel_empty_state.dart';
+import 'package:pixket/widgets/pixel/pixel_segmented.dart';
+import 'package:pixket/widgets/pixel/pixel_snack_bar.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/widgets/pixel/pixel_loading.dart';
+import 'package:pixket/widgets/pixel/pixel_badge.dart';
 
 Widget _wrap(Widget child) =>
     MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));

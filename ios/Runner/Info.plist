@@ -7,11 +7,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Chi Tiêu cần dùng camera để lưu ảnh cho mỗi khoản chi.</string>
+	<string>Pixket cần dùng camera để lưu ảnh cho mỗi khoản chi.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Piket cần truy cập thư viện ảnh để đính kèm ảnh cho mỗi khoản chi.</string>
+	<string>Pixket cần truy cập thư viện ảnh để đính kèm ảnh cho mỗi khoản chi.</string>
 	<key>CFBundleDisplayName</key>
-	<string>Piket</string>
+	<string>Pixket</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -19,7 +19,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>chi_tieu</string>
+	<string>pixket</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

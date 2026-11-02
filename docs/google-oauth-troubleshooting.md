@@ -68,7 +68,7 @@ mailer_autoconfirm: false
 6. Lưu lại **Client ID** và **Client Secret** (secret chỉ hiển thị đầy đủ một lần).
 
 > Đây là redirect URI của Supabase, không phải deep link của app. Deep link
-> `io.supabase.chitieu://login-callback/` được cấu hình ở bước 3.
+> `io.supabase.pixket://login-callback/` được cấu hình ở bước 3.
 
 ### Bước 2 — Bật Google provider trong Supabase
 
@@ -85,7 +85,7 @@ Supabase Dashboard → **Authentication → URL Configuration**:
 - **Redirect URLs**, thêm:
 
   ```text
-  io.supabase.chitieu://login-callback/
+  io.supabase.pixket://login-callback/
   ```
 
 - Nếu chạy Flutter web, thêm cả `http://localhost:<port>/**`.
@@ -98,7 +98,7 @@ Deep link này đã có trong
   <action android:name="android.intent.action.VIEW" />
   <category android:name="android.intent.category.DEFAULT" />
   <category android:name="android.intent.category.BROWSABLE" />
-  <data android:scheme="io.supabase.chitieu" android:host="login-callback" />
+  <data android:scheme="io.supabase.pixket" android:host="login-callback" />
 </intent-filter>
 ```
 
@@ -132,10 +132,10 @@ Chạy lại app, bấm Google. Nếu vẫn lỗi, xem mục 4.
 | Hiện tượng | Nguyên nhân | Cách sửa |
 | --- | --- | --- |
 | `redirect_uri_mismatch` | Redirect URI ở Google Cloud sai | Phải đúng `https://<ref>.supabase.co/auth/v1/callback` |
-| `redirect_to` / `redirect_uri` không hợp lệ trong app | Deep link chưa allowlist | Thêm `io.supabase.chitieu://login-callback/` vào Redirect URLs |
+| `redirect_to` / `redirect_uri` không hợp lệ trong app | Deep link chưa allowlist | Thêm `io.supabase.pixket://login-callback/` vào Redirect URLs |
 | `access_denied` | App OAuth đang ở chế độ Testing và tài khoản không nằm trong Test users | Thêm test user hoặc publish consent screen |
 | `Provider is not enabled` vẫn còn | Chưa Save provider hoặc đang xem nhầm project | Kiểm tra đúng project-ref và gọi lại `/auth/v1/settings` |
-| Đăng nhập xong không quay về app | Deep link không mở được | Kiểm tra `adb shell am start -a android.intent.action.VIEW -d "io.supabase.chitieu://login-callback/"` và cấu hình manifest |
+| Đăng nhập xong không quay về app | Deep link không mở được | Kiểm tra `adb shell am start -a android.intent.action.VIEW -d "io.supabase.pixket://login-callback/"` và cấu hình manifest |
 | Đăng ký email xong không đăng nhập được | `mailer_autoconfirm = false` | Xác nhận email, hoặc tắt **Confirm email** khi test |
 
 ## 5. Cải thiện đã thêm trong app

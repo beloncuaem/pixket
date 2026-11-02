@@ -9,7 +9,11 @@ import '../../core/utils/storage_paths.dart';
 /// Ảnh hóa đơn lưu trong bucket private; mọi hiển thị đi qua signed URL.
 class SupabaseStorageService {
   static const String bucketName = receiptBucket;
-  static const int signedUrlTtlSeconds = 86400;
+
+  /// Signed URL bypass RLS/storage policy với ai cầm được nó, nên TTL càng
+  /// ngắn càng tốt. 3600s đủ cho một lượt xem feed mà vẫn cắt cửa sổ rò từ
+  /// 24h xuống 1h; mỗi lần tải danh sách đều ký lại URL mới.
+  static const int signedUrlTtlSeconds = 3600;
 
   /// Tải ảnh lên storage, trả về path dạng `<user_id>/<file>` (không trả URL).
   Future<String> uploadReceiptImage(String localFilePath) async {

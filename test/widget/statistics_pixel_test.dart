@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/providers/statistics_provider.dart';
-import 'package:chi_tieu/screens/statistics/statistics_charts.dart';
-import 'package:chi_tieu/screens/statistics/statistics_screen.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_bar_chart.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_screen_header.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_segmented.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_share_bar.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_stacked_share.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_stat_tile.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/providers/statistics_provider.dart';
+import 'package:pixket/screens/statistics/statistics_charts.dart';
+import 'package:pixket/screens/statistics/statistics_screen.dart';
+import 'package:pixket/widgets/pixel/pixel_bar_chart.dart';
+import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
+import 'package:pixket/widgets/pixel/pixel_segmented.dart';
+import 'package:pixket/widgets/pixel/pixel_share_bar.dart';
+import 'package:pixket/widgets/pixel/pixel_stacked_share.dart';
+import 'package:pixket/widgets/pixel/pixel_stat_tile.dart';
 
 class _FakeStatsNotifier extends StateNotifier<StatisticsState>
     implements StatisticsNotifier {

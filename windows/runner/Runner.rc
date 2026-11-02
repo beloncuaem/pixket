@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.chitieu" "\0"
-            VALUE "FileDescription", "Piket" "\0"
+            VALUE "CompanyName", "com.pixket" "\0"
+            VALUE "FileDescription", "Pixket" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "chi_tieu" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.chitieu. All rights reserved." "\0"
-            VALUE "OriginalFilename", "chi_tieu.exe" "\0"
-            VALUE "ProductName", "Piket" "\0"
+            VALUE "InternalName", "pixket" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.pixket. All rights reserved." "\0"
+            VALUE "OriginalFilename", "pixket.exe" "\0"
+            VALUE "ProductName", "Pixket" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

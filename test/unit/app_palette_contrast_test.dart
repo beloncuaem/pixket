@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_palette.dart';
 
 // Color.r/.g/.b trả double 0.0-1.0 trên Flutter 3.47 (đã đo), nên nhân 255 trước.
 double luminance(Color c) {

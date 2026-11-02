@@ -8,7 +8,7 @@
 
 **Tech Stack:** Flutter 3.x / Dart 3.13, `supabase_flutter` 2.8.3 (`storage_client` 2.8.1, `gotrue` 2.27.3), `cached_network_image` 3.4.1, PostgreSQL RLS, GitHub Actions.
 
-**Spec:** [docs/superpowers/specs/2026-11-01-chi-tieu-pixel-redesign-design.md](../specs/2026-11-01-chi-tieu-pixel-redesign-design.md) — §3.7, §4.2, §4.3, §4.7, §6, §7, §9.
+**Spec:** [docs/superpowers/specs/2026-11-01-pixket-pixel-redesign-design.md](../specs/2026-11-01-pixket-pixel-redesign-design.md) — §3.7, §4.2, §4.3, §4.7, §6, §7, §9.
 
 ## Global Constraints
 
@@ -75,7 +75,7 @@ Tạo `test/unit/storage_paths_test.dart`:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/utils/storage_paths.dart';
+import 'package:pixket/core/utils/storage_paths.dart';
 
 void main() {
   group('storagePathOf', () {
@@ -166,7 +166,7 @@ void main() {
 - [ ] **Step 2: Chạy test, xác nhận fail vì thiếu file**
 
 Run: `flutter test test/unit/storage_paths_test.dart`
-Expected: FAIL — lỗi biên dịch `Target of URI doesn't exist: 'package:chi_tieu/core/utils/storage_paths.dart'`.
+Expected: FAIL — lỗi biên dịch `Target of URI doesn't exist: 'package:pixket/core/utils/storage_paths.dart'`.
 
 - [ ] **Step 3: Viết implementation tối thiểu**
 
@@ -286,7 +286,7 @@ git commit -m "feat(storage): add pure helpers for receipt paths and signed url 
 Thêm import:
 
 ```dart
-import 'package:chi_tieu/data/repositories/supabase_storage_service.dart';
+import 'package:pixket/data/repositories/supabase_storage_service.dart';
 ```
 
 - [ ] **Step 2: Chạy test, xác nhận fail**
@@ -400,7 +400,7 @@ class SupabaseStorageService {
 
 - [ ] **Step 4: Xóa test trùng đã chuyển chỗ**
 
-Trong `test/unit/auth_and_supabase_test.dart`: xóa `import 'package:chi_tieu/data/repositories/supabase_storage_service.dart';` (dòng 6) và toàn bộ `group('Storage Path Tests', ...)` (dòng 56-88) vì đã chuyển sang `test/unit/storage_paths_test.dart`.
+Trong `test/unit/auth_and_supabase_test.dart`: xóa `import 'package:pixket/data/repositories/supabase_storage_service.dart';` (dòng 6) và toàn bộ `group('Storage Path Tests', ...)` (dòng 56-88) vì đã chuyển sang `test/unit/storage_paths_test.dart`.
 
 - [ ] **Step 5: Chạy test và sửa tham chiếu cũ**
 
@@ -550,8 +550,8 @@ Tạo `test/unit/expense_image_mapping_test.dart`:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/repositories/expense_image_mapping.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/repositories/expense_image_mapping.dart';
 
 Expense _e(String? image, {String caption = 'A'}) => Expense(
   caption: caption,
@@ -675,10 +675,10 @@ Tạo `test/unit/expense_repository_write_test.dart`:
 ```dart
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/repositories/expense_repository.dart';
-import 'package:chi_tieu/data/repositories/expense_row_writer.dart';
-import 'package:chi_tieu/data/repositories/supabase_storage_service.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/repositories/expense_repository.dart';
+import 'package:pixket/data/repositories/expense_row_writer.dart';
+import 'package:pixket/data/repositories/supabase_storage_service.dart';
 
 class _FakeStorage extends SupabaseStorageService {
   final List<String> uploads = [];
@@ -1137,9 +1137,9 @@ Tạo `test/widget/signed_image_source_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/widgets/expense_card.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/widgets/expense_card.dart';
 
 void main() {
   testWidgets('ExpenseCard dùng displayImageUrl, không đọc imagePath làm URL', (tester) async {
@@ -1225,7 +1225,7 @@ Expected: FAIL — exception khi `Image.file(File('user-1/1710_204.jpg'))` đư�
   }
 ```
 
-Thêm import `package:chi_tieu/core/utils/storage_paths.dart` (hoặc đường dẫn tương đối `../core/utils/storage_paths.dart` tùy file đang dùng kiểu import).
+Thêm import `package:pixket/core/utils/storage_paths.dart` (hoặc đường dẫn tương đối `../core/utils/storage_paths.dart` tùy file đang dùng kiểu import).
 
 - [ ] **Step 4: Sửa các điểm đọc ảnh**
 

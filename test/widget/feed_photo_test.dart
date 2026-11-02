@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/screens/camera/feed_grid_screen.dart';
-import 'package:chi_tieu/screens/camera/feed_photo_page.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_badge.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/screens/camera/feed_grid_screen.dart';
+import 'package:pixket/screens/camera/feed_photo_page.dart';
+import 'package:pixket/widgets/pixel/pixel_badge.dart';
+import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
 
 const String _objectPath = '0f1c2b3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d/a.png';
 

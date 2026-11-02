@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/data/models/category.dart';
-import 'package:chi_tieu/data/models/priority_level.dart';
-import 'package:chi_tieu/screens/home/expense_filter_sheet.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_button.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_chip.dart';
-import 'package:chi_tieu/widgets/pixel/pixel_text_field.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/data/models/category.dart';
+import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/screens/home/expense_filter_sheet.dart';
+import 'package:pixket/widgets/pixel/pixel_button.dart';
+import 'package:pixket/widgets/pixel/pixel_chip.dart';
+import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
 void main() {
   final categories = [

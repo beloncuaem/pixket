@@ -4,11 +4,11 @@
 
 **Goal:** Thêm 4 tính năng người dùng đã chốt — nhập tiền tự chấm nhóm nghìn, chỉnh ngày giờ khoản chi, quên mật khẩu qua email, xuất CSV/sao lưu — mà không phá vỡ luồng cloud-only hiện tại.
 
-**Architecture:** Mọi logic có thể sai đều tách thành helper thuần (không import Flutter/Supabase) và unit test trước; UI chỉ còn là lớp mỏng gọi helper. Quên mật khẩu đi theo PKCE flow sẵn có của `supabase_flutter` và deep link `io.supabase.chitieu://login-callback/` đã được khai báo trong `AndroidManifest.xml:34-39`; app gate đọc cờ `recoveryMode` do sự kiện `PASSWORD_RECOVERY` đặt. CSV do `CsvBuilder` thuần dựng chuỗi (RFC 4180 + BOM), `CsvExportService` chịu trách nhiệm phân trang qua `ExpenseRepository.getExpenses(limit:, offset:)`, ghi file tạm và mở share sheet.
+**Architecture:** Mọi logic có thể sai đều tách thành helper thuần (không import Flutter/Supabase) và unit test trước; UI chỉ còn là lớp mỏng gọi helper. Quên mật khẩu đi theo PKCE flow sẵn có của `supabase_flutter` và deep link `io.supabase.pixket://login-callback/` đã được khai báo trong `AndroidManifest.xml:34-39`; app gate đọc cờ `recoveryMode` do sự kiện `PASSWORD_RECOVERY` đặt. CSV do `CsvBuilder` thuần dựng chuỗi (RFC 4180 + BOM), `CsvExportService` chịu trách nhiệm phân trang qua `ExpenseRepository.getExpenses(limit:, offset:)`, ghi file tạm và mở share sheet.
 
 **Tech Stack:** Flutter 3.47.6 / Dart 3.13.5 (đã xác minh bằng `flutter --version`), `intl`, `flutter/services` cho `TextInputFormatter`, `supabase_flutter ^2.8.3` (gotrue 2.27.3), `path_provider ^2.1.5` (đã có), `share_plus 13.3.1` (dependency mới duy nhất — đã xác minh `flutter pub add share_plus --dry-run` resolve đúng 13.3.1 với môi trường này), Riverpod 2.6.1 StateNotifier.
 
-**Spec:** `docs/superpowers/specs/2026-11-01-chi-tieu-pixel-redesign-design.md`
+**Spec:** `docs/superpowers/specs/2026-11-01-pixket-pixel-redesign-design.md`
 
 **Depends on:**
 - Plan 1 `docs/superpowers/plans/2026-11-01-cloud-signed-url-keepalive.md` — cần `ExpenseRepository.getExpenses({limit, offset})` (Task 5 Plan 1) cho phân trang CSV, và `Expense.imagePath` giờ là storage path.
@@ -318,8 +318,8 @@ Create `test/widget/amount_input_test.dart`:
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/utils/amount_input_formatter.dart';
-import 'package:chi_tieu/core/utils/currency_formatter.dart';
+import 'package:pixket/core/utils/amount_input_formatter.dart';
+import 'package:pixket/core/utils/currency_formatter.dart';
 
 void main() {
   Future<TextEditingController> pumpAmountField(
@@ -540,7 +540,7 @@ git commit -m "feat: group thousands in all amount inputs"
 
 - [ ] **Step 1: Viết test**
 
-Thêm vào cuối `test/unit/formatters_test.dart` và import `package:chi_tieu/core/utils/expense_date_limits.dart` ở đầu file:
+Thêm vào cuối `test/unit/formatters_test.dart` và import `package:pixket/core/utils/expense_date_limits.dart` ở đầu file:
 
 ```dart
   group('ExpenseDateLimits', () {
@@ -598,7 +598,7 @@ Thêm vào cuối `test/unit/formatters_test.dart` và import `package:chi_tieu/
 - [ ] **Step 2: Chạy test — FAIL vì thiếu file**
 
 Run: `flutter test test/unit/formatters_test.dart`
-Expected: FAIL — `Target of URI doesn't exist: 'package:chi_tieu/core/utils/expense_date_limits.dart'`.
+Expected: FAIL — `Target of URI doesn't exist: 'package:pixket/core/utils/expense_date_limits.dart'`.
 
 - [ ] **Step 3: Viết implementation**
 
@@ -679,9 +679,9 @@ Create `test/widget/expense_datetime_field_test.dart`:
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/theme/app_palette.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/screens/camera/expense_datetime_field.dart';
+import 'package:pixket/core/theme/app_palette.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/screens/camera/expense_datetime_field.dart';
 
 void main() {
   DateTime? captured;
@@ -960,7 +960,7 @@ git commit -m "feat: let users edit the date and time of an expense"
 **Interfaces:**
 - Consumes: `supabase_flutter` GOTRUE APIs đã xác minh: `GoTrueClient.resetPasswordForEmail(String email, {String? redirectTo, String? captchaToken})` trả `Future<void>` (gotrue-2.27.3 `lib/src/gotrue_client.dart:1116-1120`) và `GoTrueClient.updateUser(UserAttributes attributes, {String? emailRedirectTo})` trả `Future<UserResponse>` (`:891-893`), `UserAttributes({String? password, ...})` (`lib/src/types/user_attributes.dart:3-34`), `AuthChangeEvent.passwordRecovery` (`lib/src/constants.dart:39`).
 - Produces:
-  - `static const String AuthRepository.recoveryRedirect = 'io.supabase.chitieu://login-callback/';`
+  - `static const String AuthRepository.recoveryRedirect = 'io.supabase.pixket://login-callback/';`
   - `Future<void> AuthRepository.resetPassword(String email, {String redirectTo = recoveryRedirect})`
   - `Future<void> AuthRepository.updatePassword(String newPassword)`
   - `AppAuthState.recoveryMode` (`bool`, default `false`)
@@ -1133,8 +1133,8 @@ Thêm nhánh vào `_humanReadableError` (đặt cạnh các nhánh cũ):
 Thay `resetPassword` (`:117-126`) và thêm `updatePassword`:
 
 ```dart
-  /// Deep link đã khai báo trong AndroidManifest.xml (`io.supabase.chitieu`).
-  static const String recoveryRedirect = 'io.supabase.chitieu://login-callback/';
+  /// Deep link đã khai báo trong AndroidManifest.xml (`io.supabase.pixket`).
+  static const String recoveryRedirect = 'io.supabase.pixket://login-callback/';
 
   Future<void> resetPassword(
     String email, {
@@ -1204,9 +1204,9 @@ Create `test/widget/forgot_password_sheet_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/screens/auth/forgot_password_sheet.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/screens/auth/forgot_password_sheet.dart';
 
 class _FakeAuthNotifier extends StateNotifier<AppAuthState>
     implements AuthNotifier {
@@ -1475,8 +1475,8 @@ Create `test/unit/auth_gate_recovery_test.dart`:
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/app.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
+import 'package:pixket/app.dart';
+import 'package:pixket/providers/auth_provider.dart';
 
 void main() {
   test('onboarding wins over everything else', () {
@@ -1618,9 +1618,9 @@ Create `test/widget/reset_password_screen_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/screens/auth/reset_password_screen.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/screens/auth/reset_password_screen.dart';
 
 class _FakeAuthNotifier extends StateNotifier<AppAuthState>
     implements AuthNotifier {
@@ -1900,8 +1900,8 @@ Create `test/unit/csv_builder_test.dart`:
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/utils/csv_builder.dart';
-import 'package:chi_tieu/data/models/expense.dart';
+import 'package:pixket/core/utils/csv_builder.dart';
+import 'package:pixket/data/models/expense.dart';
 
 void main() {
   Expense build({
@@ -2118,10 +2118,10 @@ Create `test/unit/csv_export_service_test.dart`:
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/utils/csv_builder.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/repositories/csv_export_service.dart';
-import 'package:chi_tieu/data/repositories/expense_repository.dart';
+import 'package:pixket/core/utils/csv_builder.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/repositories/csv_export_service.dart';
+import 'package:pixket/data/repositories/expense_repository.dart';
 
 class _PagedRepo extends ExpenseRepository {
   _PagedRepo(this.pages);
@@ -2206,7 +2206,7 @@ void main() {
     test('embeds the export timestamp', () {
       expect(
         CsvExportService.buildFileName(DateTime(2026, 11, 1, 9, 4)),
-        'chi_tieu_20261101_0904.csv',
+        'pixket_20261101_0904.csv',
       );
     });
 
@@ -2267,7 +2267,7 @@ class CsvExportService {
   }
 
   static String buildFileName(DateTime now) =>
-      'chi_tieu_${DateFormat('yyyyMMdd_HHmm').format(now)}.csv';
+      'pixket_${DateFormat('yyyyMMdd_HHmm').format(now)}.csv';
 
   /// Ghi file vào thư mục tạm và trả đường dẫn.
   Future<String> exportFile({
@@ -2346,10 +2346,10 @@ Create `test/widget/csv_export_sheet_test.dart`:
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/theme/app_theme.dart';
-import 'package:chi_tieu/providers/auth_provider.dart';
-import 'package:chi_tieu/providers/category_provider.dart';
-import 'package:chi_tieu/screens/settings/csv_export_sheet.dart';
+import 'package:pixket/core/theme/app_theme.dart';
+import 'package:pixket/providers/auth_provider.dart';
+import 'package:pixket/providers/category_provider.dart';
+import 'package:pixket/screens/settings/csv_export_sheet.dart';
 
 class _FakeCategoryNotifier extends StateNotifier<CategoryState>
     implements CategoryNotifier {
@@ -2680,7 +2680,7 @@ Thêm mục:
 ```markdown
 ## Sao lưu & khôi phục dữ liệu
 
-- **Xuất CSV**: Cài đặt → Xuất CSV (sao lưu). File `chi_tieu_YYYYMMDD_HHmm.csv` mở bằng Excel/LibreOffice/Google Sheets; cột `ảnh` ghi đường dẫn trong bucket `expense-receipts`, không chứa ảnh nhúng.
+- **Xuất CSV**: Cài đặt → Xuất CSV (sao lưu). File `pixket_YYYYMMDD_HHmm.csv` mở bằng Excel/LibreOffice/Google Sheets; cột `ảnh` ghi đường dẫn trong bucket `expense-receipts`, không chứa ảnh nhúng.
 - **Khôi phục ảnh**: muốn mang ảnh theo sang project Supabase khác phải tải riêng từng object qua Storage API; CSV không tự tải ảnh.
 - **Nhập lại CSV**: chưa hỗ trợ. CSV là bản sao lưu để đọc và để nhập tay vào công cụ khác.
 ```
@@ -2718,6 +2718,6 @@ git commit -m "docs: describe csv export, password recovery and unverified flows
 - [ ] `grep -rn "double.tryParse\|replaceAll(',', '')" lib/screens/` → rỗng.
 - [ ] `grep -rn "TextInputType.number" lib/screens/ | wc -l` → `5`, mỗi nơi kèm `inputFormatters`.
 - [ ] `grep -rn "recoveryMode" lib/` → xuất hiện trong state, provider, app gate.
-- [ ] `grep -rn "service_role\|SUPABASE_ANON_KEY" lib/ .github/ docs/superpowers/plans/2026-11-01-chi-tieu-features.md` → rỗng (kế hoạch này không nhúng key).
+- [ ] `grep -rn "service_role\|SUPABASE_ANON_KEY" lib/ .github/ docs/superpowers/plans/2026-11-01-pixket-features.md` → rỗng (kế hoạch này không nhúng key).
 - [ ] Không còn `AppColors` trong 4 file mới tạo (`amount_input_formatter.dart`, `expense_datetime_field.dart`, `forgot_password_sheet.dart`, `reset_password_screen.dart`, `csv_export_sheet.dart`) — `grep -n "AppColors" <các file>` trả rỗng.
 - [ ] FR-24..FR-27 có trong `docs/requirements.md`, mục "Chưa xác minh" có trong README.

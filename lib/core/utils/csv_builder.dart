@@ -20,14 +20,28 @@ class CsvBuilder {
 
   static final DateFormat _dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
+  /// Ký tự mở đầu mà Excel/Google Sheets hiểu là công thức hoặc DDE.
+  /// `caption` là chuỗi người dùng nhập tự do nên ô bắt đầu bằng một trong
+  /// các ký tự này phải bị ép về kiểu text khi mở file.
+  static const String _formulaTriggerChars = '=+-@\t\r';
+
   static String escapeField(String value) {
+    final isFormula =
+        value.isNotEmpty && _formulaTriggerChars.contains(value[0]);
+    // Prefix ' khiến bảng tính coi ô là chuỗi literal, không tính công thức.
+    final safe = isFormula ? "'$value" : value;
+
+    // ';' cũng phải quote: ở locale dùng ';' làm phân tách, ô không quote
+    // sẽ bị tách thành nhiều cột.
     final mustQuote =
-        value.contains(',') ||
-        value.contains('"') ||
-        value.contains('\n') ||
-        value.contains('\r');
-    if (!mustQuote) return value;
-    return '"${value.replaceAll('"', '""')}"';
+        isFormula ||
+        safe.contains(',') ||
+        safe.contains(';') ||
+        safe.contains('"') ||
+        safe.contains('\n') ||
+        safe.contains('\r');
+    if (!mustQuote) return safe;
+    return '"${safe.replaceAll('"', '""')}"';
   }
 
   static String buildCsv({

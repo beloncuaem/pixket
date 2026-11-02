@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/data/repositories/expense_repository.dart';
-import 'package:chi_tieu/data/repositories/expense_row_writer.dart';
-import 'package:chi_tieu/data/repositories/supabase_storage_service.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/data/repositories/expense_repository.dart';
+import 'package:pixket/data/repositories/expense_row_writer.dart';
+import 'package:pixket/data/repositories/supabase_storage_service.dart';
 
 /// Storage path thật có segment đầu là id người dùng dạng UUID.
 const String u = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';

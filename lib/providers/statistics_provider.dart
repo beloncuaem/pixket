@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:chi_tieu/data/repositories/expense_repository.dart';
-import 'package:chi_tieu/data/repositories/category_repository.dart';
+import 'package:pixket/data/repositories/expense_repository.dart';
+import 'package:pixket/data/repositories/category_repository.dart';
 import 'package:intl/intl.dart';
 
 class StatisticsState {

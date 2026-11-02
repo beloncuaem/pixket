@@ -1,4 +1,4 @@
-# Yêu cầu và phạm vi dự án Piket (v2.2)
+# Yêu cầu và phạm vi dự án Pixket (v2.2)
 
 > Cập nhật: 2026-11-01.
 
@@ -79,7 +79,7 @@ khách hay ngoại tuyến.
   VT323 (tiêu đề số) + Be Vietnam Pro (chữ nội dung); không dùng `google_fonts`.
 - Ảnh được upload ngay khi lưu khoản chi và không giữ bản sao trên máy.
 - Không đưa khóa bí mật vào mã nguồn; chỉ dùng `SUPABASE_URL` và anon/publishable key từ `.env`.
-- Deep link OAuth: scheme `io.supabase.chitieu`, host `login-callback`.
+- Deep link OAuth: scheme `io.supabase.pixket`, host `login-callback`.
 - Mọi thay đổi phải chạy `flutter analyze` và `flutter test` trước khi bàn giao.
 
 ## 6. Phạm vi chưa triển khai
@@ -103,7 +103,7 @@ khách hay ngoại tuyến.
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
 - `flutter analyze`: không có issue nào.
-- `flutter test`: 274/274 bài pass (gồm 6 bài gate dọn dẹp trong
+- `flutter test`: 289/289 bài pass (gồm 6 bài gate dọn dẹp trong
   `test/widget/legacy_cleanup_test.dart`: không còn `AppColors`, `Icons.*`, 8 file widget cũ,
   mọi ảnh render qua `PixelReceiptImage`, `pubspec.yaml` khớp `AppInfo`).
 - `flutter build apk --debug`: **không chạy được trong phiên này** vì máy phát triển chưa có

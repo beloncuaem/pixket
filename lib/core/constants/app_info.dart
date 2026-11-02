@@ -3,7 +3,7 @@
 class AppInfo {
   AppInfo._();
 
-  static const String name = 'Piket';
+  static const String name = 'Pixket';
   static const String version = '2.2.0';
   static const String build = '3';
   static const String tagline = 'PIXEL JOURNAL';

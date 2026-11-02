@@ -35,7 +35,7 @@ class CsvExportService {
   }
 
   static String buildFileName(DateTime now) =>
-      'piket_${DateFormat('yyyyMMdd_HHmm').format(now)}.csv';
+      'pixket_${DateFormat('yyyyMMdd_HHmm').format(now)}.csv';
 
   /// Ghi file vào thư mục tạm và trả đường dẫn.
   Future<String> exportFile({
@@ -66,7 +66,7 @@ class CsvExportService {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(path)],
-        subject: 'Bản sao kê Piket',
+        subject: 'Bản sao kê Pixket',
         text:
             '${rows.length} khoản chi (${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}).',
       ),

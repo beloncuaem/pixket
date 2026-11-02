@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/data/models/expense.dart';
-import 'package:chi_tieu/screens/camera/feed_helpers.dart';
+import 'package:pixket/data/models/expense.dart';
+import 'package:pixket/screens/camera/feed_helpers.dart';
 
 Expense _expense({int? id, String? imagePath, required DateTime createdAt}) {
   return Expense(

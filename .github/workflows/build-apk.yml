@@ -92,6 +92,81 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
+      - name: Assert key là anon, không phải service_role
+        run: |
+          set -euo pipefail
+          # .env được đóng gói thành asset nên mọi thứ trong secret này nằm
+          # trong APK và tải được công khai. Chặn ngay ở CI nếu ai đó paste
+          # nhầm service_role key, thay vì để nó lọt ra thiết bị người dùng.
+          python3 - <<'PY'
+          import base64, json, os, sys
+
+          key = os.environ["SUPABASE_ANON_KEY"].strip()
+
+          if key.startswith(("sb_publishable_", "sb_anon_", "sb_")):
+              if "secret" in key:
+                  print("::error::Key publishable dạng secret. Dừng build.", file=sys.stderr)
+                  sys.exit(1)
+              print("Key ở dạng publishable mới: đạt.")
+              sys.exit(0)
+
+          parts = key.split(".")
+          if len(parts) != 3:
+              print(
+                  "::error::SUPABASE_ANON_KEY không phải JWT cũng không phải "
+                  "sb_publishable_*. Kiểm tra lại secret.",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          payload = parts[1] + "=" * (-len(parts[1]) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+          role = claims.get("role")
+          print(f"JWT claims: role={role} issuer={claims.get('iss')}")
+
+          if role in ("service_role", "supabase_admin", "postgres", "authenticated"):
+              print(
+                  f"::error::Key trong secret có role={role}. Key này sẽ bị "
+                  "phát tán trong APK. Thay bằng anon/publishable key.",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          if role != "anon":
+              print(f"::warning::role khác 'anon' (đang là {role!r}).", file=sys.stderr)
+
+          print("Assert anon key: đạt.")
+          PY
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Chuẩn bị keystore ký release
+        run: |
+          set -euo pipefail
+          # Không có keystore thì Gradle tự rơi về debug key (xem
+          # android/app/build.gradle.kts). Cảnh báo rõ ở đây để không ai tưởng
+          # APK tải về là bản ký chính thức.
+          if [ -z "${PIXKET_KEYSTORE_BASE64}" ]; then
+            echo "::warning::Thiếu secret PIXKET_KEYSTORE_BASE64 -> APK ký bằng debug key của runner. Bản này không dùng để phát hành."
+            {
+              echo "### Chữ ký APK"
+              echo ""
+              echo "Thiếu 4 secret \`PIXKET_KEYSTORE_BASE64 / PIXKET_KEYSTORE_PASSWORD / PIXKET_KEY_ALIAS / PIXKET_KEY_PASSWORD\` nên APK này ký bằng **debug key**. Xem \`docs/release-signing.md\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          printf '%s' "${PIXKET_KEYSTORE_BASE64}" | base64 -d > android/app-release.keystore
+          printf 'storeFile=app-release.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "${PIXKET_KEYSTORE_PASSWORD}" "${PIXKET_KEY_ALIAS}" "${PIXKET_KEY_PASSWORD}" \
+            > android/keystore.properties
+          echo "Đã chuẩn bị keystore (không in giá trị)."
+          echo "- APK bản này ký bằng **release keystore**." >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PIXKET_KEYSTORE_BASE64: ${{ secrets.PIXKET_KEYSTORE_BASE64 }}
+          PIXKET_KEYSTORE_PASSWORD: ${{ secrets.PIXKET_KEYSTORE_PASSWORD }}
+          PIXKET_KEY_ALIAS: ${{ secrets.PIXKET_KEY_ALIAS }}
+          PIXKET_KEY_PASSWORD: ${{ secrets.PIXKET_KEY_PASSWORD }}
+
       - name: Cài dependency
         run: flutter pub get
 
@@ -101,6 +176,6 @@ jobs:
       - name: Lưu artifact
         uses: actions/upload-artifact@v4
         with:
-          name: piket-release-apk
+          name: pixket-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error

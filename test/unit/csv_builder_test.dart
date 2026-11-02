@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chi_tieu/core/utils/csv_builder.dart';
-import 'package:chi_tieu/data/models/expense.dart';
+import 'package:pixket/core/utils/csv_builder.dart';
+import 'package:pixket/data/models/expense.dart';
 
 void main() {
   Expense build({
@@ -32,6 +32,27 @@ void main() {
       expect(CsvBuilder.escapeField('x"y'), '"x""y"');
       expect(CsvBuilder.escapeField('dòng 1\ndòng 2'), '"dòng 1\ndòng 2"');
       expect(CsvBuilder.escapeField('cr\r\nlf'), '"cr\r\nlf"');
+      expect(CsvBuilder.escapeField('a;b'), '"a;b"');
+    });
+
+    test('neutralises CSV formula injection in user-controlled text', () {
+      // Ô bắt đầu bằng = + - @ bị bảng tính tính như công thức -> prefix '.
+      expect(CsvBuilder.escapeField('=1+1'), "\"'=1+1\"");
+      expect(CsvBuilder.escapeField('+1'), "\"'+1\"");
+      expect(CsvBuilder.escapeField('-4'), "\"'-4\"");
+      expect(CsvBuilder.escapeField('@SUM(1+1)'), "\"'@SUM(1+1)\"");
+      expect(
+        CsvBuilder.escapeField("=cmd|'/c calc'!A1"),
+        '"\'=cmd|\'/c calc\'!A1"',
+        reason: 'RFC 4180 chỉ escape nháy kép, không escape nháy đơn',
+      );
+      // Ký tự điều khiển đứng đầu cũng bị chặn.
+      expect(CsvBuilder.escapeField('\t=1+1'), "\"'\t=1+1\"");
+    });
+
+    test('does not touch formula-looking text that is not at the start', () {
+      expect(CsvBuilder.escapeField('100 = 5+5'), '100 = 5+5');
+      expect(CsvBuilder.escapeField('email@example.com'), 'email@example.com');
     });
   });
 

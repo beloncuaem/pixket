@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/beloncuaem/chi_tieu/main/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="96" height="96" alt="Piket Logo" />
+  <img src="https://raw.githubusercontent.com/beloncuaem/pixket/main/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="96" height="96" alt="Pixket Logo" />
 </p>
 
-<h1 align="center">Piket — Pixel Expense Journal</h1>
+<h1 align="center">Pixket — Pixel Expense Journal</h1>
 
 <p align="center">
   <b>Nhật ký chi tiêu bằng ảnh kiểu Locket, giao diện Pixel tự vẽ, lưu trực tiếp trên Supabase (Auth, PostgreSQL RLS, Storage private) và bắt buộc đăng nhập.</b>
@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Supabase-Cloud%20Database-3ECF8E?logo=supabase&logoColor=white" alt="Supabase" />
   <img src="https://img.shields.io/badge/State-Riverpod%202.6-blue" alt="Riverpod" />
   <img src="https://img.shields.io/badge/Database-PostgreSQL-4169E1" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Tests-274%20Passed%20(100%25)-success" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-289%20Passed%20(100%25)-success" alt="Tests" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
 </p>
 
@@ -22,7 +22,7 @@
 
 ## 🌟 Giới thiệu
 
-**Piket** là ứng dụng quản lý tài chính cá nhân với trải nghiệm **nhật ký ảnh**:
+**Pixket** là ứng dụng quản lý tài chính cá nhân với trải nghiệm **nhật ký ảnh**:
 mở app là camera, chụp hóa đơn hoặc khoảnh khắc chi tiêu, rồi lướt dọc để xem lại
 từng khoản chi như một dòng thời gian. Điều hướng chính dùng nút **3 gạch** ở góc trên
 trái thay cho thanh tab đáy.
@@ -65,7 +65,7 @@ không có bản sao dữ liệu tài chính trên thiết bị và không cần
 ### 4. 🔐 Xác thực Supabase
 - Đăng nhập/đăng ký **Email & Mật khẩu**.
 - **Google OAuth** qua trình duyệt, quay lại app bằng deep link
-  `io.supabase.chitieu://login-callback/`.
+  `io.supabase.pixket://login-callback/`.
 - **Quên mật khẩu**: gửi link PKCE, mở link để về màn đặt lại mật khẩu trong app.
 - Bắt buộc đăng nhập; không có chế độ khách hay ngoại tuyến.
 - Kiểm tra provider Google trước khi mở trình duyệt để báo lỗi rõ ràng thay vì trang JSON.
@@ -108,14 +108,14 @@ không có bản sao dữ liệu tài chính trên thiết bị và không cần
 | **Camera & Ảnh** | `camera`, `image_picker`, `cached_network_image` | Chụp, chọn, cache ảnh cloud |
 | **Chia sẻ** | `share_plus` ^13.3.1 | Gửi file CSV qua share sheet |
 | **Môi trường** | `flutter_dotenv` ^5.2.1 | Đọc `.env` |
-| **Kiểm thử** | `flutter_test` | 274 Unit & Widget tests |
+| **Kiểm thử** | `flutter_test` | 289 Unit & Widget tests |
 
 ---
 
 ## 📁 Cấu trúc Thư mục
 
 ```text
-piket/
+pixket/
 ├── .github/workflows/         # supabase-keepalive.yml + build-apk.yml
 ├── android/                   # Manifest, quyền, OAuth deep link, icon pixel
 ├── assets/fonts/              # VT323 + Be Vietnam Pro bundle offline (OFL)
@@ -124,7 +124,7 @@ piket/
 │   ├── core/
 │   │   ├── icons/             # pixel_glyph_data.dart (42 glyph 16×16)
 │   │   ├── theme/             # app_palette, app_theme, pixel_text_theme
-│   │   ├── constants/         # AppInfo (Piket, 2.2.0+3), AppStrings
+│   │   ├── constants/         # AppInfo (Pixket, 2.2.0+3), AppStrings
 │   │   ├── config/            # supabase_config.dart
 │   │   └── utils/             # formatter, csv_builder, icon_helper, storage_paths
 │   ├── data/
@@ -145,7 +145,7 @@ piket/
 │   └── widgets/
 │       ├── app_drawer.dart    # Drawer 3 gạch
 │       └── pixel/             # 23 widget pixel (button, chip, panel, chart, ...)
-├── test/                      # 274 Unit & Widget tests
+├── test/                      # 289 Unit & Widget tests
 ├── supabase_setup.sql         # Bảng + RLS + Storage
 ├── .env.example               # Mẫu biến môi trường
 └── pubspec.yaml
@@ -164,8 +164,8 @@ Chi tiết xem tại [docs/project-structure.md](docs/project-structure.md).
 
 ### 2. Tải mã nguồn
 ```bash
-git clone https://github.com/beloncuaem/chi_tieu.git
-cd chi_tieu
+git clone https://github.com/beloncuaem/pixket.git
+cd pixket
 flutter pub get
 ```
 
@@ -186,7 +186,7 @@ flutter pub get
    Làm theo [docs/google-oauth-troubleshooting.md](docs/google-oauth-troubleshooting.md).
 6. Trong **Authentication → URL Configuration**, thêm redirect:
    ```text
-   io.supabase.chitieu://login-callback/
+   io.supabase.pixket://login-callback/
    ```
 
 > Không commit `.env` (đã nằm trong `.gitignore`). Chỉ anon/publishable key được nhúng
@@ -211,7 +211,7 @@ flutter run
 Cách 1 — GitHub Actions (khuyến nghị, không cần máy có Android SDK):
 mở tab **Actions** → workflow **Build APK** → **Run workflow**. Workflow chạy
 `flutter analyze` + `flutter test` trước, rồi build và đính kèm artifact
-`piket-release-apk` chứa `app-release.apk`. Cần thêm hai repository secret
+`pixket-release-apk` chứa `app-release.apk`. Cần thêm hai repository secret
 `SUPABASE_URL` và `SUPABASE_ANON_KEY` (anon key, không phải `service_role`).
 
 Cách 2 — build tại máy (cần Android SDK + JDK 17):
@@ -227,14 +227,14 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ## 💾 Sao lưu & khôi phục dữ liệu
 
-- **Xuất CSV**: Cài đặt → Xuất CSV (sao lưu). File `piket_YYYYMMDD_HHmm.csv` mở bằng
+- **Xuất CSV**: Cài đặt → Xuất CSV (sao lưu). File `pixket_YYYYMMDD_HHmm.csv` mở bằng
   Excel/LibreOffice/Google Sheets (BOM UTF-8); cột `ảnh` ghi đường dẫn trong bucket
   `expense-receipts`, không chứa ảnh nhúng. Danh sách dài được phân trang 1000 dòng.
 - **Khôi phục ảnh**: muốn mang ảnh theo sang project Supabase khác phải tải riêng từng object
   qua Storage API; CSV không tự tải ảnh.
 - **Nhập lại CSV**: chưa hỗ trợ. CSV là bản sao lưu để đọc và để nhập tay vào công cụ khác.
 - **Quên mật khẩu**: Màn hình đăng nhập → "Quên mật khẩu?" → nhập email. Supabase gửi link đặt lại;
-  mở link trên chính thiết bị đã cài app để deep link `io.supabase.chitieu://login-callback/`
+  mở link trên chính thiết bị đã cài app để deep link `io.supabase.pixket://login-callback/`
   đưa app về màn đặt mật khẩu mới.
 
 ---
@@ -243,7 +243,7 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ```bash
 flutter analyze     # No issues found!
-flutter test        # 274/274 passed
+flutter test        # 289/289 passed
 ```
 
 - **Unit Tests**: model, formatter VND/ngày, `ThousandsSeparatorInputFormatter`,
