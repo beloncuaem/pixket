@@ -8,19 +8,22 @@ git nên phải làm tay.
 
 ## 1. Đổi tên repository trên GitHub
 
-`gh` trên máy này chưa đăng nhập nên không đổi hộ được. Làm tay:
+**Đã xong (2026-11-02):** repo giờ là `https://github.com/beloncuaem/pixket`, branch mặc
+định `main`, image trong `README` (`raw.githubusercontent.com/beloncuaem/pixket/...`) đã
+trả về 200.
 
-1. Mở `https://github.com/beloncuaem/chi_tieu/settings` → mục **Repository name** →
-   nhập `pixket` → **Rename**.
-2. GitHub tự redirect người ghé qua URL cũ, nhưng remote của máy bạn thì không. Chạy:
+Việc còn lại ở máy bạn: trỏ remote vào tên mới. URL cũ vẫn redirect nên `git push`
+chưa hỏng, nhưng đừng để nó thành ẩn số:
 
-   ```powershell
-   git remote set-url origin https://github.com/beloncuaem/pixket.git
-   git fetch origin
-   ```
+```powershell
+git remote set-url origin https://github.com/beloncuaem/pixket.git
+git fetch origin
+git remote -v   # phải thấy pixket.git
+```
 
-3. Image `README` dùng URL `raw.githubusercontent.com/beloncuaem/pixket/...` nên chỉ
-   hiển thị sau khi rename xong.
+GitHub giữ redirect tới tên mới, nhưng nếu sau này ai tạo repo khác tên `chi_tieu`
+thì redirect chết — nên đổi luôn.
+
 
 ## 2. Đổi tên thư mục local
 
