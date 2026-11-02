@@ -39,11 +39,13 @@ class SupabaseStorageService {
         '${DateTime.now().millisecondsSinceEpoch}_${file.lengthSync()}.$extension';
     final storagePath = '${user.id}/$fileName';
 
-    await client.storage.from(bucketName).upload(
-      storagePath,
-      file,
-      fileOptions: FileOptions(contentType: contentType, upsert: false),
-    );
+    await client.storage
+        .from(bucketName)
+        .upload(
+          storagePath,
+          file,
+          fileOptions: FileOptions(contentType: contentType, upsert: false),
+        );
 
     return storagePath;
   }

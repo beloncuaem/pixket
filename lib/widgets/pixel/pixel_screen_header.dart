@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_palette.dart';
 import 'app_icon.dart';
 import 'pixel_logo.dart';
-import 'rainbow_rule.dart';
 
 /// Header pixel dùng cho mọi màn trừ feed/camera (màn đó có HUD tối riêng).
 class PixelScreenHeader extends StatelessWidget {
@@ -31,59 +30,49 @@ class PixelScreenHeader extends StatelessWidget {
     final palette = context.palette;
     final text = Theme.of(context).textTheme;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          constraints: const BoxConstraints(minHeight: 64),
-          padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
-          decoration: BoxDecoration(
-            color: background ?? palette.canvas,
-            border: Border(
-              bottom: BorderSide(color: palette.lineStrong, width: 3),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 64),
+      padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+      decoration: BoxDecoration(
+        color: background ?? palette.canvas,
+        border: Border(bottom: BorderSide(color: palette.lineStrong, width: 3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          leading ?? _buildLeading(palette),
+          const SizedBox(width: 8),
+          // Màn push (có nút back) không gắn mark để hàng không chật.
+          if (onBackTap == null) ...[
+            const PixelLogo(size: 24),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(title, style: text.headlineSmall),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodySmall?.copyWith(color: palette.inkMuted),
+                  ),
+                ],
+              ],
             ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              leading ?? _buildLeading(palette),
-              const SizedBox(width: 8),
-              // Màn push (có nút back) không gắn mark để hàng không chật.
-              if (onBackTap == null) ...[
-                const PixelLogo(size: 24),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(title, style: text.headlineSmall),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.bodySmall?.copyWith(
-                          color: palette.inkMuted,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (trailing != null) trailing!,
-            ],
-          ),
-        ),
-        const RainbowRule(),
-      ],
+          if (trailing != null) trailing!,
+        ],
+      ),
     );
   }
 
@@ -118,7 +107,7 @@ Widget pixelGroupHeader(String label) {
           children: [
             AppIcon(name: 'chevronRight', size: 16, color: palette.mintInk),
             const SizedBox(width: 6),
-            // Expanded + FittedBox: nhãn nhóm dài (vd 'GIAO DIỆN & HIỆU ỨNG')
+            // Expanded + FittedBox: nhãn nhóm dài (vd 'GIAO DIỆN & BIỂU ĐỒ')
             // phải co lại chứ không tràn Row ở text scale 1.3x.
             Expanded(
               child: FittedBox(

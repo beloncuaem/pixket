@@ -5,9 +5,7 @@ library;
 const String receiptBucket = 'expense-receipts';
 
 /// Path dạng `<uuid>/tên_tệp`; uuid là id người dùng nên không nhầm với tệp cục bộ.
-final RegExp _storedPathPattern = RegExp(
-  r'^[0-9a-fA-F][0-9a-fA-F-]{34,35}/.+',
-);
+final RegExp _storedPathPattern = RegExp(r'^[0-9a-fA-F][0-9a-fA-F-]{34,35}/.+');
 
 /// Suy ra path object từ giá trị đang lưu: path chuẩn, public URL legacy,
 /// signed URL. Trả null nếu là ảnh cục bộ hoặc giá trị không hợp lệ.
@@ -32,15 +30,17 @@ List<List<T>> chunkList<T>(List<T> items, {int size = 50}) {
   final chunkSize = size < 1 ? 1 : size;
   final result = <List<T>>[];
   for (var start = 0; start < items.length; start += chunkSize) {
-    final end =
-        start + chunkSize > items.length ? items.length : start + chunkSize;
+    final end = start + chunkSize > items.length
+        ? items.length
+        : start + chunkSize;
     result.add(items.sublist(start, end));
   }
   return result;
 }
 
-typedef SignedUrlSigner =
-    Future<Map<String, String>> Function(List<String> batch);
+typedef SignedUrlSigner = Future<Map<String, String>> Function(
+  List<String> batch,
+);
 
 /// Ký URL cho từng lô, khử trùng trước khi gọi signer.
 Future<Map<String, String>> signPathsInChunks(

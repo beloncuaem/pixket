@@ -1,7 +1,7 @@
 name: pixket
 description: "Pixket - Nhật ký chi tiêu pixel"
 publish_to: 'none'
-version: 2.3.0+4
+version: 2.4.0+5
 
 environment:
   sdk: ^3.13.5

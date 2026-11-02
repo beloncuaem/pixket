@@ -29,7 +29,8 @@ class PixelProgress extends StatelessWidget {
     final clamped = value.isNaN ? 0.0 : value.clamp(0.0, 1.0);
     final filled = (clamped * segments).round().clamp(0, segments);
     final over = value > 1;
-    final fill = fillColor ??
+    final fill =
+        fillColor ??
         (spendRamp
             ? (over ? palette.rose : palette.rampFill(clamped))
             : palette.mintStrong);

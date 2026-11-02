@@ -39,19 +39,42 @@ void main() {
             if (y >= y0 && y < y1) continue;
             // 'f' là gờ nhả chụp, cố ý nằm trên thân máy.
             final stray = rows[y].replaceAll('.', '').replaceAll('f', '');
-            expect(stray, isEmpty,
-                reason: 'n = $n simple=$simple có mực "$stray" ở hàng $y');
+            expect(
+              stray,
+              isEmpty,
+              reason: 'n = $n simple=$simple có mực "$stray" ở hàng $y',
+            );
           }
         }
       }
     });
 
-    test('bản mono chỉ dùng ink và ô trống', () {
+    test('chỉ dùng ký tự đã định nghĩa trong lưới', () {
+      const allowed = {
+        '.',
+        'k',
+        'b',
+        'f',
+        'h',
+        'g',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      };
       for (final n in [16, 24, 32]) {
-        for (final row in buildLogoGrid(n, mono: true)) {
-          for (final char in row.split('')) {
-            expect(char == 'k' || char == '.', isTrue,
-                reason: 'mono n = $n còn sót ký tự "$char"');
+        for (final simple in [false, true]) {
+          for (final char in buildLogoGrid(
+            n,
+            simple: simple,
+          ).join().split('')) {
+            expect(
+              allowed.contains(char),
+              isTrue,
+              reason: 'n = $n simple=$simple có ký tự lạ "$char"',
+            );
           }
         }
       }
@@ -80,26 +103,34 @@ void main() {
 
   group('PixelLogo', () {
     Future<void> pump(WidgetTester tester, Widget logo) async {
-      await tester.pumpWidget(MaterialApp(home: Scaffold(body: Center(child: logo))));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: Center(child: logo)),
+        ),
+      );
     }
 
     testWidgets('làm tròn size lẻ xuống bội số 8', (tester) async {
       await pump(tester, const PixelLogo(size: 25));
       expect(tester.takeException(), isNull);
-      final box = tester.widget<SizedBox>(find.descendant(
-        of: find.byType(PixelLogo),
-        matching: find.byType(SizedBox),
-      ));
+      final box = tester.widget<SizedBox>(
+        find.descendant(
+          of: find.byType(PixelLogo),
+          matching: find.byType(SizedBox),
+        ),
+      );
       expect(box.width, 24);
       expect(box.height, 24);
     });
 
     testWidgets('vẽ được ở cả hai theme', (tester) async {
       for (final brightness in Brightness.values) {
-        await tester.pumpWidget(MaterialApp(
-          theme: ThemeData(brightness: brightness),
-          home: const Scaffold(body: Center(child: PixelLogo())),
-        ));
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(brightness: brightness),
+            home: const Scaffold(body: Center(child: PixelLogo())),
+          ),
+        );
         expect(tester.takeException(), isNull, reason: '$brightness ném lỗi');
         expect(find.byType(CustomPaint), findsWidgets);
       }

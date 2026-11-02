@@ -11,6 +11,7 @@ import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/feed_hud.dart';
 import '../../widgets/pixel/pixel_badge.dart';
 import '../../widgets/pixel/pixel_receipt_image.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 
 /// Một trang ảnh trong nhật ký: ảnh full-bleed + panel thông tin bên dưới.
 class FeedPhotoPage extends StatelessWidget {
@@ -65,49 +66,55 @@ class FeedPhotoPage extends StatelessWidget {
               color: palette.feedPanel.withValues(alpha: 0.92),
               border: Border(top: BorderSide(color: palette.mint, width: 2)),
             ),
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FeedCaptionPanel(
-                      expense: expense,
-                      categoryName: categoryName,
-                      categoryGlyph: IconHelper.normalizeIconKey(
-                        category?.icon ?? 'tag',
-                      ),
-                      priorityName: priorityName,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+            child: Stack(
+              children: [
+                // Panel nền tối nên có sao; IgnorePointer giữ nút bấm hoạt động.
+                const Positioned.fill(child: PixelStarField()),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        PixelIconButton(
-                          key: const ValueKey('feed-edit'),
-                          icon: 'edit',
-                          tooltip: 'Chỉnh sửa khoản chi',
-                          onPressed: onEdit,
-                          background: palette.feedPanel,
-                          borderColor: palette.feedInk,
-                          iconColor: palette.feedInk,
+                        FeedCaptionPanel(
+                          expense: expense,
+                          categoryName: categoryName,
+                          categoryGlyph: IconHelper.normalizeIconKey(
+                            category?.icon ?? 'tag',
+                          ),
+                          priorityName: priorityName,
                         ),
-                        const SizedBox(width: 8),
-                        PixelIconButton(
-                          key: const ValueKey('feed-delete'),
-                          icon: 'trash',
-                          tooltip: 'Chuyển vào thùng rác',
-                          onPressed: onDelete,
-                          background: palette.feedPanel,
-                          borderColor: palette.feedInk,
-                          iconColor: palette.feedInk,
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            PixelIconButton(
+                              key: const ValueKey('feed-edit'),
+                              icon: 'edit',
+                              tooltip: 'Chỉnh sửa khoản chi',
+                              onPressed: onEdit,
+                              background: palette.feedPanel,
+                              borderColor: palette.feedInk,
+                              iconColor: palette.feedInk,
+                            ),
+                            const SizedBox(width: 8),
+                            PixelIconButton(
+                              key: const ValueKey('feed-delete'),
+                              icon: 'trash',
+                              tooltip: 'Chuyển vào thùng rác',
+                              onPressed: onDelete,
+                              background: palette.feedPanel,
+                              borderColor: palette.feedInk,
+                              iconColor: palette.feedInk,
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

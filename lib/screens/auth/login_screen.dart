@@ -10,8 +10,8 @@ import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_divider.dart';
 import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_snack_bar.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 import '../../widgets/pixel/pixel_text_field.dart';
-import '../../widgets/pixel/rainbow_rule.dart';
 import 'forgot_password_sheet.dart';
 import 'register_screen.dart';
 
@@ -94,151 +94,162 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: palette.canvas,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: palette.mint,
-                      border: Border.all(color: palette.lineStrong, width: 3),
-                    ),
-                    child: Center(
-                      child: AppIcon(
-                        name: 'camera',
-                        size: 32,
-                        color: palette.onAccent,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: PixelStarField()),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: palette.mint,
+                          border: Border.all(
+                            color: palette.lineStrong,
+                            width: 3,
+                          ),
+                        ),
+                        child: Center(
+                          child: AppIcon(
+                            name: 'camera',
+                            size: 32,
+                            color: palette.onAccent,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    AppInfo.name,
-                    textAlign: TextAlign.center,
-                    style: text.displaySmall?.copyWith(color: palette.ink),
-                  ),
-                ),
-                Text(
-                  'Đăng nhập để đồng bộ chi tiêu của bạn trên Cloud',
-                  textAlign: TextAlign.center,
-                  style: text.bodySmall?.copyWith(color: palette.inkMuted),
-                ),
-                const SizedBox(height: 12),
-                const RainbowRule(),
-                const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        AppInfo.name,
+                        textAlign: TextAlign.center,
+                        style: text.displaySmall?.copyWith(color: palette.ink),
+                      ),
+                    ),
+                    Text(
+                      'Đăng nhập để đồng bộ chi tiêu của bạn trên Cloud',
+                      textAlign: TextAlign.center,
+                      style: text.bodySmall?.copyWith(color: palette.inkMuted),
+                    ),
+                    const SizedBox(height: 24),
 
-                if (!authState.isConfigured) ...[
-                  PixelPanel(
-                    background: palette.butter,
-                    borderColor: palette.lineStrong,
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        AppIcon(
-                          name: 'alert',
-                          size: 32,
-                          color: palette.butterInk,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            SupabaseConfig.initializationError ?? 'Chưa cấu hình Supabase trong file .env. Vui lòng thêm SUPABASE_URL và SUPABASE_ANON_KEY để kết nối.',
-                            style: text.bodySmall?.copyWith(
+                    if (!authState.isConfigured) ...[
+                      PixelPanel(
+                        background: palette.butter,
+                        borderColor: palette.lineStrong,
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            AppIcon(
+                              name: 'alert',
+                              size: 32,
                               color: palette.butterInk,
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                SupabaseConfig.initializationError ?? 'Chưa cấu hình Supabase trong file .env. Vui lòng thêm SUPABASE_URL và SUPABASE_ANON_KEY để kết nối.',
+                                style: text.bodySmall?.copyWith(
+                                  color: palette.butterInk,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
 
-                PixelPanel(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        PixelTextField(
-                          key: const Key('loginEmailField'),
-                          label: 'Email',
-                          hint: 'you@example.com',
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: _validateEmail,
-                          suffixGlyph: 'mail',
+                    PixelPanel(
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            PixelTextField(
+                              key: const Key('loginEmailField'),
+                              label: 'Email',
+                              hint: 'you@example.com',
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: _validateEmail,
+                              suffixGlyph: 'mail',
+                            ),
+                            const SizedBox(height: 12),
+                            PixelTextField(
+                              key: const Key('loginPasswordField'),
+                              label: 'Mật khẩu',
+                              controller: _passwordController,
+                              obscureToggle: true,
+                              validator: _validatePassword,
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: PixelButton(
+                                key: const Key('forgotPasswordButton'),
+                                label: 'Quên mật khẩu?',
+                                variant: PixelButtonVariant.ghost,
+                                onPressed: () =>
+                                    showForgotPasswordSheet(context),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            PixelButton(
+                              key: const Key('loginSubmitButton'),
+                              label: 'ĐĂNG NHẬP',
+                              icon: 'logout',
+                              expanded: true,
+                              isLoading: busy,
+                              onPressed: busy ? null : _handleLogin,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        PixelTextField(
-                          key: const Key('loginPasswordField'),
-                          label: 'Mật khẩu',
-                          controller: _passwordController,
-                          obscureToggle: true,
-                          validator: _validatePassword,
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: PixelButton(
-                            key: const Key('forgotPasswordButton'),
-                            label: 'Quên mật khẩu?',
-                            variant: PixelButtonVariant.ghost,
-                            onPressed: () => showForgotPasswordSheet(context),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        PixelButton(
-                          key: const Key('loginSubmitButton'),
-                          label: 'ĐĂNG NHẬP',
-                          icon: 'logout',
-                          expanded: true,
-                          isLoading: busy,
-                          onPressed: busy ? null : _handleLogin,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    const PixelDivider(),
+                    Center(
+                      child: Text(
+                        'HOẶC',
+                        style: text.labelSmall?.copyWith(
+                          color: palette.inkMuted,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    PixelButton(
+                      label: 'Tiếp tục với Google',
+                      icon: 'user',
+                      variant: PixelButtonVariant.secondary,
+                      expanded: true,
+                      onPressed: busy ? null : _handleGoogleSignIn,
+                    ),
+                    const SizedBox(height: 12),
+                    PixelButton(
+                      label: 'Chưa có tài khoản? Đăng ký',
+                      variant: PixelButtonVariant.ghost,
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                const PixelDivider(),
-                Center(
-                  child: Text(
-                    'HOẶC',
-                    style: text.labelSmall?.copyWith(color: palette.inkMuted),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                PixelButton(
-                  label: 'Tiếp tục với Google',
-                  icon: 'user',
-                  variant: PixelButtonVariant.secondary,
-                  expanded: true,
-                  onPressed: busy ? null : _handleGoogleSignIn,
-                ),
-                const SizedBox(height: 12),
-                PixelButton(
-                  label: 'Chưa có tài khoản? Đăng ký',
-                  variant: PixelButtonVariant.ghost,
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -8,7 +8,7 @@ import '../../providers/app_settings_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_panel.dart';
-import '../../widgets/pixel/rainbow_rule.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 
 /// Ba glyph mở màn, lấy từ registry đã có (không thêm glyph mới).
 const List<String> onboardingGlyphs = ['wallet', 'cloud', 'chart'];
@@ -60,62 +60,66 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final isLastPage = _page == _pages.length - 1;
     return Scaffold(
       backgroundColor: palette.canvas,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const RainbowRule(),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8, top: 8),
-                child: PixelButton(
-                  label: 'BỎ QUA',
-                  variant: PixelButtonVariant.ghost,
-                  onPressed: _finish,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: PixelStarField()),
+          SafeArea(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8, top: 8),
+                    child: PixelButton(
+                      label: 'BỎ QUA',
+                      variant: PixelButtonVariant.ghost,
+                      onPressed: _finish,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: _pages.length,
-                onPageChanged: (value) => setState(() => _page = value),
-                itemBuilder: (_, index) => _pages[index],
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 120),
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.all(4),
-                  color: index == _page ? palette.ink : palette.line,
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _pages.length,
+                    onPageChanged: (value) => setState(() => _page = value),
+                    itemBuilder: (_, index) => _pages[index],
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: double.infinity,
-                child: PixelButton(
-                  key: const ValueKey('onboarding-next'),
-                  label: isLastPage ? 'BẮT ĐẦU' : 'TIẾP TỤC',
-                  icon: isLastPage ? 'check' : 'chevronRight',
-                  expanded: true,
-                  onPressed: isLastPage
-                      ? _finish
-                      : () => _pageController.nextPage(
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeOut,
-                        ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _pages.length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.all(4),
+                      color: index == _page ? palette.ink : palette.line,
+                    ),
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: PixelButton(
+                      key: const ValueKey('onboarding-next'),
+                      label: isLastPage ? 'BẮT ĐẦU' : 'TIẾP TỤC',
+                      icon: isLastPage ? 'check' : 'chevronRight',
+                      expanded: true,
+                      onPressed: isLastPage
+                          ? _finish
+                          : () => _pageController.nextPage(
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOut,
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

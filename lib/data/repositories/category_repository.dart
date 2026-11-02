@@ -21,7 +21,8 @@ class CategoryRepository {
       name: row['name'] as String,
       icon: (row['icon'] as String?) ?? 'dotsThreeOutline',
       isDefault: (row['is_default'] as bool?) ?? false,
-      createdAt: DateTime.tryParse((row['created_at'] as String?) ?? '') ??
+      createdAt:
+          DateTime.tryParse((row['created_at'] as String?) ?? '') ??
           DateTime.now(),
     );
   }

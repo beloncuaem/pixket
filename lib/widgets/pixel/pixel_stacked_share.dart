@@ -34,8 +34,8 @@ class PixelStackedShare extends StatelessWidget {
     final allocation = allocateCells(values, cells);
     final total = values.fold<double>(0, (a, b) => a + (b > 0 ? b : 0));
 
-    double? tOf(int i) => reference != null && reference! > 0 &&
-            i < values.length
+    double? tOf(int i) =>
+        reference != null && reference! > 0 && i < values.length
         ? values[i] / reference!
         : null;
 
@@ -88,11 +88,7 @@ class PixelStackedShare extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  color: colorOf(i),
-                ),
+                Container(width: 12, height: 12, color: colorOf(i)),
                 const SizedBox(width: 8),
                 AppIcon(
                   name: i < glyphs.length ? glyphs[i] : 'label',
@@ -120,10 +116,7 @@ class PixelStackedShare extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        sharePercent(
-                          i < values.length ? values[i] : 0,
-                          total,
-                        ),
+                        sharePercent(i < values.length ? values[i] : 0, total),
                         textAlign: TextAlign.end,
                         style: text.labelSmall?.copyWith(
                           color: palette.inkMuted,

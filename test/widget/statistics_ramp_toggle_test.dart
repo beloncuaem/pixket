@@ -57,7 +57,8 @@ void main() {
   testWidgets('khoá chart_spend_ramp tắt thì về accent danh mục', (
     tester,
   ) async {
-    final repo = MemorySettingsRepository()..store['chart_spend_ramp'] = 'false';
+    final repo = MemorySettingsRepository()
+      ..store['chart_spend_ramp'] = 'false';
     await tester.pumpWidget(_host(repo));
     await tester.pump();
     expect(

@@ -1,8 +1,8 @@
 enum AppSection {
-  feed('Nhật ký ảnh', 'camera'),
-  dashboard('Tổng quan', 'house'),
-  statistics('Thống kê', 'chart'),
-  budget('Ngân sách', 'wallet');
+  feed('Nhật ký ảnh', 'holocam'),
+  dashboard('Tổng quan', 'bridge'),
+  statistics('Thống kê', 'radar'),
+  budget('Ngân sách', 'cargo');
 
   final String label;
   final String glyph;

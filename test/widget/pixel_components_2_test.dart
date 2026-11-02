@@ -9,8 +9,10 @@ import 'package:pixket/widgets/pixel/pixel_segmented.dart';
 import 'package:pixket/widgets/pixel/pixel_snack_bar.dart';
 import 'package:pixket/widgets/pixel/pixel_text_field.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(theme: AppTheme.light, home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(
+  theme: AppTheme.light,
+  home: Scaffold(body: child),
+);
 
 void main() {
   testWidgets('PixelTextField hiện label và lỗi dưới field', (tester) async {
@@ -106,7 +108,10 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         const Column(
-          children: [PixelLoading(), PixelBadge(glyph: 'coffee', label: 'Cà phê')],
+          children: [
+            PixelLoading(),
+            PixelBadge(glyph: 'coffee', label: 'Cà phê'),
+          ],
         ),
       ),
     );

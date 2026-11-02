@@ -24,35 +24,46 @@ void main() {
     expect(await repo.getBool('k', fallback: false), isTrue);
   });
 
-  test('6 key hiệu ứng đọc/ghi đúng qua repository', () async {
+  test('khoá chart_spend_ramp đọc/ghi đúng qua repository', () async {
     final repo = MemorySettingsRepository();
     final notifier = EffectSettingsNotifier(repository: repo);
     await notifier.loadComplete;
 
-    // Mặc định spec §11: chỉ mosaic tắt.
-    expect(notifier.state.stars, isTrue);
-    expect(notifier.state.rainbowRule, isTrue);
-    expect(notifier.state.captureSweep, isTrue);
-    expect(notifier.state.confetti, isTrue);
-    expect(notifier.state.mosaic, isFalse);
     expect(notifier.state.chartSpendRamp, isTrue);
 
-    await notifier.set('fx_stars', false);
-    expect(notifier.state.stars, isFalse);
-    expect(repo.store['fx_stars'], 'false');
+    await notifier.set('chart_spend_ramp', false);
+    expect(notifier.state.chartSpendRamp, isFalse);
+    expect(repo.store['chart_spend_ramp'], 'false');
 
     final again = EffectSettingsNotifier(repository: repo);
     await again.loadComplete;
-    expect(again.state.stars, isFalse, reason: 'giá trị phải bền qua phiên');
+    expect(
+      again.state.chartSpendRamp,
+      isFalse,
+      reason: 'giá trị phải bền qua phiên',
+    );
+  });
+
+  test('khoá lạ không đổi state', () async {
+    final notifier = EffectSettingsNotifier(
+      repository: MemorySettingsRepository(),
+    );
+    await notifier.loadComplete;
+
+    await notifier.set('fx_stars', false);
+    expect(notifier.state.chartSpendRamp, isTrue);
   });
 
   test('repository lỗi thì về mặc định và không ném', () async {
     final notifier = EffectSettingsNotifier(repository: _BrokenSettings());
     await notifier.loadComplete;
-    expect(notifier.state.stars, isTrue);
-    expect(notifier.state.mosaic, isFalse);
+    expect(notifier.state.chartSpendRamp, isTrue);
 
-    await notifier.set('fx_stars', false);
-    expect(notifier.state.stars, isFalse, reason: 'UI vẫn đổi dù ghi hỏng');
+    await notifier.set('chart_spend_ramp', false);
+    expect(
+      notifier.state.chartSpendRamp,
+      isFalse,
+      reason: 'UI vẫn đổi dù ghi hỏng',
+    );
   });
 }

@@ -18,7 +18,10 @@ void main() {
                 Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: [AppIcon(name: name, size: 32), Text(name)],
+                    children: [
+                      AppIcon(name: name, size: 32),
+                      Text(name),
+                    ],
                   ),
                 ),
             ],

@@ -262,9 +262,7 @@ void main() {
     });
 
     test('copyWith gán URL hiển thị mà không đổi imagePath', () {
-      final updated = sample().copyWith(
-        displayImageUrl: 'https://signed/abc',
-      );
+      final updated = sample().copyWith(displayImageUrl: 'https://signed/abc');
       expect(updated.displayImageUrl, 'https://signed/abc');
       expect(updated.imagePath, 'user-1/1710_204.jpg');
       expect(updated.id, 1);

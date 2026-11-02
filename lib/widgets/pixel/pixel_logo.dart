@@ -11,7 +11,7 @@ int logoGridSize(double size) => math.max(8, (size ~/ 8) * 8);
 /// (16) và icon launcher. Trả về `n` chuỗi, mỗi chuỗi `n` ký tự:
 /// `.` trống · `k` ink · `b` surface · `f` flash · `g` highlight · `h` đồng tử ·
 /// `1`..`6` sáu cung iris.
-List<String> buildLogoGrid(int n, {bool mono = false, bool simple = false}) {
+List<String> buildLogoGrid(int n, {bool simple = false}) {
   final cells = List.generate(n, (_) => List<String>.filled(n, '.'));
   int at(double ratio) => (ratio * n).round();
 
@@ -81,36 +81,15 @@ List<String> buildLogoGrid(int n, {bool mono = false, bool simple = false}) {
     }
   }
 
-  // 6. Bản mono: chỉ còn ink. Ruột thân và highlight thành rỗng để silhouette
-  // không đặc kín — thân máy là viền, ống kính là khối ink đặc.
-  if (mono) {
-    for (var y = 0; y < n; y++) {
-      for (var x = 0; x < n; x++) {
-        cells[y][x] = switch (cells[y][x]) {
-          '.' || 'b' || 'g' => '.',
-          _ => 'k',
-        };
-      }
-    }
-  }
-
   return [for (final row in cells) row.join()];
 }
 
-/// Logo Pixket: thân máy ảnh pixel + ống kính iris sáu cung màu Nyan Cat.
+/// Logo Pixket: thân máy ảnh pixel + ống kính iris sáu cung màu cầu vồng.
 class PixelLogo extends StatelessWidget {
-  const PixelLogo({
-    super.key,
-    this.size = 24,
-    this.mono = false,
-    this.simple = false,
-  });
+  const PixelLogo({super.key, this.size = 24, this.simple = false});
 
   /// Cạnh logo; giá trị không phải bội số 8 bị làm tròn xuống.
   final double size;
-
-  /// Chỉ dùng ink, cho launcher / drawer / favicon.
-  final bool mono;
 
   /// Bỏ gờ nhả chụp và ô ngắm, chỉ còn thân + ống kính.
   final bool simple;
@@ -119,7 +98,7 @@ class PixelLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.palette;
     final grid = logoGridSize(size);
-    final rows = buildLogoGrid(grid, mono: mono, simple: simple);
+    final rows = buildLogoGrid(grid, simple: simple);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SizedBox.square(

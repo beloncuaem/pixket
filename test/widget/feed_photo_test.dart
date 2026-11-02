@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pixket/core/theme/app_theme.dart';
@@ -44,8 +45,21 @@ const _canThiet = PriorityLevel(
   sortOrder: 0,
 );
 
-Widget wrap(Widget child) => MaterialApp(
-  theme: AppTheme.dark,
+/// Nền sao (Consumer + repeat vô hạn ở theme tối) nên cần ProviderScope; tắt
+/// animation ở `builder` để cờ áp dụng cho cả route được push, nếu không
+/// `pumpAndSettle` không bao giờ dừng.
+Widget _app({required Widget home}) => ProviderScope(
+  child: MaterialApp(
+    theme: AppTheme.dark,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(disableAnimations: true),
+      child: child!,
+    ),
+    home: home,
+  ),
+);
+
+Widget wrap(Widget child) => _app(
   home: Scaffold(body: SizedBox(width: 400, height: 560, child: child)),
 );
 
@@ -63,8 +77,8 @@ void main() {
       wrap(FeedGridScreen(expenses: photos, categoriesById: categories)),
     );
     final grid = tester.widget<GridView>(find.byType(GridView));
-    final delegate = grid.gridDelegate
-        as SliverGridDelegateWithFixedCrossAxisCount;
+    final delegate =
+        grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
     expect(delegate.crossAxisCount, 3);
     expect(find.byType(PixelReceiptImage), findsNWidgets(2));
     expect(find.text('2 ảnh'), findsOneWidget);
@@ -75,19 +89,17 @@ void main() {
   testWidgets('chạm ô lưới thì trả index qua Navigator.pop', (tester) async {
     int? popped;
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.dark,
+      _app(
         home: Builder(
           builder: (context) => Scaffold(
             body: TextButton(
               onPressed: () async {
                 popped = await Navigator.of(context).push<int>(
                   MaterialPageRoute(
-                    builder: (_) =>
-                        FeedGridScreen(
-                          expenses: photos,
-                          categoriesById: categories,
-                        ),
+                    builder: (_) => FeedGridScreen(
+                      expenses: photos,
+                      categoriesById: categories,
+                    ),
                   ),
                 );
               },
@@ -150,13 +162,7 @@ void main() {
 
   testWidgets('không có danh mục thì panel vẫn vẽ badge Khác', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        FeedPhotoPage(
-          expense: photos[1],
-          onEdit: () {},
-          onDelete: () {},
-        ),
-      ),
+      wrap(FeedPhotoPage(expense: photos[1], onEdit: () {}, onDelete: () {})),
     );
     expect(find.text('Khác'), findsOneWidget);
     expect(find.textContaining('7.000'), findsOneWidget);

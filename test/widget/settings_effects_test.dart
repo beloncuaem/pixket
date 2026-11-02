@@ -25,47 +25,52 @@ class _FakeTheme extends StateNotifier<ThemeMode> implements ThemeNotifier {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Text _chipLabel(WidgetTester tester, String key) =>
-    tester.widgetList<Text>(find.descendant(
-      of: find.byKey(ValueKey(key)),
-      matching: find.byType(Text),
-    )).single;
+Text _chipLabel(WidgetTester tester, String key) => tester
+    .widgetList<Text>(
+      find.descendant(
+        of: find.byKey(ValueKey(key)),
+        matching: find.byType(Text),
+      ),
+    )
+    .single;
 
 void main() {
-  testWidgets('6 khoá hiệu ứng đọc/ghi qua provider', (tester) async {
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authProvider.overrideWith((ref) => _FakeAuth()),
-        themeProvider.overrideWith((ref) => _FakeTheme()),
-        effectsProvider.overrideWith(
-          (ref) =>
-              EffectSettingsNotifier(repository: MemorySettingsRepository()),
-        ),
-      ],
-      child: MaterialApp(theme: AppTheme.light, home: const SettingsScreen()),
-    ));
+  testWidgets('chỉ còn khoá biểu đồ, các khoá hiệu ứng đã bỏ', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith((ref) => _FakeAuth()),
+          themeProvider.overrideWith((ref) => _FakeTheme()),
+          effectsProvider.overrideWith(
+            (ref) =>
+                EffectSettingsNotifier(repository: MemorySettingsRepository()),
+          ),
+        ],
+        child: MaterialApp(theme: AppTheme.light, home: const SettingsScreen()),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('GIAO DIỆN & HIỆU ỨNG'), findsOneWidget);
-    for (final label in [
+    expect(find.text('GIAO DIỆN & BIỂU ĐỒ'), findsOneWidget);
+    expect(find.text('Biểu đồ tô theo mức chi'), findsOneWidget);
+
+    for (final removed in [
+      'GIAO DIỆN & HIỆU ỨNG',
       'Nền sao (chế độ tối)',
       'Vệt cầu vồng dưới header',
       'Cầu vồng quét khi chụp',
       'Pháo giấy khi lưu',
       'Lật mosaic khi đổi mục',
-      'Biểu đồ tô theo mức chi',
     ]) {
-      expect(find.text(label), findsOneWidget, reason: 'thiếu khoá $label');
+      expect(find.text(removed), findsNothing, reason: 'khoá $removed còn sót');
     }
 
-    // mosaic mặc định TẮT, năm khoá còn lại BẬT.
-    expect(_chipLabel(tester, 'fx_mosaic').data, 'TẮT');
-    expect(_chipLabel(tester, 'fx_stars').data, 'BẬT');
+    expect(_chipLabel(tester, 'chart_spend_ramp').data, 'BẬT');
 
-    await tester.ensureVisible(find.byKey(const ValueKey('fx_mosaic')));
+    await tester.ensureVisible(find.byKey(const ValueKey('chart_spend_ramp')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('fx_mosaic')));
+    await tester.tap(find.byKey(const ValueKey('chart_spend_ramp')));
     await tester.pumpAndSettle();
-    expect(_chipLabel(tester, 'fx_mosaic').data, 'BẬT');
+    expect(_chipLabel(tester, 'chart_spend_ramp').data, 'TẮT');
   });
 }

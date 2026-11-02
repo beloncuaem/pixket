@@ -196,7 +196,7 @@ void main() {
 
     for (final label in [
       'DỮ LIỆU',
-      'GIAO DIỆN & HIỆU ỨNG',
+      'GIAO DIỆN & BIỂU ĐỒ',
       'TÀI KHOẢN',
       'VỀ APP',
     ]) {
@@ -207,7 +207,7 @@ void main() {
     expect(find.text('Quản lý danh mục'), findsOneWidget);
     expect(find.text('Thùng rác'), findsOneWidget);
     expect(find.text('Chế độ tối'), findsOneWidget);
-    expect(find.text('Phiên bản 2.3.0 • PIXEL JOURNAL'), findsOneWidget);
+    expect(find.text('Phiên bản 2.4.0 • PIXEL JOURNAL'), findsOneWidget);
     expect(find.byType(SwitchListTile), findsNothing);
     expect(find.byType(ListTile), findsNothing);
     expect(find.byType(Card), findsNothing);

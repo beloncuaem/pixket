@@ -46,7 +46,10 @@ void main() {
 
         test('$name: ink và inkMuted trên $bgName', () {
           expect(contrast(palette.ink, bg), greaterThanOrEqualTo(_textMin));
-          expect(contrast(palette.inkMuted, bg), greaterThanOrEqualTo(_textMin));
+          expect(
+            contrast(palette.inkMuted, bg),
+            greaterThanOrEqualTo(_textMin),
+          );
         });
 
         test('$name: cả 6 accentInk trên $bgName', () {
@@ -64,7 +67,10 @@ void main() {
       test('$name: onAccent trên cả 6 accent', () {
         expect(palette.accents.length, 6);
         for (final accent in palette.accents) {
-          expect(contrast(palette.onAccent, accent), greaterThanOrEqualTo(_textMin));
+          expect(
+            contrast(palette.onAccent, accent),
+            greaterThanOrEqualTo(_textMin),
+          );
         }
       });
 
@@ -86,7 +92,11 @@ void main() {
       final name = palette == AppPalette.light ? 'light' : 'dark';
 
       test('$name: mintStrong là khối/viền nên chỉ cần 3.0', () {
-        for (final bg in [palette.canvas, palette.surface, palette.surfaceAlt]) {
+        for (final bg in [
+          palette.canvas,
+          palette.surface,
+          palette.surfaceAlt,
+        ]) {
           expect(
             contrast(palette.mintStrong, bg),
             greaterThanOrEqualTo(_nonTextMin),
@@ -108,35 +118,50 @@ void main() {
       });
     }
 
-    test('dark: cả 6 bright accent đạt 3.0 trên canvas nên dùng làm khối được', () {
-      for (final accent in AppPalette.dark.accents) {
-        expect(contrast(accent, AppPalette.dark.canvas), greaterThanOrEqualTo(_nonTextMin));
-      }
-    });
+    test(
+      'dark: cả 6 bright accent đạt 3.0 trên canvas nên dùng làm khối được',
+      () {
+        for (final accent in AppPalette.dark.accents) {
+          expect(
+            contrast(accent, AppPalette.dark.canvas),
+            greaterThanOrEqualTo(_nonTextMin),
+          );
+        }
+      },
+    );
   });
 
   group('Hai ngoại lệ đã biết của spec §12 — khoá lại để không trôi', () {
-    test('light: bright accent dưới 3.0 trên canvas nên khối bắt buộc viền ink', () {
-      for (final accent in AppPalette.light.accents) {
-        expect(contrast(accent, AppPalette.light.canvas), lessThan(_nonTextMin));
-      }
-      // Viền ink là thứ gánh tương phản phi-text cho khối ở theme kem.
-      expect(
-        contrast(AppPalette.light.line, AppPalette.light.canvas),
-        greaterThanOrEqualTo(_nonTextMin),
-      );
-    });
+    test(
+      'light: bright accent dưới 3.0 trên canvas nên khối bắt buộc viền ink',
+      () {
+        for (final accent in AppPalette.light.accents) {
+          expect(
+            contrast(accent, AppPalette.light.canvas),
+            lessThan(_nonTextMin),
+          );
+        }
+        // Viền ink là thứ gánh tương phản phi-text cho khối ở theme kem.
+        expect(
+          contrast(AppPalette.light.line, AppPalette.light.canvas),
+          greaterThanOrEqualTo(_nonTextMin),
+        );
+      },
+    );
 
-    test('dark: rose bright trượt 4.5 trên surface nên chữ đỏ phải dùng roseInk', () {
-      expect(
-        contrast(AppPalette.dark.rose, AppPalette.dark.surface),
-        lessThan(_textMin),
-      );
-      expect(
-        contrast(AppPalette.dark.roseInk, AppPalette.dark.surface),
-        greaterThanOrEqualTo(_textMin),
-      );
-    });
+    test(
+      'dark: rose bright trượt 4.5 trên surface nên chữ đỏ phải dùng roseInk',
+      () {
+        expect(
+          contrast(AppPalette.dark.rose, AppPalette.dark.surface),
+          lessThan(_textMin),
+        );
+        expect(
+          contrast(AppPalette.dark.roseInk, AppPalette.dark.surface),
+          greaterThanOrEqualTo(_textMin),
+        );
+      },
+    );
   });
 
   group('Cấu trúc dải Nyan Cat', () {

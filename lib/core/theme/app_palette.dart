@@ -259,7 +259,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
   static const _priorityAccentIndex = [3, 4, 2, 0];
 
   /// Ngoài 0..3 thì coi như Thiết yếu (lục), không kẹp về 3 vì ô 3 là đỏ.
-  static int _prioritySlot(int priority) => priority < 0 || priority > 3 ? 0 : priority;
+  static int _prioritySlot(int priority) =>
+      priority < 0 || priority > 3 ? 0 : priority;
 
   Color priorityColor(int priority) =>
       accentAt(_priorityAccentIndex[_prioritySlot(priority)]);
@@ -281,7 +282,13 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// NaN (kỳ rỗng: 0/0) cũng về bậc 0, nếu không sẽ tô đỏ "Vượt mức" oan.
   int spendBand(double t) {
     if (t.isNaN) return 0;
-    return t < 0.25 ? 0 : t < 0.5 ? 1 : t < 0.75 ? 2 : 3;
+    return t < 0.25
+        ? 0
+        : t < 0.5
+        ? 1
+        : t < 0.75
+        ? 2
+        : 3;
   }
 
   /// Tô khối theo mức chi: dương → lục → vàng → đỏ.

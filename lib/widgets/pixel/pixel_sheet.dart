@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_palette.dart';
 import 'pixel_panel.dart';
+import 'pixel_star_field.dart';
 
 /// Bottom sheet theo phong cách pixel. `fullScreen: true` cho form nhiều field.
 Future<R?> showPixelSheet<R>({
@@ -28,26 +29,34 @@ Future<R?> showPixelSheet<R>({
                 MediaQuery.sizeOf(sheetContext).height *
                 (fullScreen ? 0.92 : 0.8),
           ),
-          child: PixelPanel(
-            background: palette.surface,
-            borderWidth: 0,
-            shadowOffset: Offset.zero,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(sheetContext).textTheme.headlineSmall
-                      ?.copyWith(letterSpacing: 0.9),
+          child: Stack(
+            children: [
+              // Nền sao nằm giữa nền sheet và nội dung nên panel phải trong suốt.
+              const Positioned.fill(child: PixelStarField()),
+              PixelPanel(
+                background: Colors.transparent,
+                borderWidth: 0,
+                shadowOffset: Offset.zero,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(sheetContext).textTheme.headlineSmall
+                          ?.copyWith(letterSpacing: 0.9),
+                    ),
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: builder(sheetContext),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Flexible(
-                  child: SingleChildScrollView(child: builder(sheetContext)),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

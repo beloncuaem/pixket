@@ -17,6 +17,7 @@ import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_receipt_image.dart';
 import '../../widgets/pixel/pixel_screen_header.dart';
 import '../../widgets/pixel/pixel_snack_bar.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 
 class TrashScreen extends ConsumerStatefulWidget {
   const TrashScreen({super.key});
@@ -85,97 +86,102 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
 
     return Scaffold(
       backgroundColor: palette.canvas,
-      body: Column(
+      body: Stack(
         children: [
-          SafeArea(
-            bottom: false,
-            child: PixelScreenHeader(
-              title: 'THÙNG RÁC',
-              subtitle: 'Hoàn tác hoặc xóa hẳn khoản chi khỏi cloud',
-              onBackTap: () => Navigator.of(context).pop(),
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<Expense>>(
-              future: _deletedExpenses,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const Center(
-                    child: PixelLoading(label: 'Đang tải thùng rác…'),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return ListView(
-                    padding: const EdgeInsets.all(12),
-                    children: [
-                      PixelPanel(
-                        background: palette.butter,
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+          const Positioned.fill(child: PixelStarField()),
+          Column(
+            children: [
+              SafeArea(
+                bottom: false,
+                child: PixelScreenHeader(
+                  title: 'THÙNG RÁC',
+                  subtitle: 'Hoàn tác hoặc xóa hẳn khoản chi khỏi cloud',
+                  onBackTap: () => Navigator.of(context).pop(),
+                ),
+              ),
+              Expanded(
+                child: FutureBuilder<List<Expense>>(
+                  future: _deletedExpenses,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Center(
+                        child: PixelLoading(label: 'Đang tải thùng rác…'),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return ListView(
+                        padding: const EdgeInsets.all(12),
+                        children: [
+                          PixelPanel(
+                            background: palette.butter,
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                AppIcon(
-                                  name: 'alert',
-                                  size: 32,
-                                  color: palette.butterInk,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Không tải được thùng rác. Kiểm tra kết nối.',
-                                    style: text.bodyMedium?.copyWith(
+                                Row(
+                                  children: [
+                                    AppIcon(
+                                      name: 'alert',
+                                      size: 32,
                                       color: palette.butterInk,
                                     ),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Không tải được thùng rác. Kiểm tra kết nối.',
+                                        style: text.bodyMedium?.copyWith(
+                                          color: palette.butterInk,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                PixelButton(
+                                  label: 'THỬ LẠI',
+                                  icon: 'refresh',
+                                  variant: PixelButtonVariant.secondary,
+                                  onPressed: () => setState(_reload),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            PixelButton(
-                              label: 'THỬ LẠI',
-                              icon: 'refresh',
-                              variant: PixelButtonVariant.secondary,
-                              onPressed: () => setState(_reload),
+                          ),
+                        ],
+                      );
+                    }
+                    final expenses = snapshot.data ?? const <Expense>[];
+                    if (expenses.isEmpty) {
+                      return const PixelEmptyState(
+                        glyph: 'trash',
+                        title: 'Thùng rác đang trống',
+                        message: 'Xóa khoản chi trong nhật ký để đưa vào đây trước khi xóa hẳn.',
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: expenses.length,
+                      itemBuilder: (context, index) {
+                        final expense = expenses[index];
+                        final category = categoryMap[expense.categoryId];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _TrashRow(
+                            expense: expense,
+                            categoryName: category?.name ?? 'Khác',
+                            categoryIcon: IconHelper.normalizeIconKey(
+                              category?.icon ?? 'dotsThreeOutline',
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }
-                final expenses = snapshot.data ?? const <Expense>[];
-                if (expenses.isEmpty) {
-                  return const PixelEmptyState(
-                    glyph: 'trash',
-                    title: 'Thùng rác đang trống',
-                    message: 'Xóa khoản chi trong nhật ký để đưa vào đây trước khi xóa hẳn.',
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: expenses.length,
-                  itemBuilder: (context, index) {
-                    final expense = expenses[index];
-                    final category = categoryMap[expense.categoryId];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _TrashRow(
-                        expense: expense,
-                        categoryName: category?.name ?? 'Khác',
-                        categoryIcon: IconHelper.normalizeIconKey(
-                          category?.icon ?? 'dotsThreeOutline',
-                        ),
-                        onRestore: () => _restore(expense),
-                        onPurge: () => _deleteForever(expense),
-                      ),
+                            onRestore: () => _restore(expense),
+                            onPurge: () => _deleteForever(expense),
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

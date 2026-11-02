@@ -46,32 +46,12 @@ final appSettingsProvider =
     );
 
 class EffectSettings {
-  final bool stars, rainbowRule, captureSweep, confetti, mosaic, chartSpendRamp;
+  final bool chartSpendRamp;
 
-  const EffectSettings({
-    this.stars = true,
-    this.rainbowRule = true,
-    this.captureSweep = true,
-    this.confetti = true,
-    this.mosaic = false,
-    this.chartSpendRamp = true,
-  });
+  const EffectSettings({this.chartSpendRamp = true});
 
-  EffectSettings copyWith({
-    bool? stars,
-    bool? rainbowRule,
-    bool? captureSweep,
-    bool? confetti,
-    bool? mosaic,
-    bool? chartSpendRamp,
-  }) => EffectSettings(
-    stars: stars ?? this.stars,
-    rainbowRule: rainbowRule ?? this.rainbowRule,
-    captureSweep: captureSweep ?? this.captureSweep,
-    confetti: confetti ?? this.confetti,
-    mosaic: mosaic ?? this.mosaic,
-    chartSpendRamp: chartSpendRamp ?? this.chartSpendRamp,
-  );
+  EffectSettings copyWith({bool? chartSpendRamp}) =>
+      EffectSettings(chartSpendRamp: chartSpendRamp ?? this.chartSpendRamp);
 }
 
 class EffectSettingsNotifier extends StateNotifier<EffectSettings> {
@@ -88,39 +68,21 @@ class EffectSettingsNotifier extends StateNotifier<EffectSettings> {
   final Completer<void> _loadCompleter = Completer<void>();
   Future<void> get loadComplete => _loadCompleter.future;
 
-  static const _keys = (
-    stars: 'fx_stars',
-    rainbowRule: 'fx_rainbow_rule',
-    captureSweep: 'fx_capture_sweep',
-    confetti: 'fx_confetti',
-    mosaic: 'fx_mosaic',
-    chartSpendRamp: 'chart_spend_ramp',
-  );
+  static const _keys = (chartSpendRamp: 'chart_spend_ramp');
 
   Future<EffectSettings> _load() async {
-    // Không catch ở đây thì mọi test widget pump màn có PixelScreenHeader
-    // (→ RainbowRule → effectsProvider) sẽ dính MissingPluginException của
-    // sqflite; trên máy thật thì DB lỗi cũng chỉ nên về mặc định, không crash.
+    // Không catch ở đây thì test widget nào pump màn đọc khoá này sẽ dính
+    // MissingPluginException của sqflite; trên máy thật thì DB lỗi cũng chỉ
+    // nên về mặc định, không crash.
     try {
       return EffectSettings(
-        stars: await _repository.getBool(_keys.stars, fallback: true),
-        rainbowRule: await _repository.getBool(
-          _keys.rainbowRule,
-          fallback: true,
-        ),
-        captureSweep: await _repository.getBool(
-          _keys.captureSweep,
-          fallback: true,
-        ),
-        confetti: await _repository.getBool(_keys.confetti, fallback: true),
-        mosaic: await _repository.getBool(_keys.mosaic, fallback: false),
         chartSpendRamp: await _repository.getBool(
           _keys.chartSpendRamp,
           fallback: true,
         ),
       );
     } catch (error) {
-      debugPrint('Không đọc được khoá hiệu ứng, dùng mặc định: $error');
+      debugPrint('Không đọc được khoá biểu đồ, dùng mặc định: $error');
       return const EffectSettings();
     }
   }
@@ -130,17 +92,10 @@ class EffectSettingsNotifier extends StateNotifier<EffectSettings> {
       await _repository.setBool(key, value);
     } catch (error) {
       // Vẫn đổi state: khoá là cosmetic, UI phải phản hồi dù ghi DB hỏng.
-      debugPrint('Không lưu được khoá hiệu ứng $key: $error');
+      debugPrint('Không lưu được khoá $key: $error');
     }
-    final s = state;
-    state = s.copyWith(
-      stars: key == _keys.stars ? value : null,
-      rainbowRule: key == _keys.rainbowRule ? value : null,
-      captureSweep: key == _keys.captureSweep ? value : null,
-      confetti: key == _keys.confetti ? value : null,
-      mosaic: key == _keys.mosaic ? value : null,
-      chartSpendRamp: key == _keys.chartSpendRamp ? value : null,
-    );
+    if (key != _keys.chartSpendRamp) return;
+    state = state.copyWith(chartSpendRamp: value);
   }
 }
 

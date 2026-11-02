@@ -9,6 +9,5 @@ class MemorySettingsRepository extends AppSettingsRepository {
   Future<String?> getString(String key) async => store[key];
 
   @override
-  Future<void> setString(String key, String value) async =>
-      store[key] = value;
+  Future<void> setString(String key, String value) async => store[key] = value;
 }

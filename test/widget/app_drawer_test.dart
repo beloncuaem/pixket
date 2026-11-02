@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pixket/core/navigation/app_section.dart';
 import 'package:pixket/widgets/app_drawer.dart';
@@ -36,8 +37,11 @@ Future<void> _openDrawer(WidgetTester tester, AppDrawer drawer) async {
 
   final key = GlobalKey<ScaffoldState>();
   await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(key: key, drawer: drawer, body: const SizedBox.expand()),
+    // Drawer có nền sao (Consumer) nên cần ProviderScope.
+    ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(key: key, drawer: drawer, body: const SizedBox.expand()),
+      ),
     ),
   );
   key.currentState!.openDrawer();
@@ -130,13 +134,17 @@ void main() {
 
     testWidgets('Hiển thị hồ sơ cloud và nút đăng xuất', (tester) async {
       var loggedOut = false;
-      await _openDrawer(tester, _drawer(onLogout: () async => loggedOut = true));
+      await _openDrawer(
+        tester,
+        _drawer(onLogout: () async => loggedOut = true),
+      );
 
       expect(find.text('Quang'), findsOneWidget);
       expect(find.text('quang@example.com'), findsOneWidget);
       expect(find.text('Cloud Sync'), findsOneWidget);
       expect(find.byType(PixelLogo), findsOneWidget);
-      expect(tester.widget<PixelLogo>(find.byType(PixelLogo)).mono, isTrue);
+      // Drawer dùng bản đầy đủ (có cầu vồng ở ống kính), không phải bản tối giản.
+      expect(tester.widget<PixelLogo>(find.byType(PixelLogo)).simple, isFalse);
 
       await tester.tap(find.byTooltip('Đăng xuất'));
       await tester.pumpAndSettle();

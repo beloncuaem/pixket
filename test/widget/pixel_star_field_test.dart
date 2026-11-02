@@ -2,19 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pixket/core/theme/app_theme.dart';
-import 'package:pixket/providers/app_settings_provider.dart';
 import 'package:pixket/widgets/pixel/pixel_star_field.dart';
-
-import '../support/memory_settings.dart';
 
 Widget _host({bool dark = true, bool disableAnimations = false}) =>
     ProviderScope(
-      overrides: [
-        effectsProvider.overrideWith(
-          (ref) =>
-              EffectSettingsNotifier(repository: MemorySettingsRepository()),
-        ),
-      ],
       child: MaterialApp(
         theme: dark ? AppTheme.dark : AppTheme.light,
         // Builder + copyWith: `MediaQueryData(...)` dựng mới sẽ thay toàn bộ
@@ -22,9 +13,8 @@ Widget _host({bool dark = true, bool disableAnimations = false}) =>
         // dùng copyWith trên MediaQuery kế thừa.
         home: Builder(
           builder: (context) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              disableAnimations: disableAnimations,
-            ),
+            data: MediaQuery.of(context)
+                .copyWith(disableAnimations: disableAnimations),
             child: const Scaffold(
               body: SizedBox.expand(child: PixelStarField()),
             ),
@@ -51,11 +41,12 @@ void main() {
     }
   });
 
-  test('mật độ 1 ô / 3600 px2', () {
+  test('mật độ 1 ô / 2200 px2, chặn trần 220 ô', () {
     expect(
       buildStarField(const Size(360, 640)).length,
-      (360 * 640 / 3600).round(),
+      (360 * 640 / 2200).round(),
     );
+    expect(buildStarField(const Size(1200, 1600)).length, 220);
   });
 
   test('keep-out nở thêm 4 px', () {
@@ -70,7 +61,9 @@ void main() {
     expect(_paint(), findsNothing);
   });
 
-  testWidgets('disableAnimations thì không còn controller chạy', (tester) async {
+  testWidgets('disableAnimations thì không còn controller chạy', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host(disableAnimations: true));
     await tester.pump();
     expect(_paint(), findsOneWidget, reason: 'sao vẫn vẽ, chỉ ngưng nhấp nháy');

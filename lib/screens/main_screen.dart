@@ -3,13 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/navigation/app_section.dart';
 import '../core/theme/app_palette.dart';
-import '../providers/app_settings_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/pixel/mosaic_wipe.dart';
 import '../widgets/pixel/pixel_star_field.dart';
-import '../widgets/pixel/pixel_tab_bar.dart';
 import 'budget/budget_screen.dart';
 import 'camera/camera_screen.dart';
 import 'categories/manage_categories_screen.dart';
@@ -24,6 +21,9 @@ class MainScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<MainScreen> createState() => _MainScreenState();
 }
+
+/// Vùng mép trái nhận vuốt trên màn CHỤP, tránh xung đột gesture của camera.
+const double _edgeSwipeWidth = 24;
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -67,6 +67,58 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     };
   }
 
+  double _swipeDx = 0;
+
+  void _onSwipeStart(DragStartDetails details) => _swipeDx = 0;
+
+  void _onSwipeUpdate(DragUpdateDetails details) =>
+      _swipeDx += details.delta.dx;
+
+  /// Mở drawer khi vuốt đủ xa hoặc đủ nhanh — không nhảy tab trực tiếp.
+  void _onSwipeEnd(DragEndDetails details) {
+    final far = _swipeDx.abs() > 40;
+    final fast = (details.primaryVelocity?.abs() ?? 0) > 180;
+    _swipeDx = 0;
+    if (far || fast) _openDrawer();
+  }
+
+  /// Màn CHỤP chỉ nhận vuốt từ mép trái; các màn còn lại vuốt ở bất kỳ đâu.
+  Widget _withSwipeToOpenDrawer(
+    Widget child, {
+    required Key key,
+    required bool edgeOnly,
+  }) {
+    if (edgeOnly) {
+      return Stack(
+        key: key,
+        children: [
+          child,
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: _edgeSwipeWidth,
+            child: GestureDetector(
+              key: const ValueKey('edge-swipe-area'),
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragStart: _onSwipeStart,
+              onHorizontalDragUpdate: _onSwipeUpdate,
+              onHorizontalDragEnd: _onSwipeEnd,
+            ),
+          ),
+        ],
+      );
+    }
+    return GestureDetector(
+      key: key,
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragStart: _onSwipeStart,
+      onHorizontalDragUpdate: _onSwipeUpdate,
+      onHorizontalDragEnd: _onSwipeEnd,
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -78,6 +130,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final displayName = (name == null || name.isEmpty)
         ? (email != null ? email.split('@').first : 'Bạn')
         : name;
+    final still = MediaQuery.of(context).disableAnimations;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -96,19 +149,27 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             themeMode == ThemeMode.dark ||
             (themeMode == ThemeMode.system && isDark),
       ),
-      bottomNavigationBar: PixelTabBar(
-        selected: _section,
-        onSelect: _selectSection,
-      ),
       body: Stack(
         children: [
           const Positioned.fill(child: PixelStarField()),
-          MosaicWipe(
-            transitionKey: _section,
-            enabled:
-                ref.watch(effectsProvider).mosaic &&
-                !MediaQuery.of(context).disableAnimations,
-            child: _buildSection(_section),
+          AnimatedSwitcher(
+            duration: still ? Duration.zero : const Duration(milliseconds: 180),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) {
+              final scale = Tween<double>(begin: 0.98, end: 1).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOut),
+              );
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: scale, child: child),
+              );
+            },
+            child: _withSwipeToOpenDrawer(
+              _buildSection(_section),
+              key: ValueKey('swipe-${_section.name}'),
+              edgeOnly: _section == AppSection.feed,
+            ),
           ),
         ],
       ),

@@ -15,10 +15,10 @@ import '../../providers/expense_provider.dart';
 import '../../providers/priority_provider.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_chip.dart';
-import '../../widgets/pixel/pixel_confetti.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_receipt_image.dart';
 import '../../widgets/pixel/pixel_sheet.dart';
+import '../../widgets/pixel/pixel_star_flash.dart';
 import '../../widgets/pixel/pixel_text_field.dart';
 import 'expense_datetime_field.dart';
 
@@ -38,6 +38,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
 
 class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   final _formKey = GlobalKey<FormState>();
+  final _saveButtonKey = GlobalKey();
   late final TextEditingController _captionController;
   late final TextEditingController _amountController;
   int? _selectedCategoryId;
@@ -134,12 +135,16 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
       }
       if (!mounted) return;
-      PixelConfetti.burst(context);
-      if (_isEditing) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Đã cập nhật khoản chi.')));
-      }
+      // Lấy toạ độ trước khi pop: sheet đóng là mất render box của nút.
+      final flashAt = _saveButtonCenter();
+      PixelStarFlash.burst(context, at: flashAt);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isEditing ? 'Đã cập nhật khoản chi.' : 'Đã lưu khoản chi.',
+          ),
+        ),
+      );
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
@@ -151,6 +156,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  /// Tâm nút lưu theo toạ độ global — nơi hiệu ứng sao lóe xuất hiện.
+  Offset? _saveButtonCenter() {
+    final box = _saveButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached) return null;
+    return box.localToGlobal(box.size.center(Offset.zero));
   }
 
   @override
@@ -296,6 +308,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             ),
           const SizedBox(height: 24),
           PixelButton(
+            key: _saveButtonKey,
             label: _isEditing ? 'LƯU THAY ĐỔI' : 'LƯU KHOẢN CHI',
             icon: 'check',
             expanded: true,

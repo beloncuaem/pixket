@@ -6,6 +6,7 @@ import '../../data/models/expense.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/pixel_empty_state.dart';
 import '../../widgets/pixel/pixel_receipt_image.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 
 /// Lưới ảnh nhật ký: chạm một ô để quay lại đúng trang ảnh đó.
 class FeedGridScreen extends StatelessWidget {
@@ -41,29 +42,34 @@ class FeedGridScreen extends StatelessWidget {
           style: text.titleMedium?.copyWith(color: palette.feedInk),
         ),
       ),
-      body: expenses.isEmpty
-          ? const PixelEmptyState(
-              glyph: 'filmStrip',
-              title: 'Chưa có khoản chi nào',
-              message: 'Mở camera và chụp khoản chi đầu tiên.',
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(4),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 4,
-                crossAxisSpacing: 4,
-              ),
-              itemCount: expenses.length,
-              itemBuilder: (context, index) {
-                final expense = expenses[index];
-                return _GridTile(
-                  expense: expense,
-                  categoryName: categoriesById[expense.categoryId]?.name,
-                  onTap: () => Navigator.of(context).pop(index),
-                );
-              },
-            ),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: PixelStarField()),
+          expenses.isEmpty
+              ? const PixelEmptyState(
+                  glyph: 'filmStrip',
+                  title: 'Chưa có khoản chi nào',
+                  message: 'Mở camera và chụp khoản chi đầu tiên.',
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(4),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 4,
+                    crossAxisSpacing: 4,
+                  ),
+                  itemCount: expenses.length,
+                  itemBuilder: (context, index) {
+                    final expense = expenses[index];
+                    return _GridTile(
+                      expense: expense,
+                      categoryName: categoriesById[expense.categoryId]?.name,
+                      onTap: () => Navigator.of(context).pop(index),
+                    );
+                  },
+                ),
+        ],
+      ),
     );
   }
 }

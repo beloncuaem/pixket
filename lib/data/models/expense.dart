@@ -3,6 +3,7 @@ import '../../core/constants/app_strings.dart';
 class Expense {
   final int? id;
   final String? imagePath;
+
   /// Signed URL chỉ dùng để hiển thị trong phiên hiện tại; không lưu vào DB.
   final String? displayImageUrl;
   final String caption;

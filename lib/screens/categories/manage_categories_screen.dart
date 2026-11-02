@@ -13,6 +13,7 @@ import '../../widgets/pixel/pixel_empty_state.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_screen_header.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 import '../../widgets/pixel/pixel_text_field.dart';
 import 'category_glyph_grid.dart';
 
@@ -75,92 +76,103 @@ class ManageCategoriesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: palette.canvas,
-      body: Column(
+      body: Stack(
         children: [
-          SafeArea(
-            bottom: false,
-            child: PixelScreenHeader(
-              title: 'QUẢN LÝ DANH MỤC',
-              subtitle: '${state.categories.length} danh mục',
-              onBackTap: () => Navigator.of(context).pop(),
-              trailing: AppIcon(name: 'tag', size: 32, color: palette.inkMuted),
-            ),
-          ),
-          Expanded(
-            child: state.isLoading && state.categories.isEmpty
-                ? const Center(child: PixelLoading(label: 'Đang tải danh mục'))
-                : state.categories.isEmpty
-                ? const PixelEmptyState(
-                    glyph: 'tag',
-                    title: 'Chưa có danh mục',
-                    message: 'Thêm danh mục để phân loại khoản chi.',
-                  )
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                    children: [
-                      if (state.errorMessage != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: PixelPanel(
-                            background: palette.butter,
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              children: [
-                                AppIcon(
-                                  name: 'alert',
-                                  size: 32,
-                                  color: palette.butterInk,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    state.errorMessage!,
-                                    style: text.bodyMedium?.copyWith(
+          const Positioned.fill(child: PixelStarField()),
+          Column(
+            children: [
+              SafeArea(
+                bottom: false,
+                child: PixelScreenHeader(
+                  title: 'QUẢN LÝ DANH MỤC',
+                  subtitle: '${state.categories.length} danh mục',
+                  onBackTap: () => Navigator.of(context).pop(),
+                  trailing: AppIcon(
+                    name: 'tag',
+                    size: 32,
+                    color: palette.inkMuted,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: state.isLoading && state.categories.isEmpty
+                    ? const Center(
+                        child: PixelLoading(label: 'Đang tải danh mục'),
+                      )
+                    : state.categories.isEmpty
+                    ? const PixelEmptyState(
+                        glyph: 'tag',
+                        title: 'Chưa có danh mục',
+                        message: 'Thêm danh mục để phân loại khoản chi.',
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                        children: [
+                          if (state.errorMessage != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: PixelPanel(
+                                background: palette.butter,
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    AppIcon(
+                                      name: 'alert',
+                                      size: 32,
                                       color: palette.butterInk,
                                     ),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        state.errorMessage!,
+                                        style: text.bodyMedium?.copyWith(
+                                          color: palette.butterInk,
+                                        ),
+                                      ),
+                                    ),
+                                    PixelButton(
+                                      label: 'THỬ LẠI',
+                                      variant: PixelButtonVariant.secondary,
+                                      icon: 'refresh',
+                                      onPressed: () => ref
+                                          .read(categoryProvider.notifier)
+                                          .loadCategories(),
+                                    ),
+                                  ],
                                 ),
-                                PixelButton(
-                                  label: 'THỬ LẠI',
-                                  variant: PixelButtonVariant.secondary,
-                                  icon: 'refresh',
-                                  onPressed: () => ref
-                                      .read(categoryProvider.notifier)
-                                      .loadCategories(),
+                              ),
+                            ),
+                          for (final category in state.categories)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _CategoryRow(
+                                category: category,
+                                onEdit: () => _showCategoryDialog(
+                                  context,
+                                  ref,
+                                  category: category,
                                 ),
-                              ],
+                                onDelete: () =>
+                                    _confirmDelete(context, ref, category),
+                              ),
                             ),
-                          ),
-                        ),
-                      for (final category in state.categories)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _CategoryRow(
-                            category: category,
-                            onEdit: () => _showCategoryDialog(
-                              context,
-                              ref,
-                              category: category,
-                            ),
-                            onDelete: () =>
-                                _confirmDelete(context, ref, category),
-                          ),
-                        ),
-                    ],
-                  ),
-          ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-              child: PixelButton(
-                key: const ValueKey('addCategoryButton'),
-                label: 'THÊM DANH MỤC',
-                icon: 'plus',
-                expanded: true,
-                onPressed: () => _showCategoryDialog(context, ref),
+                        ],
+                      ),
               ),
-            ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  child: PixelButton(
+                    key: const ValueKey('addCategoryButton'),
+                    label: 'THÊM DANH MỤC',
+                    icon: 'plus',
+                    expanded: true,
+                    onPressed: () => _showCategoryDialog(context, ref),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

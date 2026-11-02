@@ -4,11 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pixket/core/constants/app_info.dart';
 
-List<File> _dartFiles(String root) => Directory(
-  root,
-).listSync(recursive: true, followLinks: false).whereType<File>().where(
-  (f) => f.path.endsWith('.dart'),
-).toList();
+List<File> _dartFiles(String root) =>
+    Directory(root)
+        .listSync(recursive: true, followLinks: false)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart'))
+        .toList();
 
 List<String> _filesContaining(String needle, {String root = 'lib'}) => [
   for (final file in _dartFiles(root))
@@ -26,13 +27,38 @@ const _legacyWidgets = [
   'lib/core/constants/app_colors.dart',
 ];
 
+const _legacyEffects = [
+  'lib/widgets/pixel/pixel_tab_bar.dart',
+  'lib/widgets/pixel/mosaic_wipe.dart',
+  'lib/widgets/pixel/rainbow_sweep.dart',
+  'lib/widgets/pixel/rainbow_rule.dart',
+  'lib/widgets/pixel/pixel_confetti.dart',
+];
+
 void main() {
   group('Pixel cleanup gates', () {
     test('8 file cũ không còn trên đĩa', () {
-      expect(
-        [for (final path in _legacyWidgets) if (File(path).existsSync()) path],
-        isEmpty,
-      );
+      expect([
+        for (final path in _legacyWidgets)
+          if (File(path).existsSync()) path,
+      ], isEmpty);
+    });
+
+    test('tab bar đáy và dải 7 màu không quay lại', () {
+      expect([
+        for (final path in _legacyEffects)
+          if (File(path).existsSync()) path,
+      ], isEmpty);
+      for (final needle in [
+        'PixelTabBar',
+        'MosaicWipe',
+        'RainbowSweep',
+        'RainbowRule',
+        'PixelConfetti',
+        'bottomNavigationBar',
+      ]) {
+        expect(_filesContaining(needle), isEmpty, reason: needle);
+      }
     });
 
     test('lib/ không còn tham chiếu AppColors hay Icons.*', () {
@@ -71,8 +97,8 @@ void main() {
     test('pubspec và AppInfo cùng một phiên bản', () {
       final pubspec = File('pubspec.yaml').readAsStringSync();
       expect(pubspec, contains('version: ${AppInfo.version}+${AppInfo.build}'));
-      expect(AppInfo.version, '2.3.0');
-      expect(AppInfo.build, '4');
+      expect(AppInfo.version, '2.4.0');
+      expect(AppInfo.build, '5');
       expect(AppInfo.tagline, 'PIXEL JOURNAL');
     });
 

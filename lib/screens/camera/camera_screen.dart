@@ -17,9 +17,9 @@ import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/feed_hud.dart';
 import '../../widgets/pixel/pixel_badge.dart';
 import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_iris.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_panel.dart';
-import '../../widgets/pixel/rainbow_sweep.dart';
 import 'expense_form_sheet.dart';
 import 'feed_grid_screen.dart';
 import 'feed_helpers.dart';
@@ -150,7 +150,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     try {
       final picture = await _controller!.takePicture();
       if (!mounted) return;
-      await RainbowSweep.play(
+      await PixelIris.play(
         context,
         onCovered: () {
           if (mounted) _openExpenseForm(imagePath: picture.path);

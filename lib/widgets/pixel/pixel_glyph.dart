@@ -29,7 +29,7 @@ class PixelGlyph extends StatelessWidget {
 
     return SizedBox.square(
       dimension: size,
-      child: CustomPaint(painter: _GlyphPainter(rows, main, sub)),
+      child: CustomPaint(painter: _GlyphPainter(rows, main, sub, palette)),
     );
   }
 }
@@ -38,8 +38,26 @@ class _GlyphPainter extends CustomPainter {
   final List<String> rows;
   final Color main;
   final Color secondary;
+  final AppPalette palette;
 
-  _GlyphPainter(this.rows, this.main, this.secondary);
+  _GlyphPainter(this.rows, this.main, this.secondary, this.palette);
+
+  /// Highlight cố định màu sáng để đọc được trên cả nền kem lẫn nền vũ trụ.
+  static const Color _highlight = Color(0xFFF7FBFF);
+
+  Color? _colorOf(String char) => switch (char) {
+    '#' => main,
+    '+' => secondary,
+    'k' => palette.shadow,
+    'w' => _highlight,
+    '1' => palette.accents[0],
+    '2' => palette.accents[1],
+    '3' => palette.accents[2],
+    '4' => palette.accents[3],
+    '5' => palette.accents[4],
+    '6' => palette.accents[5],
+    _ => null,
+  };
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -52,8 +70,9 @@ class _GlyphPainter extends CustomPainter {
       final row = y < rows.length ? rows[y] : '.' * pixelGlyphGrid;
       for (var x = 0; x < pixelGlyphGrid; x++) {
         final char = x < row.length ? row[x] : '.';
-        if (char == '.') continue;
-        paint.color = char == '#' ? main : secondary;
+        final color = _colorOf(char);
+        if (color == null) continue;
+        paint.color = color;
         // +0.2 là dung sai chống kẻ hở giữa hai ô liền kề; không đổi thành
         // anti-alias.
         canvas.drawRect(
@@ -66,5 +85,8 @@ class _GlyphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GlyphPainter old) =>
-      old.main != main || old.secondary != secondary || old.rows != rows;
+      old.main != main ||
+      old.secondary != secondary ||
+      old.rows != rows ||
+      old.palette != palette;
 }

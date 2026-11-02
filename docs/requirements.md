@@ -31,7 +31,7 @@ khách hay ngoại tuyến.
 | FR-08 | Biểu đồ pixel theo danh mục, mức độ cần thiết và theo ngày; nhận xét tổng quan. | Đã có |
 | FR-09 | Chuyển giao diện sáng/tối. | Đã có |
 | FR-10 | Nhật ký ảnh kiểu Locket: trang camera đầu tiên, lướt dọc xem ảnh đã chụp. | Đã có |
-| FR-11 | Điều hướng bằng nút 3 gạch + drawer, không dùng thanh tab đáy. | Đã có |
+| FR-11 | Điều hướng bằng nút 3 gạch + drawer hoặc vuốt ngang (CHỤP chỉ nhận vuốt mép trái 24 px), không dùng thanh tab đáy. | Đã có |
 | FR-12 | Đăng nhập/đăng ký email & mật khẩu qua Supabase Auth. | Đã có |
 | FR-13 | Đăng nhập Google OAuth qua trình duyệt, quay về app bằng deep link. | Đã có, phụ thuộc cấu hình Supabase/Google Cloud |
 | FR-14 | Bắt buộc đăng nhập; không có chế độ khách/ngoại tuyến. | Đã có |
@@ -54,7 +54,8 @@ khách hay ngoại tuyến.
 | FR-31 | Biểu đồ tự vẽ bằng khối pixel (tỉ trọng danh mục, mức độ cần thiết, theo ngày) kèm nhãn chữ và `Semantics`; đã gỡ `fl_chart`. | Đã có |
 | FR-32 | Vùng chạm ≥ 48×48 dp, chữ không chỉ dựa vào màu, lỗi hiển thị dưới field, test ở text scale 1.3×. | Đã có, cần xác minh thêm trên thiết bị |
 | FR-33 | Ảnh khoản chi chỉ render qua `PixelReceiptImage` với placeholder "Không tải được ảnh"; feed/lưới/thùng rác/danh mục theo ngôn ngữ Pixel. | Đã có |
-| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.3.0` / build `4`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
+| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.4.0` / build `5`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
+| FR-35 | Bộ nhận diện v2.4: logo máy ảnh pixel có ống kính cầu vồng (bản đủ + bản tối giản), 63 glyph đa màu phong cách tàu vũ trụ, bầu trời sao ở nền tối, hiệu ứng iris khi chụp và sao lóe khi lưu; đã gỡ mọi dải 7 màu, pháo giấy, mosaic và tab bar đáy. | Đã có |
 
 ## 4. Quy tắc dữ liệu
 
@@ -103,9 +104,10 @@ khách hay ngoại tuyến.
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
 - `flutter analyze`: không có issue nào.
-- `flutter test`: 369/369 bài pass (gồm 6 bài gate dọn dẹp trong
-  `test/widget/legacy_cleanup_test.dart`: không còn `AppColors`, `Icons.*`, 8 file widget cũ,
-  mọi ảnh render qua `PixelReceiptImage`, `pubspec.yaml` khớp `AppInfo`).
+- `flutter test`: 371 bài pass, 1 bài skip có điều kiện (sinh icon launcher, cần
+  `PIXKET_GEN_ICONS=1`); gồm 7 bài gate dọn dẹp trong `test/widget/legacy_cleanup_test.dart`:
+  không còn `AppColors`, `Icons.*`, 8 file widget cũ, tab bar đáy + 5 widget dải 7 màu,
+  mọi ảnh render qua `PixelReceiptImage`, `pubspec.yaml` khớp `AppInfo`.
 - `flutter build apk --debug`: **không chạy được trong phiên này** vì máy phát triển chưa có
   Android SDK/JDK (`flutter build apk --debug` báo "No Android SDK found"). APK sẽ được build
   bởi workflow GitHub Actions.

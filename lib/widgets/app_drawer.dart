@@ -7,6 +7,7 @@ import '../core/theme/app_palette.dart';
 import 'pixel/app_icon.dart';
 import 'pixel/pixel_divider.dart';
 import 'pixel/pixel_logo.dart';
+import 'pixel/pixel_star_field.dart';
 
 class AppDrawer extends StatelessWidget {
   final AppSection selected;
@@ -52,124 +53,133 @@ class AppDrawer extends StatelessWidget {
             right: BorderSide(color: palette.lineStrong, width: 3),
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
-                child: Row(
-                  children: [
-                    // Mark thương hiệu thay avatar chữ 'P' (cùng cỡ 40 nên không
-                    // đổi layout); avatar của người dùng nằm ở _ProfileCard.
-                    const PixelLogo(size: 40, mono: true),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppInfo.name.toUpperCase(),
-                            style: Theme.of(context).textTheme.titleLarge,
+        child: Stack(
+          children: [
+            const Positioned.fill(child: PixelStarField()),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
+                    child: Row(
+                      children: [
+                        // Mark thương hiệu thay avatar chữ 'P' (cùng cỡ 40 nên không
+                        // đổi layout); avatar của người dùng nằm ở _ProfileCard.
+                        const PixelLogo(size: 40),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppInfo.name.toUpperCase(),
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              Text(
+                                AppInfo.tagline,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(color: palette.inkMuted),
+                              ),
+                            ],
                           ),
-                          Text(
-                            AppInfo.tagline,
+                        ),
+                        IconButton(
+                          tooltip: 'Đóng menu',
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: AppIcon(
+                            name: 'close',
+                            size: 20,
+                            color: palette.ink,
+                            semanticLabel: 'Đóng menu',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _ProfileCard(
+                      displayName: displayName,
+                      email: email,
+                      onLogout: () => _closeThen(context, () => onLogout()),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      children: [
+                        const _SectionLabel('KHÔNG GIAN'),
+                        for (final section in AppSection.values)
+                          _DrawerTile(
+                            glyph: section.glyph,
+                            label: section.label,
+                            selected: section == selected,
+                            onTap: () => _closeThen(
+                              context,
+                              () => onSelectSection(section),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        const _SectionLabel('TIỆN ÍCH'),
+                        _DrawerTile(
+                          glyph: 'console',
+                          label: 'Quản lý danh mục',
+                          onTap: () => _closeThen(context, onOpenCategories),
+                        ),
+                        _DrawerTile(
+                          glyph: 'airlock',
+                          label: 'Thùng rác',
+                          onTap: () => _closeThen(context, onOpenTrash),
+                        ),
+                        _DrawerTile(
+                          glyph: 'engine',
+                          label: 'Cài đặt',
+                          onTap: () => _closeThen(context, onOpenSettings),
+                        ),
+                        const PixelDivider(),
+                        _DrawerTile(
+                          glyph: isDarkMode ? 'moon' : 'sun',
+                          label: 'Giao diện tối',
+                          onTap: onToggleTheme,
+                          trailing: Switch(
+                            value: isDarkMode,
+                            onChanged: (_) => onToggleTheme(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+                    child: Row(
+                      children: [
+                        AppIcon(
+                          name: SupabaseConfig.isInitialized
+                              ? 'cloud'
+                              : 'cloudOff',
+                          size: 16,
+                          color: palette.inkMuted,
+                          semanticLabel: SupabaseConfig.isInitialized
+                              ? 'Đã kết nối đám mây'
+                              : 'Chưa kết nối đám mây',
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            AppInfo.aboutLabel,
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(color: palette.inkMuted),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      tooltip: 'Đóng menu',
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: AppIcon(
-                        name: 'close',
-                        size: 20,
-                        color: palette.ink,
-                        semanticLabel: 'Đóng menu',
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _ProfileCard(
-                  displayName: displayName,
-                  email: email,
-                  onLogout: () => _closeThen(context, () => onLogout()),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  children: [
-                    const _SectionLabel('KHÔNG GIAN'),
-                    for (final section in AppSection.values)
-                      _DrawerTile(
-                        glyph: section.glyph,
-                        label: section.label,
-                        selected: section == selected,
-                        onTap: () =>
-                            _closeThen(context, () => onSelectSection(section)),
-                      ),
-                    const SizedBox(height: 16),
-                    const _SectionLabel('TIỆN ÍCH'),
-                    _DrawerTile(
-                      glyph: 'tag',
-                      label: 'Quản lý danh mục',
-                      onTap: () => _closeThen(context, onOpenCategories),
-                    ),
-                    _DrawerTile(
-                      glyph: 'trash',
-                      label: 'Thùng rác',
-                      onTap: () => _closeThen(context, onOpenTrash),
-                    ),
-                    _DrawerTile(
-                      glyph: 'settings',
-                      label: 'Cài đặt',
-                      onTap: () => _closeThen(context, onOpenSettings),
-                    ),
-                    const PixelDivider(),
-                    _DrawerTile(
-                      glyph: isDarkMode ? 'moon' : 'sun',
-                      label: 'Giao diện tối',
-                      onTap: onToggleTheme,
-                      trailing: Switch(
-                        value: isDarkMode,
-                        onChanged: (_) => onToggleTheme(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-                child: Row(
-                  children: [
-                    AppIcon(
-                      name: SupabaseConfig.isInitialized ? 'cloud' : 'cloudOff',
-                      size: 16,
-                      color: palette.inkMuted,
-                      semanticLabel: SupabaseConfig.isInitialized
-                          ? 'Đã kết nối đám mây'
-                          : 'Chưa kết nối đám mây',
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        AppInfo.aboutLabel,
-                        style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(color: palette.inkMuted),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -318,7 +328,7 @@ class _DrawerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
-    final fg = selected ? palette.onAccent : palette.ink;
+    final fg = palette.ink;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Semantics(
@@ -326,7 +336,11 @@ class _DrawerTile extends StatelessWidget {
         selected: selected,
         label: label,
         child: Material(
-          color: selected ? palette.mint : Colors.transparent,
+          // Mục đang chọn: mint trong suốt + viền mint + quầng sáng, không tô
+          // đặc để icon đa màu và nền sao vẫn nhìn thấy.
+          color: selected
+              ? palette.mint.withValues(alpha: 0.18)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           child: InkWell(
             onTap: onTap,
@@ -336,12 +350,19 @@ class _DrawerTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
-                border: Border(
-                  left: BorderSide(
-                    color: selected ? palette.lineStrong : Colors.transparent,
-                    width: 4,
-                  ),
+                border: Border.all(
+                  color: selected ? palette.mint : Colors.transparent,
+                  width: 2,
                 ),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: palette.mint.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : const [],
               ),
               child: Row(
                 children: [
@@ -350,8 +371,10 @@ class _DrawerTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       label,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(color: fg),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: fg,
+                        fontWeight: selected ? FontWeight.w700 : null,
+                      ),
                     ),
                   ),
                   if (trailing != null) trailing!,
