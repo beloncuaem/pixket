@@ -37,4 +37,14 @@ class PriorityLevel {
     colorValue: map['color_value'] as int,
     sortOrder: map['sort_order'] as int,
   );
+
+  /// Row từ bảng Supabase `priority_levels`. `level_key` mới là giá trị mà
+  /// `expenses.priority` trỏ tới, còn `id` của bảng chỉ là identity nội bộ.
+  factory PriorityLevel.fromSupabaseRow(Map<String, dynamic> row) =>
+      PriorityLevel(
+        id: (row['level_key'] as num).toInt(),
+        name: row['name'] as String,
+        colorValue: (row['color_value'] as num).toInt(),
+        sortOrder: (row['sort_order'] as num).toInt(),
+      );
 }

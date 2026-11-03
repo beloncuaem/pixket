@@ -25,29 +25,14 @@ class PriorityNotifier extends StateNotifier<PriorityState> {
 
   Future<void> loadLevels() async {
     state = state.copyWith(isLoading: true);
-    final levels = await _repository.getAll();
-    state = state.copyWith(levels: levels, isLoading: false);
-  }
-
-  Future<void> addLevel(String name, int colorValue) async {
-    final id = await _repository.nextId();
-    await _repository.insert(
-      PriorityLevel(id: id, name: name, colorValue: colorValue, sortOrder: id),
-    );
-    await loadLevels();
-  }
-
-  Future<void> updateLevel(PriorityLevel level) async {
-    await _repository.update(level);
-    await loadLevels();
-  }
-
-  Future<void> deleteLevel(int id, int replacementId) async {
-    await _repository.deleteAndMoveExpenses(
-      id: id,
-      replacementId: replacementId,
-    );
-    await loadLevels();
+    try {
+      final levels = await _repository.getAll();
+      state = state.copyWith(levels: levels, isLoading: false);
+    } catch (error) {
+      // Supabase chưa kết nối hoặc chưa đăng nhập: giữ danh sách rỗng để UI
+      // hiện placeholder thay vì để lỗi lan lên làm sập màn hình.
+      state = state.copyWith(isLoading: false);
+    }
   }
 }
 
