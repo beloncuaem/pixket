@@ -1,4 +1,4 @@
-# Cấu trúc dự án Pixket (v2.4 — Pixel Journal)
+# Cấu trúc dự án Pixket (v2.5 — Pixel Journal)
 
 > Cập nhật: 2026-11-03. Tài liệu phản ánh kiến trúc Cloud-only (Supabase), xác thực bắt buộc,
 > giao diện Pixel tự vẽ (icon 16×16 phong cách tàu vũ trụ, panel viền cứng), điều hướng
@@ -15,7 +15,7 @@ pixket/
 │   ├── core/
 │   │   ├── config/supabase_config.dart  # Đọc .env, khởi tạo Supabase, isInitialized
 │   │   ├── constants/
-│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.4.0, build 5, tagline
+│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.5.0, build 6, tagline
 │   │   │   └── app_strings.dart         # Nhãn cố định (mức độ cần thiết, v.v.)
 │   │   ├── icons/pixel_glyph_data.dart  # Bảng glyph pixel 16×16 (chuỗi hàng + palette index)
 │   │   ├── navigation/app_section.dart  # enum 4 khu vực: feed / dashboard / statistics / budget
@@ -26,22 +26,22 @@ pixket/
 │   │   │   └── pixel_text_theme.dart    # Scale chữ VT323 / Be Vietnam Pro
 │   │   └── utils/
 │   │       ├── amount_input_formatter.dart  # Dấu chấm nhóm nghìn, chặn ký tự lạ, ≤12 chữ số
-│   │       ├── csv_builder.dart             # BOM UTF-8 + dòng CSV
 │   │       ├── currency_formatter.dart      # format / parseInput / toEditableText
 │   │       ├── date_formatter.dart          # dd/MM/yyyy, Hôm nay/Hôm qua + HH:mm
 │   │       ├── expense_date_limits.dart     # Chặn tương lai và quá 10 năm
 │   │       ├── icon_helper.dart             # normalizeIconKey, availableIcons → AppIcon
 │   │       ├── pixel_allocate.dart          # Chia ô cho biểu đồ pixel
+│   │       ├── save_to_gallery.dart         # Tải ảnh khoản chi về thư viện máy (gal)
+│   │       ├── square_image.dart            # Cắt ô vuông 1:1 + nén JPEG 1200px + marker _sq
 │   │       └── storage_paths.dart           # storagePathOf: URL public cũ → path trong bucket
 │   ├── data/
 │   │   ├── database/database_helper.dart    # SQLite: onboarding + mức độ cần thiết
 │   │   ├── models/                          # Expense, Category, Budget, PriorityLevel
 │   │   └── repositories/
 │   │       ├── auth_repository.dart         # Email/Google OAuth + quên mật khẩu + preflight
-│   │       ├── csv_export_service.dart      # Phân trang 1000 dòng, export file CSV
 │   │       ├── expense_image_mapping.dart   # Đường dẫn ảnh ↔ storage path
-│   │       ├── expense_repository.dart      # Chỉ Supabase, upload ảnh + signed URL
-│   │       ├── expense_row_writer.dart      # Ghi dòng expenses (dùng chung cho import/export)
+│   │       ├── expense_repository.dart      # Supabase: upload ảnh vuông, signed URL, migration lazy ảnh legacy
+│   │       ├── expense_row_writer.dart      # Ghi dòng expenses + repointImage khi đổi path ảnh
 │   │       ├── category_repository.dart
 │   │       ├── budget_repository.dart       # Chọn dòng ngân sách tổng mới nhất
 │   │       ├── budget_alert_repository.dart
@@ -67,7 +67,7 @@ pixket/
 │   │   │   ├── expense_form_sheet.dart        # Nhập số tiền/danh mục/mức độ, lưu cloud
 │   │   │   ├── feed_grid_screen.dart          # Lưới ảnh pixel, chạm để nhảy tới feed
 │   │   │   ├── feed_helpers.dart              # Lọc ảnh + sắp xếp mới nhất trước
-│   │   │   └── feed_photo_page.dart           # Trang ảnh toàn màn hình + HUD
+│   │   │   └── feed_photo_page.dart           # Ảnh vuông 1:1 + panel thông tin bên dưới
 │   │   ├── categories/
 │   │   │   ├── category_glyph_grid.dart       # Lưới chọn icon pixel 48dp
 │   │   │   └── manage_categories_screen.dart
@@ -81,8 +81,7 @@ pixket/
 │   │   │   └── statistics_charts.dart         # dailySeries + biểu đồ pixel
 │   │   ├── budget/budget_screen.dart          # Ngân sách theo tháng (yyyy-MM)
 │   │   ├── settings/
-│   │   │   ├── settings_screen.dart           # 4 nhóm DỮ LIỆU/GIAO DIỆN & BIỂU ĐỒ/TÀI KHOẢN/VỀ APP
-│   │   │   └── csv_export_sheet.dart          # showCsvExportSheet
+│   │   │   └── settings_screen.dart           # 4 nhóm DỮ LIỆU/GIAO DIỆN & BIỂU ĐỒ/TÀI KHOẢN/VỀ APP
 │   │   └── trash/trash_screen.dart            # Hàng khoản đã xóa + khôi phục
 │   └── widgets/
 │       ├── app_drawer.dart                    # Menu 3 gạch: hồ sơ + không gian + tiện ích
@@ -202,9 +201,12 @@ MainScreen (Scaffold + Drawer + PixelStarField nền, không bottomNavigationBar
   `pixel_glyph_data.dart` (bảng ký tự `.#kw1-6`), vẽ bằng `CustomPainter`; không dùng
   `Icons.*` hay emoji. Glyph khu vực và tiện ích vẽ theo bảng điều khiển tàu vũ trụ
   (`holocam`, `bridge`, `radar`, `cargo`, `console`, `airlock`, `engine`), mỗi glyph ≥ 3 màu.
-- `PixelLogo` là logo máy ảnh pixel dựng từ `buildLogoGrid(n, {simple})`: thân đơn sắc,
-  ống kính **6 cung cầu vồng** + đồng tử + điểm sáng, gờ shutter màu bơ; bản `simple`
-  16 ô dùng cho favicon/launcher nhỏ. Icon launcher Android được sinh lại từ chính logo này
+- `PixelLogo` là mark "Lens Orbit" dựng thủ tục bằng `buildLogoGrid(n)`: vành ống kính khía
+  sáu rãnh, quỹ đạo nghiêng `-26°`, vì sao vàng bốn cánh giữa ống kính, hành tinh lục ngồi
+  trên mép vành và sao nền `*` chỉ vẽ ở theme tối (`logoCellColor`). Hằng số đo trên lưới
+  chuẩn 24×24 rồi nhân theo `n / 24`, với `n = logoGridSize(size)` làm tròn xuống bội số 8,
+  nên cùng một nét ở header 24 dp, drawer 40 dp và launcher 192 px. Icon launcher Android và
+  `docs/brand/pixket_icon_1024.png` được sinh lại từ chính logo này
   (`test/tool/launcher_icons_test.dart`, chạy với `PIXKET_GEN_ICONS=1`).
 - Ảnh demo trong `docs/screenshots/` cũng do test sinh:
   `test/tool/demo_screenshots_test.dart`, chạy với `PIXKET_GEN_SHOTS=1`, render
@@ -271,8 +273,8 @@ flutter test             # 371 passed, 7 skip (test sinh icon + 6 test sinh ản
 ```
 
 - Unit: model, formatter VND/ngày, giới hạn ngày khoản chi, parse số có dấu nghìn,
-  `AppPalette`/glyph pixel, `resolveReceiptImage`, storage path, state ngân sách/thống kê/auth,
-  builder CSV.
+  `AppPalette`/glyph pixel, `resolveReceiptImage`, storage path, cắt ảnh vuông + migration,
+  tải ảnh về máy, state ngân sách/thống kê/auth.
 - Widget: onboarding/login/register/forgot password, dashboard, form khoản chi, camera/feed/grid,
   ảnh feed, thống kê, ngân sách, danh mục, thùng rác, cài đặt, `AppDrawer`,
   `main_navigation_test` (không tab bar đáy, đổi khu vực qua drawer, vuốt mép mở drawer,
@@ -283,7 +285,8 @@ flutter test             # 371 passed, 7 skip (test sinh icon + 6 test sinh ản
 - Đã xác minh trên emulator `codex_api35` (Android API 35) ở các bản trước:
   onboarding → login → email sai trả lỗi từ Supabase → feed Locket → drawer.
 - **Chưa** xác minh lại bằng tay sau đợt redesign Pixel: màn hình thật, camera, keyboard inset,
-  signed URL, share sheet CSV (xem mục "Chưa xác minh trên thiết bị" của README).
+  signed URL, cắt vuông khi chụp và tải ảnh vào thư viện máy (xem mục "Chưa xác minh trên thiết
+  bị" của README).
 - `flutter build apk --debug` trên máy phát triển này báo `No Android SDK found`;
   APK release do workflow GitHub Actions build.
 

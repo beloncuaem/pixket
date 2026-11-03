@@ -139,15 +139,46 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('nút sửa và xóa có nhãn tiếng Việt và 48dp', (tester) async {
+  testWidgets('nút sửa, tải ảnh và xóa có nhãn tiếng Việt và 48dp', (
+    tester,
+  ) async {
     await tester.pumpWidget(wrap(photoPage()));
-    for (final key in ['feed-edit', 'feed-delete']) {
+    for (final key in ['feed-edit', 'feed-download', 'feed-delete']) {
       final size = tester.getSize(find.byKey(ValueKey(key)));
       expect(size.width, greaterThanOrEqualTo(48));
       expect(size.height, greaterThanOrEqualTo(48));
     }
     expect(find.byTooltip('Chỉnh sửa khoản chi'), findsOneWidget);
+    expect(find.byTooltip('Tải ảnh về máy'), findsOneWidget);
     expect(find.byTooltip('Chuyển vào thùng rác'), findsOneWidget);
+  });
+
+  testWidgets('ảnh là ô vuông nằm trọn phía trên panel, không bị che', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(photoPage()));
+    final image = tester.getRect(find.byType(PixelReceiptImage));
+    final panel = tester.getRect(find.byType(FeedCaptionPanel));
+    expect(image.width, image.height);
+    expect(image.bottom, lessThanOrEqualTo(panel.top));
+  });
+
+  testWidgets('ẩn bộ đếm khi không truyền vị trí ảnh', (tester) async {
+    await tester.pumpWidget(wrap(photoPage()));
+    expect(find.textContaining(RegExp(r'^\d+/\d+$')), findsNothing);
+
+    await tester.pumpWidget(
+      wrap(
+        FeedPhotoPage(
+          expense: photos.first,
+          onEdit: () {},
+          onDelete: () {},
+          photoIndex: 3,
+          photoCount: 12,
+        ),
+      ),
+    );
+    expect(find.text('3/12'), findsOneWidget);
   });
 
   testWidgets('trang ảnh không còn glass pill và placeholder cũ', (

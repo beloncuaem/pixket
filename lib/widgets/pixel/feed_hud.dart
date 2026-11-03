@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_palette.dart';
 
+/// Phần thân của HUD trên: padding 10 + nút 48 + padding 22. FeedPhotoPage chừa
+/// đúng chừng này để ảnh không bị thanh tiêu đề đè lên.
+const double feedHudBarHeight = 80;
+
 /// Viền chuyển sáng cho HUD trên/dưới của feed, chỉ dùng token nền tối.
 LinearGradient hudTopGradient(AppPalette palette) => LinearGradient(
   begin: Alignment.topCenter,

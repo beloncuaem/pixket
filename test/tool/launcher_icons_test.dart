@@ -1,5 +1,6 @@
-// Sinh ic_launcher.png cho năm mật độ Android từ chính lưới logo, không thêm
-// dependency. Mặc định skip để `flutter test` trong CI không ghi đè file.
+// Sinh ic_launcher.png cho năm mật độ Android và icon thương hiệu 1024 từ chính
+// lưới logo, không thêm dependency. Mặc định skip để `flutter test` trong CI
+// không ghi đè file.
 // Chạy: PIXKET_GEN_ICONS=1 flutter test test/tool/launcher_icons_test.dart
 import 'dart:io';
 import 'dart:typed_data';
@@ -12,26 +13,47 @@ import 'package:pixket/core/theme/app_palette.dart';
 import 'package:pixket/widgets/pixel/pixel_logo.dart';
 
 /// Cỡ mipmap chuẩn của Android; tất cả đều chia hết cho lưới 24 nên mỗi cell
-/// là một số nguyên pixel và không phải resample.
-const _densities = <String, int>{
-  'mdpi': 48,
-  'hdpi': 72,
-  'xhdpi': 96,
-  'xxhdpi': 144,
-  'xxxhdpi': 192,
+/// là một số nguyên pixel và không phải resample. `brand` là icon 1024 cho tài
+/// liệu thương hiệu: lưới nội suy theo tỉ lệ nên cell lẻ chỉ làm nét mượt hơn.
+const _targets = <String, ({int px, String path})>{
+  'mdpi': (
+    px: 48,
+    path: 'android/app/src/main/res/mipmap-mdpi/ic_launcher.png',
+  ),
+  'hdpi': (
+    px: 72,
+    path: 'android/app/src/main/res/mipmap-hdpi/ic_launcher.png',
+  ),
+  'xhdpi': (
+    px: 96,
+    path: 'android/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
+  ),
+  'xxhdpi': (
+    px: 144,
+    path: 'android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png',
+  ),
+  'xxxhdpi': (
+    px: 192,
+    path: 'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png',
+  ),
+  'brand': (px: 1024, path: 'docs/brand/pixket_icon_1024.png'),
 };
 
 void main() {
   final enabled = Platform.environment['PIXKET_GEN_ICONS'] == '1';
 
   testWidgets(
-    'ghi ic_launcher.png cho năm mật độ',
+    'ghi icon launcher năm mật độ và icon thương hiệu 1024',
     (tester) async {
-      // Launcher dùng bản đầy đủ, có cầu vồng ở ống kính, trên nền canvas dark.
+      // Nền canvas dark vì sao `*` chỉ vẽ trên theme tối; launcher giữ cầu sao.
       final palette = AppPalette.dark;
 
-      for (final entry in _densities.entries) {
-        final px = entry.value;
+      // Cửa sổ test mặc định 800×600 sẽ bóp icon 1024 xuống 800 ô; nới surface
+      // ra bằng cỡ lớn nhất để mỗi SizedBox giữ đúng px×px.
+      await tester.binding.setSurfaceSize(const Size.square(1024));
+
+      for (final entry in _targets.entries) {
+        final px = entry.value.px;
         final key = GlobalObjectKey(entry.key);
 
         await tester.pumpWidget(
@@ -73,8 +95,7 @@ void main() {
         });
 
         expect(png, isNotNull, reason: '${entry.key} không mã hoá được PNG');
-        final path =
-            'android/app/src/main/res/mipmap-${entry.key}/ic_launcher.png';
+        final path = entry.value.path;
         await tester.binding.runAsync(
           () => File(path).writeAsBytes(png!, flush: true),
         );

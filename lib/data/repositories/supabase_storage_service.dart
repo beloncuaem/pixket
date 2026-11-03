@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/utils/square_image.dart';
 import '../../core/utils/storage_paths.dart';
 
 /// Ảnh hóa đơn lưu trong bucket private; mọi hiển thị đi qua signed URL.
@@ -35,8 +36,11 @@ class SupabaseStorageService {
       'heic' => 'image/heic',
       _ => 'image/jpeg',
     };
+    // Marker `_sq` đi thẳng vào tên object để biết ảnh nào đã vuông mà không
+    // cần thêm cột vào bảng expenses.
+    final marker = isSquareImagePath(localFilePath) ? '_sq' : '';
     final fileName =
-        '${DateTime.now().millisecondsSinceEpoch}_${file.lengthSync()}.$extension';
+        '${DateTime.now().millisecondsSinceEpoch}_${file.lengthSync()}$marker.$extension';
     final storagePath = '${user.id}/$fileName';
 
     await client.storage
@@ -47,6 +51,28 @@ class SupabaseStorageService {
           fileOptions: FileOptions(contentType: contentType, upsert: false),
         );
 
+    return storagePath;
+  }
+
+  /// Ghi ảnh đã cắt vuông lên cùng thư mục người dùng của [legacyPath].
+  Future<String> uploadSquareBytes(
+    Uint8List bytes, {
+    required String legacyPath,
+  }) async {
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      throw StateError('Chưa cấu hình Supabase.');
+    }
+    final folder = legacyPath.split('/').first;
+    final storagePath =
+        '$folder/${DateTime.now().millisecondsSinceEpoch}_${bytes.length}$squareImageSuffix';
+    await client.storage
+        .from(bucketName)
+        .uploadBinary(
+          storagePath,
+          bytes,
+          fileOptions: FileOptions(contentType: 'image/jpeg', upsert: false),
+        );
     return storagePath;
   }
 
@@ -86,12 +112,17 @@ class SupabaseStorageService {
     signer: (batch) => signPaths(batch),
   );
 
-  Future<void> deleteByPath(String storagePath) async {
+  Future<void> deleteByPath(String storagePath) => deletePaths([storagePath]);
+
+  /// Xoá nhiều object trong một yêu cầu. Path không còn tồn tại vẫn được chấp
+  /// nhận nên caller không phải kiểm tra trước.
+  Future<void> deletePaths(List<String> storagePaths) async {
+    if (storagePaths.isEmpty) return;
     final client = SupabaseConfig.client;
     if (client == null) {
       throw StateError('Chưa cấu hình Supabase.');
     }
-    await client.storage.from(bucketName).remove([storagePath]);
+    await client.storage.from(bucketName).remove(storagePaths);
   }
 
   /// Xóa object từ bất kỳ giá trị nào từng lưu trong `image_url`.

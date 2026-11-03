@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/utils/square_image.dart';
 import '../../core/utils/storage_paths.dart';
 import '../models/expense.dart';
 import 'expense_image_mapping.dart';
@@ -14,11 +16,14 @@ class ExpenseRepository {
   ExpenseRepository({
     SupabaseStorageService? storageService,
     ExpenseRowWriter? writer,
+    http.Client? httpClient,
   }) : _storage = storageService ?? SupabaseStorageService(),
-       _writer = writer ?? SupabaseExpenseRowWriter();
+       _writer = writer ?? SupabaseExpenseRowWriter(),
+       _http = httpClient ?? http.Client();
 
   final SupabaseStorageService _storage;
   final ExpenseRowWriter _writer;
+  final http.Client _http;
 
   SupabaseClient _requireClient() {
     final client = SupabaseConfig.client;
@@ -54,7 +59,13 @@ class ExpenseRepository {
     if (stored != null) return (path: stored, uploaded: false);
 
     if (await File(value).exists()) {
-      return (path: await _storage.uploadReceiptImage(value), uploaded: true);
+      // Chốt chặn cuối cho tỉ lệ vuông: mọi đường ghi ảnh đều đi qua đây, kể cả
+      // khi UI gửi lên một tệp chưa cắt.
+      final squared = await writeSquareCopy(File(value));
+      return (
+        path: await _storage.uploadReceiptImage(squared.path),
+        uploaded: true,
+      );
     }
 
     throw StateError('Không tìm thấy ảnh để tải lên Cloud.');
@@ -134,6 +145,52 @@ class ExpenseRepository {
     } catch (error) {
       debugPrint('Ký URL ảnh thất bại: $error');
       return rows;
+    }
+  }
+
+  static const int legacyMigrationLimit = 5;
+  final Set<String> _migrationAttempted = {};
+
+  /// Cắt lại tối đa [legacyMigrationLimit] ảnh tỉ lệ full mỗi lần nạp feed, và
+  /// repoint các dòng đang trỏ tới chúng. Không xoá object ở đây: caller phải
+  /// nạp lại state trước khi gọi [deleteLegacyImages], nếu không ảnh đang hiển
+  /// thị sẽ mất nguồn.
+  /// Trả về danh sách path cũ đã repoint thành công.
+  Future<List<String>> migrateLegacyImages(
+    Map<String, String> signedUrls,
+  ) async {
+    final pending = signedUrls.keys
+        .where((path) => !isSquareImagePath(path))
+        .where((path) => _migrationAttempted.add(path))
+        .take(legacyMigrationLimit)
+        .toList();
+
+    final repointed = <String>[];
+    for (final path in pending) {
+      try {
+        final response = await _http.get(Uri.parse(signedUrls[path]!));
+        if (response.statusCode != 200) continue;
+        final squared = cropToSquareBytes(response.bodyBytes);
+        if (squared == null) continue;
+        final newPath = await _storage.uploadSquareBytes(
+          squared,
+          legacyPath: path,
+        );
+        await _writer.repointImage(path, newPath);
+        repointed.add(path);
+      } catch (error) {
+        debugPrint('Bỏ qua migration ảnh $path: $error');
+      }
+    }
+    return repointed;
+  }
+
+  Future<void> deleteLegacyImages(List<String> paths) async {
+    if (paths.isEmpty) return;
+    try {
+      await _storage.deletePaths(paths);
+    } catch (error) {
+      debugPrint('Dọn ảnh legacy thất bại: $error');
     }
   }
 

@@ -101,8 +101,9 @@ không phải ảnh chụp từ thiết bị, và toàn bộ số liệu là d�
   `CustomPainter` qua `AppIcon`; không còn ký hiệu `Icons.*` nào trong `lib/`. Bộ glyph
   khu vực vẽ theo bảng điều khiển tàu vũ trụ (`holocam`, `bridge`, `radar`, `cargo`) và
   tiện ích (`console`, `airlock`, `engine`), mỗi glyph dùng ≥ 3 màu.
-- Logo máy ảnh pixel: thân đơn sắc, **ống kính cầu vồng 6 cung** + đồng tử + điểm sáng;
-  có bản đầy đủ và bản tối giản 16 ô (`PixelLogo(simple: true)`).
+- Logo **"Lens Orbit"** do `buildLogoGrid(n)` dựng thủ tục trên lưới 24×24 nhân tỉ lệ:
+  vành ống kính khía sáu rãnh, quỹ đạo nghiêng, vì sao vàng giữa ống kính, một hành tinh
+  trên mép vành và sao nền chỉ vẽ ở theme tối. Icon launcher Android sinh từ chính lưới này.
 - Panel viền vuông 2–3 px, bóng cứng lệch `(3, 4)`, không gradient ở `lib/screens/`.
 - Bảng màu `AppPalette` (ThemeExtension): nền kem `#FFF6E3` + nhấn mint `#7BD8A8`,
   có phiên bản tối cho nhật ký ảnh.
@@ -166,7 +167,7 @@ không phải ảnh chụp từ thiết bị, và toàn bộ số liệu là d�
 | **Icon** | `pixel_glyph_data.dart` + `CustomPainter` | 63 glyph 16×16 tự vẽ, không dùng `Icons.*` |
 | **Biểu đồ** | Widget pixel tự vẽ (`PixelShareBar`, `PixelStackedShare`, `PixelBarChart`) | Không dùng `fl_chart` |
 | **Camera & Ảnh** | `camera`, `image_picker`, `cached_network_image` | Chụp, chọn, cache ảnh cloud |
-| **Chia sẻ** | `share_plus` ^13.3.1 | Gửi file CSV qua share sheet |
+| **Xử lý ảnh** | `image` ^4.12.0, `gal` ^2.3.3 | Cắt ô vuông 1:1 + nén JPEG 1200px, lưu ảnh vào thư viện máy |
 | **Môi trường** | `flutter_dotenv` ^5.2.1 | Đọc `.env` |
 | **Kiểm thử** | `flutter_test` | 371 Unit & Widget tests |
 
@@ -184,12 +185,12 @@ pixket/
 │   ├── core/
 │   │   ├── icons/             # pixel_glyph_data.dart (63 glyph 16×16)
 │   │   ├── theme/             # app_palette, app_theme, pixel_text_theme
-│   │   ├── constants/         # AppInfo (Pixket, 2.4.0+5), AppStrings
+│   │   ├── constants/         # AppInfo (Pixket, 2.5.0+6), AppStrings
 │   │   ├── config/            # supabase_config.dart
-│   │   └── utils/             # formatter, csv_builder, icon_helper, storage_paths
+│   │   └── utils/             # formatter, square_image, save_to_gallery, icon_helper, storage_paths
 │   ├── data/
 │   │   ├── models/            # Expense, Category, Budget, PriorityLevel
-│   │   └── repositories/      # auth, expense, category, budget, csv_export_service
+│   │   └── repositories/      # auth, expense, category, budget, supabase_storage_service
 │   ├── providers/             # Riverpod StateNotifier
 │   ├── screens/
 │   │   ├── main_screen.dart   # Drawer + starfield + vuốt ngang, không tab bar đáy
@@ -199,7 +200,7 @@ pixket/
 │   │   ├── statistics/        # Thống kê + biểu đồ pixel
 │   │   ├── budget/            # Ngân sách
 │   │   ├── categories/        # Danh mục + bảng glyph
-│   │   ├── settings/          # Cài đặt + xuất CSV
+│   │   ├── settings/          # Cài đặt
 │   │   ├── trash/             # Thùng rác
 │   │   └── onboarding/        # Giới thiệu lần đầu
 │   └── widgets/
@@ -285,14 +286,19 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
-## 💾 Sao lưu & khôi phục dữ liệu
+## 💾 Ảnh, sao lưu & khôi phục dữ liệu
 
-- **Xuất CSV**: Cài đặt → Xuất CSV (sao lưu). File `pixket_YYYYMMDD_HHmm.csv` mở bằng
-  Excel/LibreOffice/Google Sheets (BOM UTF-8); cột `ảnh` ghi đường dẫn trong bucket
-  `expense-receipts`, không chứa ảnh nhúng. Danh sách dài được phân trang 1000 dòng.
-- **Khôi phục ảnh**: muốn mang ảnh theo sang project Supabase khác phải tải riêng từng object
-  qua Storage API; CSV không tự tải ảnh.
-- **Nhập lại CSV**: chưa hỗ trợ. CSV là bản sao lưu để đọc và để nhập tay vào công cụ khác.
+- **Chuẩn hoá ảnh vuông 1:1**: camera cắt ô vuông giữa của ảnh rồi nén JPEG cạnh 1200px
+  (`lib/core/utils/square_image.dart`), khoảng 250–350 KB mỗi ảnh thay vì 1,5–3 MB ảnh
+  full-screen. Ảnh đã cắt mang marker `_sq.jpg` ngay trong path object, nên không cần thêm
+  cột nào để phân biệt với ảnh cũ.
+- **Ảnh cũ (legacy)**: mở dashboard là app tự tải tối đa 5 ảnh chưa marker, cắt vuông, upload
+  object mới, `update` cột `image_url` rồi mới xóa object cũ. Ảnh legacy hiển thị bằng
+  `BoxFit.contain` nên không bị cắt mất hai bên trước khi kịp migration.
+- **Tải ảnh về máy**: trang ảnh → nút "Tải ảnh về máy", lưu vào thư viện ảnh của thiết bị qua
+  `gal`. Khoản chi chưa upload thì lấy tệp cục bộ; không có ảnh thì app báo rõ thay vì im lặng.
+- **Khôi phục ảnh**: muốn mang ảnh sang project Supabase khác phải tải riêng từng object
+  qua Storage API.
 - **Quên mật khẩu**: Màn hình đăng nhập → "Quên mật khẩu?" → nhập email. Supabase gửi link đặt lại;
   mở link trên chính thiết bị đã cài app để deep link `io.supabase.pixket://login-callback/`
   đưa app về màn đặt mật khẩu mới.
@@ -308,7 +314,8 @@ flutter test        # 371 passed, 7 skip (test sinh icon + 6 test sinh ảnh dem
 ```
 
 - **Unit Tests**: model, formatter VND/ngày, `ThousandsSeparatorInputFormatter`,
-  `CurrencyFormatter.parseInput`, giới hạn ngày giờ, `CsvBuilder`, `StoragePaths`,
+  `CurrencyFormatter.parseInput`, giới hạn ngày giờ, `cropToSquareBytes` + marker `_sq` +
+  migration lazy, `saveReceiptToGallery`, `StoragePaths`,
   `pixel_allocate`, trạng thái ngân sách/thống kê/auth, ánh xạ icon + hợp lệ 63 glyph,
   sắp xếp feed ảnh, `PixelReceiptImage`.
 - **Widget Tests**: Login/Register/Quên mật khẩu/Đặt lại mật khẩu, onboarding, dashboard,
@@ -336,7 +343,8 @@ th thủ công trên máy thật sau đợt redesign Pixel:
    bởi HUD hay không.
 2. Keyboard khi nhập số tiền/chọn ngày giờ trong bottom sheet (inset, cuộn, che nút).
 3. Tải ảnh thật từ bucket private qua signed URL trên thiết bị, và ảnh legacy còn hiển thị.
-4. Share sheet Android với file `.csv` và hiệu năng phân trang khi > 5000 khoản chi.
+4. Cắt vuông khi chụp bằng camera thật và `gal` lưu ảnh vào thư viện Android (từ API 29 dùng
+   scoped storage, `WRITE_EXTERNAL_STORAGE` chỉ áp cho API ≤ 28).
 5. Email đặt lại mật khẩu + deep link mở lại app, và `updateUser(password:)` có đòi
    reauthentication hay không (tùy cấu hình project Supabase).
 

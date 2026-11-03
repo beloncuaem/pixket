@@ -10,6 +10,8 @@
 	<string>Pixket cần dùng camera để lưu ảnh cho mỗi khoản chi.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Pixket cần truy cập thư viện ảnh để đính kèm ảnh cho mỗi khoản chi.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Pixket cần lưu ảnh khoản chi vào thư viện ảnh trên máy.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Pixket</string>
 	<key>CFBundleExecutable</key>

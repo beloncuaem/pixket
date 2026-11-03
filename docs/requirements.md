@@ -41,21 +41,23 @@ khách hay ngoại tuyến.
 | FR-18 | Kiểm tra Google provider trước khi mở trình duyệt để báo lỗi rõ ràng. | Đã có |
 | FR-19 | Xem ảnh dạng lưới trong nhật ký và nhảy tới đúng ảnh trong feed. | Đã có |
 | FR-20 | Hiển thị "Quá ngân sách: X" thay vì số còn lại âm khi vượt hạn mức. | Đã có |
-| FR-21 | Ảnh hóa đơn lưu bucket private, hiển thị qua signed URL hạn 24h. | Đã có |
+| FR-21 | Ảnh hóa đơn lưu bucket private, hiển thị qua signed URL hạn 1 giờ (TTL 3600s). | Đã có |
 | FR-22 | Keep-alive Supabase bằng GitHub Actions (kèm cron-job.org dự phòng). | Đã có, cần người dùng cấu hình secrets |
 | FR-23 | Rollback ảnh đã upload khi ghi DB thất bại. | Đã có |
 | FR-24 | Ô nhập tiền tự chèn dấu chấm nhóm nghìn, chặn ký tự lạ, tối đa 12 chữ số; toàn bộ chỗ đọc số dùng `CurrencyFormatter.parseInput`. | Đã có |
 | FR-25 | Khoản chi chọn được ngày giờ, không nhận tương lai và không quá 10 năm, có nút "Bây giờ". | Đã có |
 | FR-26 | Quên mật khẩu qua email (PKCE + deep link), màn đặt lại mật khẩu trong app, thông báo trung tính. | Đã có, cần xác minh trên thiết bị |
-| FR-27 | Xuất CSV có BOM UTF-8, phân trang 1000 dòng, chia sẻ qua share sheet hệ thống. | Đã có, cần xác minh trên thiết bị |
+| FR-27 | Ảnh vuông chuẩn hoá: cắt ô vuông giữa + nén JPEG cạnh 1200px khi chụp/chọn ảnh, marker `_sq.jpg` trong path; ảnh legacy được migration lazy (tối đa 5 ảnh/lượt) khi mở dashboard. Chức năng xuất CSV đã gỡ ở bản 2.5. | Đã có, cần xác minh trên thiết bị |
 | FR-28 | Bộ icon pixel tự vẽ (lưới 16×16, `CustomPainter`) thay Material Icons và emoji; `IconHelper` giữ API cũ, chỉ đổi render sang `AppIcon`. | Đã có |
 | FR-29 | `AppPalette` (ThemeExtension) là nguồn màu duy nhất, tương phản WCAG ở cả hai theme; bỏ gradient và glassmorphism. | Đã có |
 | FR-30 | Component pixel dùng chung cho mọi màn: panel, button, chip, progress, segmented, text field, dialog/sheet/snackbar, empty/loading/stat/badge/divider, expense tile. | Đã có |
 | FR-31 | Biểu đồ tự vẽ bằng khối pixel (tỉ trọng danh mục, mức độ cần thiết, theo ngày) kèm nhãn chữ và `Semantics`; đã gỡ `fl_chart`. | Đã có |
 | FR-32 | Vùng chạm ≥ 48×48 dp, chữ không chỉ dựa vào màu, lỗi hiển thị dưới field, test ở text scale 1.3×. | Đã có, cần xác minh thêm trên thiết bị |
 | FR-33 | Ảnh khoản chi chỉ render qua `PixelReceiptImage` với placeholder "Không tải được ảnh"; feed/lưới/thùng rác/danh mục theo ngôn ngữ Pixel. | Đã có |
-| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.4.0` / build `5`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
-| FR-35 | Bộ nhận diện v2.4: logo máy ảnh pixel có ống kính cầu vồng (bản đủ + bản tối giản), 63 glyph đa màu phong cách tàu vũ trụ, bầu trời sao ở nền tối, hiệu ứng iris khi chụp và sao lóe khi lưu; đã gỡ mọi dải 7 màu, pháo giấy, mosaic và tab bar đáy. | Đã có |
+| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.5.0` / build `6`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
+| FR-35 | Bộ nhận diện v2.4: 63 glyph đa màu phong cách tàu vũ trụ, bầu trời sao ở nền tối, hiệu ứng iris khi chụp và sao lóe khi lưu; đã gỡ mọi dải 7 màu, pháo giấy, mosaic và tab bar đáy. Logo máy ảnh ống kính cầu vồng của bản này được thay bằng mark Lens Orbit (FR-37). | Đã có |
+| FR-36 | Tải ảnh khoản chi về thư viện máy từ trang ảnh (`gal`), lấy signed URL nếu đã upload, ngược lại dùng tệp cục bộ; thiếu quyền hoặc thiếu ảnh thì báo tiếng Việt. | Đã có, cần xác minh trên thiết bị |
+| FR-37 | Logo "Lens Orbit" dựng thủ tục từ lưới 24×24 (`buildLogoGrid`): vành ống kính khía sáu rãnh, quỹ đạo nghiêng, vì sao vàng, hành tinh và sao nền chỉ vẽ ở theme tối; cùng một mark cho header, drawer, icon launcher và icon thương hiệu. | Đã có |
 
 ## 4. Quy tắc dữ liệu
 
@@ -88,7 +90,6 @@ khách hay ngoại tuyến.
 - OCR/nhận diện hóa đơn; ảnh chỉ là tệp đính kèm.
 - Thay ảnh của khoản chi đã lưu (hiện chỉ sửa được ghi chú, số tiền, danh mục, mức độ).
 - Đồng bộ hai chiều tự động theo thời gian thực và xử lý xung đột nâng cao.
-- Nhập lại dữ liệu từ file CSV đã xuất (CSV hiện chỉ là bản sao lưu để đọc).
 - Đăng nhập Apple/Facebook và các provider OAuth khác.
 
 ## 7. Điều kiện cấu hình bên ngoài
@@ -121,8 +122,7 @@ khách hay ngoại tuyến.
     app báo rõ trước khi mở trình duyệt.
 - Chưa xác minh bằng tay (không có thiết bị/emulator trong phiên): tải ảnh thật lên
   bucket private, xem ảnh qua signed URL trên thiết bị, ảnh legacy còn hiển thị.
-- Chưa xác minh bằng tay cho FR-26/FR-27: email đặt lại mật khẩu và deep link mở lại app,
-  `updateUser(password:)` có đòi reauthentication hay không, share sheet Android với file
-  `.csv`, hiệu năng phân trang khi > 5000 khoản chi.
+- Chưa xác minh bằng tay cho FR-26: email đặt lại mật khẩu và deep link mở lại app,
+  `updateUser(password:)` có đòi reauthentication hay không (tùy cấu hình project Supabase).
 - Người dùng cần: chạy lại `supabase_setup.sql`, thêm GitHub Secrets, chạy workflow tay
   một lần và xác nhận `HTTP 200`.

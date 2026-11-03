@@ -14,7 +14,6 @@ import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_screen_header.dart';
 import '../categories/manage_categories_screen.dart';
 import '../trash/trash_screen.dart';
-import 'csv_export_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -55,11 +54,6 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   _ProfilePanel(displayName: displayName, email: email),
                   pixelGroupHeader('DỮ LIỆU'),
-                  _NavRow(
-                    glyph: 'download',
-                    label: 'Xuất CSV (sao lưu)',
-                    onTap: () => showCsvExportSheet(context),
-                  ),
                   _NavRow(
                     glyph: 'tag',
                     label: 'Quản lý danh mục',

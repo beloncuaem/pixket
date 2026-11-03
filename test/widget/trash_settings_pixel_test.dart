@@ -188,7 +188,7 @@ void main() {
     expect(fake.purged, [7]);
   });
 
-  testWidgets('Cài đặt: 4 nhóm, giữ nhãn CSV, không SwitchListTile', (
+  testWidgets('Cài đặt: 4 nhóm, bỏ mục xuất CSV, không SwitchListTile', (
     tester,
   ) async {
     await tester.pumpWidget(_settings());
@@ -203,11 +203,11 @@ void main() {
       expect(find.text(label), findsOneWidget);
     }
     expect(find.text('CÀI ĐẶT'), findsOneWidget);
-    expect(find.text('Xuất CSV (sao lưu)'), findsOneWidget);
+    expect(find.text('Xuất CSV (sao lưu)'), findsNothing);
     expect(find.text('Quản lý danh mục'), findsOneWidget);
     expect(find.text('Thùng rác'), findsOneWidget);
     expect(find.text('Chế độ tối'), findsOneWidget);
-    expect(find.text('Phiên bản 2.4.0 • PIXEL JOURNAL'), findsOneWidget);
+    expect(find.text('Phiên bản 2.5.0 • PIXEL JOURNAL'), findsOneWidget);
     expect(find.byType(SwitchListTile), findsNothing);
     expect(find.byType(ListTile), findsNothing);
     expect(find.byType(Card), findsNothing);

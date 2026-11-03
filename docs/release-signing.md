@@ -71,7 +71,7 @@ cập nhật tay, nếu không đăng nhập Google và Quên mật khẩu sẽ 
 
 Bật R8 (`isMinifyEnabled = true`) chỉ lộ lỗi thật trên thiết bị, không lộ ở bước build.
 Sau khi có keystore, cài bản mới lên máy đã cài bản cũ và test đủ bốn đường:
-camera/chụp hóa đơn, share CSV, thông báo ngân sách, đăng nhập Google + Quên mật khẩu.
+camera/chụp hóa đơn, tải ảnh về thư viện máy, thông báo ngân sách, đăng nhập Google + Quên mật khẩu.
 
 `isShrinkResources` cố tình để `false`: `flutter_local_notifications` tham chiếu
 `@mipmap/ic_launcher` bằng chuỗi lúc runtime nên resource shrinking sẽ xoá mất icon.

@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/utils/square_image.dart';
 import '../core/utils/storage_paths.dart';
 import '../data/models/expense.dart';
 import '../data/repositories/expense_repository.dart';
@@ -106,12 +108,33 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
         monthTotal: results[3] as double,
         isLoading: false,
       );
+      unawaited(_migrateLegacySquares(results[0] as List<Expense>));
     } catch (_) {
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Không thể tải dữ liệu chi tiêu.',
       );
     }
+  }
+
+  /// Migration lazy cho ảnh tỉ lệ full còn sót trong DB. Chạy sau khi feed đã
+  /// vẽ, cắt vài ảnh mỗi lần, và chỉ xoá object cũ khi state đã trỏ sang ảnh
+  /// mới — nếu không ảnh đang hiển thị sẽ mất nguồn giữa chừng.
+  Future<void> _migrateLegacySquares(List<Expense> rows) async {
+    final signedByPath = <String, String>{};
+    for (final row in rows) {
+      final path = storagePathOf(row.imagePath);
+      final url = row.displayImageUrl;
+      if (path == null || url == null || isSquareImagePath(path)) continue;
+      signedByPath[path] = url;
+    }
+    if (signedByPath.isEmpty) return;
+
+    final repointed = await _repository.migrateLegacyImages(signedByPath);
+    if (repointed.isEmpty || !mounted) return;
+
+    state = state.copyWith(expenses: await _repository.getExpenses());
+    await _repository.deleteLegacyImages(repointed);
   }
 
   Future<void> addExpense(Expense expense) async {

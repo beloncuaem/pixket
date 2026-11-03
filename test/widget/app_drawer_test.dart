@@ -143,8 +143,8 @@ void main() {
       expect(find.text('quang@example.com'), findsOneWidget);
       expect(find.text('Cloud Sync'), findsOneWidget);
       expect(find.byType(PixelLogo), findsOneWidget);
-      // Drawer dùng bản đầy đủ (có cầu vồng ở ống kính), không phải bản tối giản.
-      expect(tester.widget<PixelLogo>(find.byType(PixelLogo)).simple, isFalse);
+      // Drawer dùng logo cỡ 40 nên lưới làm tròn về 40, không phải bản 24.
+      expect(tester.widget<PixelLogo>(find.byType(PixelLogo)).size, 40);
 
       await tester.tap(find.byTooltip('Đăng xuất'));
       await tester.pumpAndSettle();

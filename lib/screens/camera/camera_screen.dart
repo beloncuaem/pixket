@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:math' as math;
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/square_image.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
 import '../../providers/category_provider.dart';
@@ -15,7 +19,6 @@ import '../../providers/priority_provider.dart';
 import '../../widgets/hamburger_button.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/feed_hud.dart';
-import '../../widgets/pixel/pixel_badge.dart';
 import '../../widgets/pixel/pixel_button.dart';
 import '../../widgets/pixel/pixel_iris.dart';
 import '../../widgets/pixel/pixel_loading.dart';
@@ -150,10 +153,14 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     try {
       final picture = await _controller!.takePicture();
       if (!mounted) return;
+      // Việc cắt chạy trên isolate ngay trong lúc mống mắt đóng, nên onCovered
+      // chỉ đợi phần còn lại của nó.
+      final squared = writeSquareCopy(File(picture.path));
       await PixelIris.play(
         context,
-        onCovered: () {
-          if (mounted) _openExpenseForm(imagePath: picture.path);
+        onCovered: () async {
+          final file = await squared;
+          if (mounted) _openExpenseForm(imagePath: file.path);
         },
       );
     } catch (error) {
@@ -172,9 +179,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         maxHeight: 1600,
         imageQuality: 80,
       );
-      if (image != null && mounted) {
-        await _openExpenseForm(imagePath: image.path);
-      }
+      if (image == null || !mounted) return;
+      final squared = await writeSquareCopy(File(image.path));
+      if (!mounted) return;
+      await _openExpenseForm(imagePath: squared.path);
     } catch (error) {
       debugPrint('Error picking image: $error');
       if (mounted) _showSnackBar('Không thể mở thư viện ảnh.');
@@ -344,6 +352,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   expense: expense,
                   category: category,
                   priority: priority,
+                  photoIndex: index,
+                  photoCount: photos.length,
                   onEdit: () => _openExpenseForm(expense: expense),
                   onDelete: () => _moveToTrash(expense),
                 );
@@ -411,25 +421,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   ),
                 ),
                 if (photos.isNotEmpty)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      PixelBadge(
-                        glyph: 'filmStrip',
-                        label: isCameraPage
-                            ? '${photos.length} ảnh'
-                            : '$_pageIndex/${photos.length}',
-                        ink: palette.feedInk,
-                      ),
-                      PixelIconButton(
-                        icon: 'grid',
-                        tooltip: 'Xem lưới ảnh',
-                        onPressed: _openPhotoGrid,
-                        background: palette.feedPanel,
-                        borderColor: palette.feedInk,
-                        iconColor: palette.feedInk,
-                      ),
-                    ],
+                  PixelIconButton(
+                    icon: 'grid',
+                    tooltip: 'Xem lưới ảnh',
+                    onPressed: _openPhotoGrid,
+                    background: palette.feedPanel,
+                    borderColor: palette.feedInk,
+                    iconColor: palette.feedInk,
                   )
                 else
                   const SizedBox(width: 48),
@@ -663,11 +661,11 @@ class _FeedNoticeCard extends StatelessWidget {
   }
 }
 
-/// Khung ngắm pixel: 4 góc vuông đậm, không áp filter hay làm mờ ảnh xem trước.
+/// Khung ngắm pixel: guide vuông đúng vùng cắt, 4 góc đậm, không áp filter hay
+/// làm mờ ảnh xem trước.
 class _ViewfinderCorners extends StatelessWidget {
   const _ViewfinderCorners();
 
-  static const double _inset = 20;
   static const double _side = 24;
 
   @override
@@ -687,17 +685,26 @@ class _ViewfinderCorners extends StatelessWidget {
     );
 
     return IgnorePointer(
-      child: Stack(
-        children: [
-          Positioned(top: _inset, left: _inset, child: bracket(true, true)),
-          Positioned(top: _inset, right: _inset, child: bracket(false, true)),
-          Positioned(bottom: _inset, left: _inset, child: bracket(true, false)),
-          Positioned(
-            bottom: _inset,
-            right: _inset,
-            child: bracket(false, false),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Preview vẽ BoxFit.cover nên vùng cắt vuông luôn phủ kín cạnh nhỏ
+          // của khung: guide là ô vuông nội tiếp, ảnh thật lấy dư hai bên.
+          final guide = math.min(constraints.maxWidth, constraints.maxHeight);
+          return Center(
+            child: SizedBox(
+              width: guide,
+              height: guide,
+              child: Stack(
+                children: [
+                  Positioned(top: 0, left: 0, child: bracket(true, true)),
+                  Positioned(top: 0, right: 0, child: bracket(false, true)),
+                  Positioned(bottom: 0, left: 0, child: bracket(true, false)),
+                  Positioned(bottom: 0, right: 0, child: bracket(false, false)),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

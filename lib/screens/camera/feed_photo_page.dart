@@ -4,6 +4,8 @@ import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/icon_helper.dart';
+import '../../core/utils/save_to_gallery.dart';
+import '../../core/utils/square_image.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/priority_level.dart';
@@ -13,13 +15,18 @@ import '../../widgets/pixel/pixel_badge.dart';
 import '../../widgets/pixel/pixel_receipt_image.dart';
 import '../../widgets/pixel/pixel_star_field.dart';
 
-/// Một trang ảnh trong nhật ký: ảnh full-bleed + panel thông tin bên dưới.
+/// Một trang ảnh trong nhật ký: ảnh vuông ở trên, panel thông tin đặc ở dưới,
+/// không thành phần nào đè hay làm mờ ảnh.
 class FeedPhotoPage extends StatelessWidget {
   final Expense expense;
   final Category? category;
   final PriorityLevel? priority;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+
+  /// Vị trí hiện tại trong feed, chỉ để hiển thị "3/12"; null là ẩn.
+  final int? photoIndex;
+  final int? photoCount;
 
   const FeedPhotoPage({
     super.key,
@@ -28,42 +35,63 @@ class FeedPhotoPage extends StatelessWidget {
     required this.onDelete,
     this.category,
     this.priority,
+    this.photoIndex,
+    this.photoCount,
   });
+
+  Future<void> _saveToGallery(BuildContext context) async {
+    // Bắt messenger trước khi chờ: BuildContext sau await không còn hợp lệ.
+    final messenger = ScaffoldMessenger.of(context);
+    final error = await saveReceiptToGallery(
+      signedUrl: expense.displayImageUrl,
+      localPath: expense.imagePath,
+      name: 'pixket_${expense.id ?? DateTime.now().millisecondsSinceEpoch}',
+    );
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Đã lưu ảnh vào thư viện.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final text = Theme.of(context).textTheme;
     final categoryName = category?.name ?? 'Khác';
     final priorityName = priority?.name ?? expense.priorityLabel;
+    // Ảnh legacy chưa cắt mà ép cover sẽ mất hai bên, nên chỉ vuông mới cover.
+    final fit = isSquareImagePath(expense.imagePath)
+        ? BoxFit.cover
+        : BoxFit.contain;
+    final topInset = MediaQuery.of(context).padding.top;
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        PixelReceiptImage.fromExpense(
-          expense,
-          fit: BoxFit.cover,
-          radius: 4,
-          semanticLabel:
-              'Ảnh khoản chi ${expense.caption.isEmpty ? expense.amount.toInt() : expense.caption}',
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 160,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(gradient: hudTopGradient(palette)),
+    return ColoredBox(
+      color: palette.feedBg,
+      child: Column(
+        children: [
+          SizedBox(height: topInset + feedHudBarHeight),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: PixelReceiptImage.fromExpense(
+                    expense,
+                    fit: fit,
+                    radius: 4,
+                    semanticLabel:
+                        'Ảnh khoản chi ${expense.caption.isEmpty ? expense.amount.toInt() : expense.caption}',
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: DecoratedBox(
+          DecoratedBox(
             decoration: BoxDecoration(
-              color: palette.feedPanel.withValues(alpha: 0.92),
+              color: palette.feedPanel,
               border: Border(top: BorderSide(color: palette.mint, width: 2)),
             ),
             child: Stack(
@@ -100,6 +128,16 @@ class FeedPhotoPage extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             PixelIconButton(
+                              key: const ValueKey('feed-download'),
+                              icon: 'download',
+                              tooltip: 'Tải ảnh về máy',
+                              onPressed: () => _saveToGallery(context),
+                              background: palette.feedPanel,
+                              borderColor: palette.feedInk,
+                              iconColor: palette.feedInk,
+                            ),
+                            const SizedBox(width: 8),
+                            PixelIconButton(
                               key: const ValueKey('feed-delete'),
                               icon: 'trash',
                               tooltip: 'Chuyển vào thùng rác',
@@ -108,6 +146,15 @@ class FeedPhotoPage extends StatelessWidget {
                               borderColor: palette.feedInk,
                               iconColor: palette.feedInk,
                             ),
+                            if (photoIndex != null && photoCount != null) ...[
+                              const Spacer(),
+                              Text(
+                                '$photoIndex/$photoCount',
+                                style: text.bodySmall?.copyWith(
+                                  color: palette.feedMuted,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -117,8 +164,8 @@ class FeedPhotoPage extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

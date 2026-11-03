@@ -7,6 +7,10 @@ abstract class ExpenseRowWriter {
   String currentUserId();
   Future<int> insert(Map<String, dynamic> values);
   Future<void> update(int id, Map<String, dynamic> values);
+
+  /// Chuyển mọi dòng đang trỏ tới [oldPath] sang [newPath]; dùng cho migration
+  /// ảnh vuông, nơi path cũ vẫn còn được nhiều dòng tham chiếu.
+  Future<void> repointImage(String oldPath, String newPath);
 }
 
 class SupabaseExpenseRowWriter implements ExpenseRowWriter {
@@ -37,4 +41,10 @@ class SupabaseExpenseRowWriter implements ExpenseRowWriter {
   @override
   Future<void> update(int id, Map<String, dynamic> values) =>
       _client().from('expenses').update(values).eq('id', id);
+
+  @override
+  Future<void> repointImage(String oldPath, String newPath) => _client()
+      .from('expenses')
+      .update({'image_url': newPath})
+      .eq('image_url', oldPath);
 }

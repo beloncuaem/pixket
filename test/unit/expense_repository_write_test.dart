@@ -1,7 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:image/image.dart' as img;
 
+import 'package:pixket/core/utils/square_image.dart';
 import 'package:pixket/data/models/expense.dart';
 import 'package:pixket/data/repositories/expense_repository.dart';
 import 'package:pixket/data/repositories/expense_row_writer.dart';
@@ -11,8 +16,11 @@ import 'package:pixket/data/repositories/supabase_storage_service.dart';
 const String u = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 
 class _FakeStorage extends SupabaseStorageService {
+  static const String squarePath = '$u/migrated_sq.jpg';
+
   final List<String> uploads = [];
   final List<String> deleted = [];
+  final List<String> squareUploads = [];
   final Map<String, String> signed;
 
   _FakeStorage({this.signed = const {}});
@@ -24,8 +32,22 @@ class _FakeStorage extends SupabaseStorageService {
   }
 
   @override
+  Future<String> uploadSquareBytes(
+    Uint8List bytes, {
+    required String legacyPath,
+  }) async {
+    squareUploads.add(legacyPath);
+    return squarePath;
+  }
+
+  @override
   Future<void> deleteByPath(String storagePath) async {
     deleted.add(storagePath);
+  }
+
+  @override
+  Future<void> deletePaths(List<String> storagePaths) async {
+    deleted.addAll(storagePaths);
   }
 
   @override
@@ -46,12 +68,17 @@ class _ThrowingWriter implements ExpenseRowWriter {
   @override
   Future<void> update(int id, Map<String, dynamic> values) async =>
       throw StateError('db down');
+
+  @override
+  Future<void> repointImage(String oldPath, String newPath) async =>
+      throw StateError('db down');
 }
 
 class _RecordingWriter implements ExpenseRowWriter {
   Map<String, dynamic>? inserted;
   Map<String, dynamic>? updated;
   int? updatedId;
+  final Map<String, String> repointed = {};
 
   @override
   String currentUserId() => u;
@@ -66,6 +93,11 @@ class _RecordingWriter implements ExpenseRowWriter {
   Future<void> update(int id, Map<String, dynamic> values) async {
     updatedId = id;
     updated = values;
+  }
+
+  @override
+  Future<void> repointImage(String oldPath, String newPath) async {
+    repointed[oldPath] = newPath;
   }
 }
 
@@ -95,15 +127,14 @@ void main() {
       writer: _ThrowingWriter(),
     );
 
-    expect(
-      () => repository.saveExpense(
+    await expectLater(
+      repository.saveExpense(
         expenseId: null,
         imageSource: image,
         values: {'caption': 'A', 'amount': 1000},
       ),
       throwsStateError,
     );
-    await Future<void>.delayed(Duration.zero);
     expect(storage.uploads, [image]);
     expect(storage.deleted, ['$u/IMG_1.jpg']);
   });
@@ -198,6 +229,64 @@ void main() {
 
     final decorated = await repository.decorateWithSignedUrls(rows);
     expect(decorated.single.displayImageUrl, isNull);
+  });
+
+  test('migrateLegacyImages cắt, upload và repoint rồi trả path cũ', () async {
+    final bytes = img.encodeJpg(img.Image(width: 1600, height: 900));
+    final client = MockClient((_) async => http.Response.bytes(bytes, 200));
+    final storage = _FakeStorage();
+    final writer = _RecordingWriter();
+    final repository = ExpenseRepository(
+      storageService: storage,
+      writer: writer,
+      httpClient: client,
+    );
+
+    final repointed = await repository.migrateLegacyImages({
+      '$u/a.jpg': 'https://signed/a',
+    });
+
+    expect(repointed, ['$u/a.jpg']);
+    expect(storage.squareUploads, ['$u/a.jpg']);
+    expect(writer.repointed, {'$u/a.jpg': _FakeStorage.squarePath});
+    // Lần hai cùng một path: _migrationAttempted đã ghi nhớ nên không gọi lại.
+    expect(
+      await repository.migrateLegacyImages({'$u/a.jpg': 'https://signed/a'}),
+      isEmpty,
+    );
+  });
+
+  test('migrateLegacyImages bỏ qua ảnh đã vuông và ảnh tải lỗi', () async {
+    final repository = ExpenseRepository(
+      storageService: _FakeStorage(),
+      writer: _RecordingWriter(),
+      httpClient: MockClient(
+        (_) async => http.Response.bytes(Uint8List.fromList([1, 2, 3]), 500),
+      ),
+    );
+
+    expect(
+      await repository.migrateLegacyImages({
+        '$u/b_sq.jpg': 'https://signed/b',
+        '$u/c.jpg': 'https://signed/c',
+      }),
+      isEmpty,
+    );
+  });
+
+  test('writeSquareCopy đặt marker _sq cạnh tệp gốc', () async {
+    final source = File('${tempDir.path}/IMG_2.jpg');
+    await source.writeAsBytes(
+      img.encodeJpg(img.Image(width: 1600, height: 900)),
+    );
+
+    final squared = await writeSquareCopy(source);
+
+    expect(squared.path, endsWith(squareImageSuffix));
+    expect(isSquareImagePath(squared.path), isTrue);
+    expect(await squared.exists(), isTrue);
+    // Ảnh đã vuông đi qua writeSquareCopy phải trả chính nó, không nén lần hai.
+    expect(await writeSquareCopy(squared), same(squared));
   });
 }
 

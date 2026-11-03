@@ -7,98 +7,134 @@ import '../../core/theme/app_palette.dart';
 /// Cạnh lưới logo: bội số 8, làm tròn xuống từ [size].
 int logoGridSize(double size) => math.max(8, (size ~/ 8) * 8);
 
-/// Sinh lưới logo máy ảnh theo spec §3, dùng chung cho brand (24), glyph nhỏ
-/// (16) và icon launcher. Trả về `n` chuỗi, mỗi chuỗi `n` ký tự:
-/// `.` trống · `k` ink · `b` surface · `f` flash · `g` highlight · `h` đồng tử ·
-/// `1`..`6` sáu cung iris.
-List<String> buildLogoGrid(int n, {bool simple = false}) {
+/// Lưới "Lens Orbit": vành ống kính khía sáu rãnh, quỹ đạo nghiêng, vì sao bốn
+/// cánh giữa ống kính, một hành tinh ngồi trên mép vành và các ô sao nền.
+///
+/// Mọi hằng số đo trên lưới chuẩn 24×24 rồi nhân theo `n / 24`, nên cùng một
+/// mark ở mọi cỡ: header 24 dp, drawer 40 dp, icon launcher tới 192 px.
+///
+/// `.` trống · `k` vành ink · `s` quỹ đạo · `f` vì sao vàng · `m` hành tinh lục ·
+/// `*` sao nền, chỉ theme tối vẽ.
+List<String> buildLogoGrid(int n) {
+  final scale = n / 24;
   final cells = List.generate(n, (_) => List<String>.filled(n, '.'));
-  int at(double ratio) => (ratio * n).round();
 
-  final x0 = at(0.12), x1 = at(0.88);
-  final y0 = at(0.33), y1 = at(0.75);
-
-  // 1. Thân máy: chữ nhật đặc, ô nào có hàng xóm ngoài mask thì thành viền.
-  for (var y = y0; y < y1; y++) {
-    for (var x = x0; x < x1; x++) {
-      final border = x == x0 || x == x1 - 1 || y == y0 || y == y1 - 1;
-      cells[y][x] = border ? 'k' : 'b';
-    }
+  void set(int x, int y, String c) {
+    if (x >= 0 && y >= 0 && x < n && y < n) cells[y][x] = c;
   }
 
-  final bumpHeight = math.max(1, at(0.08));
-
-  if (!simple) {
-    // 2. Gờ nhả chụp, nằm ngay trên thân.
-    for (var y = y0 - bumpHeight; y < y0; y++) {
-      for (var x = at(0.76); x < at(0.88); x++) {
-        if (y >= 0 && x >= 0 && x < n) cells[y][x] = 'f';
-      }
-    }
-
-    // 3. Ô ngắm ở góc trên-trái thân máy, nằm trong ruột nên không phá viền.
-    final vx0 = x0 + 2;
-    final vx1 = vx0 + math.max(1, at(0.17));
-    for (var y = y0 + 1; y < y0 + 1 + bumpHeight && y < y1 - 1; y++) {
-      for (var x = vx0; x < vx1 && x < x1 - 1; x++) {
-        cells[y][x] = 'h';
+  // Vùng chữ nhật trong lưới chuẩn, biên làm tròn theo tỉ lệ.
+  void rect(double x0, double x1, double y0, double y1, String c) {
+    final left = (x0 * scale).ceil(), right = (x1 * scale).floor();
+    final top = (y0 * scale).ceil(), bottom = (y1 * scale).floor();
+    for (var y = top; y <= bottom; y++) {
+      for (var x = left; x <= right; x++) {
+        set(x, y, c);
       }
     }
   }
 
-  // 4. Ống kính: vành ink, sáu cung 60° lệch swirl 15°, đồng tử lục giác.
-  final cx = (x0 + x1 - 1) / 2;
-  final cy = (y0 + y1 - 1) / 2 + 0.01 * n;
-  // Spec §3 chốt R = 26%·n nhưng thân máy chỉ cao 42%·n, nên đĩa kính 52%·n
-  // tràn ra ngoài thân một hàng ở cả trên lẫn dưới. Lấy R nội tiếp trong thân
-  // thì đúng ở mọi n: hàng trên/dưới của viền luôn cách tâm xa hơn R.
-  final radius = (y1 - y0) / 2 - 0.5;
-  final pupilRadius = 0.34 * radius;
+  // Một ô sao: lưới nhỏ hơn 24 vẫn giữ tối thiểu một cell để không mất nét.
+  void dot(double x, double y, String c) {
+    final side = math.max(1, scale.round());
+    final offset = ((side - 1) / 2).floor();
+    final cx = (x * scale).round(), cy = (y * scale).round();
+    for (var dy = 0; dy < side; dy++) {
+      for (var dx = 0; dx < side; dx++) {
+        set(cx - offset + dx, cy - offset + dy, c);
+      }
+    }
+  }
+
+  const ringX = 11.5, ringY = 11.5, ringRadius = 8.8;
+
+  // 1. Vành ống kính: vòng dày 2,1 ô, khía sáu rãnh 60° lệch nhau 9°.
   for (var y = 0; y < n; y++) {
     for (var x = 0; x < n; x++) {
-      final dx = x - cx, dy = y - cy;
+      final dx = x / scale - ringX, dy = y / scale - ringY;
       final rho = math.sqrt(dx * dx + dy * dy);
-      if (rho > radius) continue;
-      if (rho > radius - 1) {
-        cells[y][x] = 'k';
-        continue;
-      }
-      final sweep = (math.atan2(dy, dx) * 180 / math.pi + 15) % 360;
-      // Bán kính lục giác theo hướng: a / cos(góc lệch trong cung 60°).
-      final local = (sweep % 60) - 30;
-      final hexRadius = pupilRadius / math.cos(local * math.pi / 180);
-      cells[y][x] = rho < hexRadius ? 'h' : '${sweep ~/ 60 + 1}';
+      if (rho > ringRadius || rho < ringRadius - 2.1) continue;
+      final ang = ((math.atan2(dy, dx) * 180 / math.pi + 30) % 60 + 60) % 60;
+      if (ang < 9) continue;
+      set(x, y, 'k');
     }
   }
 
-  // 5. Highlight 2×2 nằm trên cung màu, không đè lên viền hay đồng tử.
-  final hx = (cx - 0.52 * radius).round();
-  final hy = (cy - 0.62 * radius).round();
-  for (var y = hy; y < hy + 2; y++) {
-    for (var x = hx; x < hx + 2; x++) {
-      if (y < 0 || x < 0 || y >= n || x >= n) continue;
-      if ('123456'.contains(cells[y][x])) cells[y][x] = 'g';
+  // 2. Quỹ đạo nghiêng -26°, tâm thấp hơn tâm vành 0,7 ô nên vòng elip đeo
+  // chéo qua ống kính; phần vẽ bị cắt trong vành nên không chạm mép ngoài.
+  final tilt = -26 * math.pi / 180;
+  final cosTilt = math.cos(tilt), sinTilt = math.sin(tilt);
+  for (var y = 0; y < n; y++) {
+    for (var x = 0; x < n; x++) {
+      final dx = x / scale - ringX, dy = y / scale - ringY;
+      if (math.sqrt(dx * dx + dy * dy) > ringRadius - 2.4) continue;
+      final orbitY = y / scale - 12.2;
+      final u = dx * cosTilt + orbitY * sinTilt;
+      final v = -dx * sinTilt + orbitY * cosTilt;
+      final ellipse = math.sqrt((u / 6.9) * (u / 6.9) + (v / 2.2) * (v / 2.2));
+      if ((ellipse - 1).abs() > 0.11) continue;
+      set(x, y, 's');
     }
+  }
+
+  // 3. Vì sao vàng bốn cánh ở giữa ống kính.
+  rect(9, 14, 9, 10, 'f');
+  rect(11, 12, 7, 12, 'f');
+
+  // 4. Hành tinh lục trên mép vành, vẽ sau nên đè lên vành.
+  for (var y = 0; y < n; y++) {
+    for (var x = 0; x < n; x++) {
+      final dx = x / scale - 5.4, dy = y / scale - 15.2;
+      final rho = math.sqrt(dx * dx + dy * dy);
+      if (rho > 2.6) continue;
+      set(x, y, rho > 1.6 ? 'k' : 'm');
+    }
+  }
+
+  // 5. Sao nền: vì sao bốn cánh góc trên-phải cộng mười chấm rời.
+  rect(19, 21, 4, 4, '*');
+  rect(20, 20, 3, 5, '*');
+  for (final star in const [
+    [4, 2],
+    [1, 13],
+    [21, 19],
+    [7, 1],
+    [2, 7],
+    [23, 12],
+    [12, 22],
+    [2, 20],
+    [18, 1],
+    [22, 22],
+  ]) {
+    dot(star[0].toDouble(), star[1].toDouble(), '*');
   }
 
   return [for (final row in cells) row.join()];
 }
 
-/// Logo Pixket: thân máy ảnh pixel + ống kính iris sáu cung màu cầu vồng.
+/// Màu của một ô lưới; null là ô không vẽ (sao trên nền sáng, ký tự ngoài bảng).
+Color? logoCellColor(String char, AppPalette palette, {required bool isDark}) =>
+    switch (char) {
+      'k' => palette.ink,
+      's' => palette.sky,
+      'f' => palette.butter,
+      'm' => palette.mint,
+      '*' => isDark ? palette.star : null,
+      _ => null,
+    };
+
+/// Logo Pixket: ống kính pixel trên quỹ đạo, tinh tú quanh vành.
 class PixelLogo extends StatelessWidget {
-  const PixelLogo({super.key, this.size = 24, this.simple = false});
+  const PixelLogo({super.key, this.size = 24});
 
   /// Cạnh logo; giá trị không phải bội số 8 bị làm tròn xuống.
   final double size;
-
-  /// Bỏ gờ nhả chụp và ô ngắm, chỉ còn thân + ống kính.
-  final bool simple;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
     final grid = logoGridSize(size);
-    final rows = buildLogoGrid(grid, simple: simple);
+    final rows = buildLogoGrid(grid);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SizedBox.square(
@@ -115,20 +151,6 @@ class _LogoPainter extends CustomPainter {
 
   _LogoPainter(this.rows, this.palette, this.isDark);
 
-  Color _colorOf(String char) => switch (char) {
-    'k' || 'h' => palette.ink,
-    'b' => palette.surface,
-    'f' => palette.butter,
-    'g' => isDark ? palette.star : palette.surface,
-    '1' => palette.accents[0],
-    '2' => palette.accents[1],
-    '3' => palette.accents[2],
-    '4' => palette.accents[3],
-    '5' => palette.accents[4],
-    '6' => palette.accents[5],
-    _ => Colors.transparent,
-  };
-
   @override
   void paint(Canvas canvas, Size size) {
     if (rows.isEmpty || size.width <= 0 || size.height <= 0) return;
@@ -139,9 +161,9 @@ class _LogoPainter extends CustomPainter {
     for (var y = 0; y < rows.length; y++) {
       final row = rows[y];
       for (var x = 0; x < row.length; x++) {
-        final char = row[x];
-        if (char == '.') continue;
-        paint.color = _colorOf(char);
+        final color = logoCellColor(row[x], palette, isDark: isDark);
+        if (color == null) continue;
+        paint.color = color;
         // +0.2 là dung sai chống kẻ hở giữa hai ô liền kề; không đổi thành
         // anti-alias.
         canvas.drawRect(
