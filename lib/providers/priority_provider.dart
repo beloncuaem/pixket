@@ -17,11 +17,13 @@ class PriorityState {
 }
 
 class PriorityNotifier extends StateNotifier<PriorityState> {
-  PriorityNotifier() : super(const PriorityState()) {
+  PriorityNotifier({PriorityRepository? repository})
+    : _repository = repository ?? PriorityRepository(),
+      super(const PriorityState()) {
     loadLevels();
   }
 
-  final PriorityRepository _repository = PriorityRepository();
+  final PriorityRepository _repository;
 
   Future<void> loadLevels() async {
     state = state.copyWith(isLoading: true);

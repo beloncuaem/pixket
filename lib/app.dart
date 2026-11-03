@@ -9,6 +9,7 @@ import 'core/constants/app_strings.dart';
 import 'providers/budget_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/expense_provider.dart';
+import 'providers/priority_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/app_settings_provider.dart';
@@ -81,12 +82,17 @@ class _AppHome extends ConsumerWidget {
       if (!wasAuthenticated && isAuthenticated) {
         ref.read(expenseProvider.notifier).refreshDashboard();
         ref.read(categoryProvider.notifier).loadCategories();
+        // priority_levels nằm trên Supabase và constructor của PriorityNotifier
+        // nuốt lỗi đọc: nếu lần đọc đầu hỏng (mất mạng) thì đây là đường retry
+        // duy nhất, không có nó danh sách mức độ rỗng tới khi restart app.
+        ref.read(priorityProvider.notifier).loadLevels();
         ref
             .read(budgetProvider.notifier)
             .refreshCurrentMonthAfterExpenseChange();
       } else if (wasAuthenticated && !isAuthenticated) {
         ref.invalidate(expenseProvider);
         ref.invalidate(categoryProvider);
+        ref.invalidate(priorityProvider);
         ref.invalidate(budgetProvider);
         ref.invalidate(statisticsProvider);
         unawaited(_clearUserCaches());

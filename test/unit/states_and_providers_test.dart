@@ -9,6 +9,68 @@ import 'package:pixket/data/models/budget.dart';
 import 'package:pixket/data/models/category.dart';
 import 'package:pixket/data/models/expense.dart';
 import 'package:pixket/data/models/priority_level.dart';
+import 'package:pixket/data/repositories/priority_repository.dart';
+import 'package:pixket/data/repositories/priority_row_reader.dart';
+
+/// Reader giả chạy theo kịch bản: lần gọi thứ n dùng bước thứ n, hết kịch bản
+/// thì lặp lại bước cuối.
+class _ScriptedReader implements PriorityRowReader {
+  _ScriptedReader(this._script);
+
+  final List<Future<List<Map<String, dynamic>>> Function()> _script;
+  int calls = 0;
+
+  @override
+  Future<List<Map<String, dynamic>>> readAll() {
+    final step = _script[calls.clamp(0, _script.length - 1)];
+    calls++;
+    return step();
+  }
+}
+
+Future<List<Map<String, dynamic>>> _readFails() async =>
+    throw StateError('Chưa kết nối được Supabase. Vui lòng kiểm tra mạng.');
+
+Future<List<Map<String, dynamic>>> _readSeed() async => _seededRows;
+
+/// Đúng 4 dòng mà section 5.1 của supabase_setup.sql seed.
+const List<Map<String, dynamic>> _seededRows = [
+  {
+    'id': 1,
+    'level_key': 0,
+    'name': 'Thiết yếu',
+    'color_value': 4282622023,
+    'sort_order': 0,
+  },
+  {
+    'id': 2,
+    'level_key': 1,
+    'name': 'Rất cần',
+    'color_value': 4280191205,
+    'sort_order': 1,
+  },
+  {
+    'id': 3,
+    'level_key': 2,
+    'name': 'Cần vừa',
+    'color_value': 4294675456,
+    'sort_order': 2,
+  },
+  {
+    'id': 4,
+    'level_key': 3,
+    'name': 'Chưa cần',
+    'color_value': 4293212469,
+    'sort_order': 3,
+  },
+];
+
+PriorityNotifier _notifierWith(PriorityRowReader reader) =>
+    PriorityNotifier(repository: PriorityRepository(reader: reader));
+
+/// Constructor của PriorityNotifier gọi loadLevels() mà không await, nên test
+/// phải nhường event loop cho lần đọc đó xong trước khi assert state.
+Future<void> _settleFirstLoad() => pumpEventQueue();
 
 void main() {
   group('BudgetState Logic Tests', () {
@@ -147,6 +209,41 @@ void main() {
       expect(updated.levels.length, 1);
       expect(updated.levels.first.name, 'Thiết yếu');
       expect(updated.isLoading, false);
+    });
+  });
+
+  group('PriorityNotifier.loadLevels', () {
+    test('lần đọc đầu ném lỗi: state rỗng, không ném ra ngoài', () async {
+      final notifier = _notifierWith(_ScriptedReader([_readFails]));
+      await _settleFirstLoad();
+
+      await expectLater(notifier.loadLevels(), completes);
+
+      expect(notifier.state.levels, isEmpty);
+      expect(notifier.state.isLoading, isFalse);
+    });
+
+    test('đọc lại sau lần đầu thất bại thì có dữ liệu', () async {
+      final notifier = _notifierWith(_ScriptedReader([_readFails, _readSeed]));
+      await _settleFirstLoad();
+
+      expect(notifier.state.levels, isEmpty, reason: 'lần đọc đầu thất bại');
+
+      await notifier.loadLevels();
+
+      expect(notifier.state.levels.map((level) => level.id), [0, 1, 2, 3]);
+      expect(notifier.state.isLoading, isFalse);
+    });
+
+    test('reader ném lỗi vẫn giữ dữ liệu đã load được trước đó', () async {
+      final notifier = _notifierWith(_ScriptedReader([_readSeed, _readFails]));
+      await _settleFirstLoad();
+      expect(notifier.state.levels, hasLength(4));
+
+      await notifier.loadLevels();
+
+      expect(notifier.state.levels, hasLength(4));
+      expect(notifier.state.isLoading, isFalse);
     });
   });
 
