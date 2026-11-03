@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_palette.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/pixel_allocate.dart';
 
 /// Biểu đồ cột theo ngày, vẽ bằng khối pixel 10×10, chạm để hiện tooltip.
+/// Mỗi cột mang số tiền rút gọn ở trên và ngày ở dưới nên đọc được từng ngày
+/// mà không cần chạm.
 class PixelBarChart extends StatefulWidget {
   const PixelBarChart({
     super.key,
@@ -14,7 +17,6 @@ class PixelBarChart extends StatefulWidget {
     this.rows = 8,
     this.maxBars = 31,
     this.barColor,
-    this.axisLabels = 6,
     this.reference,
   });
 
@@ -24,7 +26,6 @@ class PixelBarChart extends StatefulWidget {
   final int rows;
   final int maxBars;
   final Color? barColor;
-  final int axisLabels;
 
   /// Mốc tham chiếu (max của kỳ đang xem) để tô từng cột theo bậc mức chi.
   final double? reference;
@@ -34,6 +35,9 @@ class PixelBarChart extends StatefulWidget {
 }
 
 class _PixelBarChartState extends State<PixelBarChart> {
+  /// Ô mỗi cột: đủ chỗ cho nhãn tiền rút gọn ('347 K') và số ngày hai chữ số.
+  static const double _slotWidth = 26;
+
   int? _selected;
 
   double? _t(double value) {
@@ -74,15 +78,13 @@ class _PixelBarChartState extends State<PixelBarChart> {
     final values = widget.values.sublist(skip, count);
     final texts = widget.valueTexts.sublist(skip, count);
     final maxValue = values.fold<double>(0, (a, b) => b > a ? b : a);
-    final width = (dates.length * 14).clamp(0, 10000).toDouble();
+    final width = (dates.length * _slotWidth).clamp(0, 10000).toDouble();
 
     // Nằm trong guard index: `_selected` cũ có thể vượt biên sau khi đổi kỳ.
     String? tooltip;
     if (_selected != null && _selected! < texts.length) {
-      final t = _t(values[_selected!]);
       tooltip =
-          '${DateFormatter.formatDate(dates[_selected!])} • ${texts[_selected!]}'
-          '${t == null ? '' : ' • ${palette.rampLabel(t)}'}';
+          '${DateFormatter.formatDate(dates[_selected!])} • ${texts[_selected!]}';
     }
 
     return Semantics(
@@ -106,7 +108,7 @@ class _PixelBarChartState extends State<PixelBarChart> {
               ),
             ),
           SizedBox(
-            height: 120,
+            height: 132,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SizedBox(
@@ -129,26 +131,6 @@ class _PixelBarChartState extends State<PixelBarChart> {
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 18,
-            child: Row(
-              children: [
-                for (final i in pickAxisIndices(
-                  dates.length,
-                  widget.axisLabels,
-                ))
-                  SizedBox(
-                    width: 14,
-                    child: Text(
-                      '${dates[i].day}',
-                      textAlign: TextAlign.center,
-                      style: text.labelSmall?.copyWith(color: palette.inkMuted),
-                    ),
-                  ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -167,6 +149,8 @@ class _PixelBarChartState extends State<PixelBarChart> {
         ? 0
         : pixelFilledCells(value / maxValue, widget.rows);
     final isSelected = _selected == i;
+    final label = Theme.of(context).textTheme.labelSmall
+        ?.copyWith(color: palette.inkMuted);
 
     return GestureDetector(
       key: ValueKey('bar-$i'),
@@ -175,10 +159,14 @@ class _PixelBarChartState extends State<PixelBarChart> {
       child: Semantics(
         label: '${DateFormatter.formatDate(date)}: $valueText',
         child: SizedBox(
-          width: 14,
+          width: _slotWidth,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              // Hai nhãn nằm trong ô cao cố định và tự co lại: text scale lớn
+              // không được đẩy cột tràn khỏi khung 132 px.
+              _barLabel(CurrencyFormatter.short(value), label),
+              const SizedBox(height: 2),
               for (var r = widget.rows - 1; r >= 0; r--)
                 Container(
                   width: 10,
@@ -188,10 +176,20 @@ class _PixelBarChartState extends State<PixelBarChart> {
                       ? (isSelected ? palette.mintInk : barColor)
                       : palette.surfaceAlt,
                 ),
+              const SizedBox(height: 2),
+              _barLabel('${date.day}', label),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _barLabel(String value, TextStyle? style) => SizedBox(
+    height: 16,
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(value, maxLines: 1, style: style),
+    ),
+  );
 }

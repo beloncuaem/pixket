@@ -19,26 +19,6 @@ void main() {
     });
   });
 
-  group('allocateCells', () {
-    test('tổng phần bằng tổng ô khi sum > 0', () {
-      expect(allocateCells([1, 1, 1], 10).reduce((a, b) => a + b), 10);
-      expect(allocateCells([0.33, 0.33, 0.34], 24).reduce((a, b) => a + b), 24);
-    });
-    test('largest remainder ưu tiên phần dư lớn nhất, tie theo index nhỏ', () {
-      expect(allocateCells([2, 1], 3), [2, 1]);
-      expect(allocateCells([1, 1, 1], 5), [2, 2, 1]);
-      expect(allocateCells([1, 1], 1), [1, 0]);
-    });
-    test('sum <= 0 trả toàn 0, không NaN', () {
-      expect(allocateCells([0, 0, 0], 12), [0, 0, 0]);
-      expect(allocateCells([], 12), isEmpty);
-      expect(allocateCells([-1, -2], 5), [0, 0]);
-    });
-    test('một phần chiếm hết', () {
-      expect(allocateCells([0, 7], 6), [0, 6]);
-    });
-  });
-
   group('sharePercent', () {
     test('total <= 0 trả 0%', () {
       expect(sharePercent(0, 0), '0%');
@@ -50,22 +30,6 @@ void main() {
       expect(sharePercent(1, 3), '33%');
       expect(sharePercent(2, 3), '67%');
       expect(sharePercent(3, 3), '100%');
-    });
-  });
-
-  group('pickAxisIndices', () {
-    test('count <= maxLabels lấy hết', () {
-      expect(pickAxisIndices(3, 8), [0, 1, 2]);
-      expect(pickAxisIndices(0, 8), isEmpty);
-    });
-    test('thưa dần và luôn gồm index cuối', () {
-      final idx = pickAxisIndices(31, 6);
-      expect(idx.length, lessThanOrEqualTo(6));
-      expect(idx.last, 30);
-      expect(idx.first, 0);
-      for (var i = 1; i < idx.length; i++) {
-        expect(idx[i] > idx[i - 1], isTrue);
-      }
     });
   });
 

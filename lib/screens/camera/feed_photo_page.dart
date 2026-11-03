@@ -15,8 +15,8 @@ import '../../widgets/pixel/pixel_badge.dart';
 import '../../widgets/pixel/pixel_receipt_image.dart';
 import '../../widgets/pixel/pixel_star_field.dart';
 
-/// Một trang ảnh trong nhật ký: ảnh vuông ở trên, panel thông tin đặc ở dưới,
-/// không thành phần nào đè hay làm mờ ảnh.
+/// Một trang ảnh trong nhật ký: ảnh vuông ở trên, panel thông tin trong suốt
+/// ở dưới, một nền sao chạy liền toàn trang; không gì đè hay làm mờ ảnh.
 class FeedPhotoPage extends StatelessWidget {
   final Expense expense;
   final Category? category;
@@ -71,9 +71,9 @@ class FeedPhotoPage extends StatelessWidget {
       color: palette.feedBg,
       child: Stack(
         children: [
-          // Nền sao phủ toàn trang, không chỉ riêng panel: khoảng trống hai bên
-          // ảnh vuông và dải dưới HUD hết là viền đen. Ảnh và panel phía trên
-          // đều đặc nên sao không bao giờ đè lên nội dung.
+          // Một trường sao duy nhất phủ toàn trang: khoảng trống quanh ảnh
+          // vuông, dải dưới HUD và cả panel dưới đều cùng nền sao liền mạch.
+          // Ảnh đặc vẽ đè lên nên sao không bao giờ nằm sau nội dung ảnh.
           const Positioned.fill(child: PixelStarField()),
           Column(
             children: [
@@ -95,82 +95,69 @@ class FeedPhotoPage extends StatelessWidget {
                   ),
                 ),
               ),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: palette.feedPanel,
-                  border: Border(
-                    top: BorderSide(color: palette.mint, width: 2),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    // Panel nền tối nên có sao; IgnorePointer giữ nút bấm hoạt động.
-                    const Positioned.fill(child: PixelStarField()),
-                    SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            FeedCaptionPanel(
-                              expense: expense,
-                              categoryName: categoryName,
-                              categoryGlyph: IconHelper.normalizeIconKey(
-                                category?.icon ?? 'tag',
+              // Panel trong suốt, không viền: nền sao full-bleed phía sau chạy
+              // liền một mạch từ đỉnh trang xuống hết panel dưới.
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FeedCaptionPanel(
+                        expense: expense,
+                        categoryName: categoryName,
+                        categoryGlyph: IconHelper.normalizeIconKey(
+                          category?.icon ?? 'tag',
+                        ),
+                        priorityName: priorityName,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          PixelIconButton(
+                            key: const ValueKey('feed-edit'),
+                            icon: 'edit',
+                            tooltip: 'Chỉnh sửa khoản chi',
+                            onPressed: onEdit,
+                            background: palette.feedPanel,
+                            borderColor: palette.feedInk,
+                            iconColor: palette.feedInk,
+                          ),
+                          const SizedBox(width: 8),
+                          PixelIconButton(
+                            key: const ValueKey('feed-download'),
+                            icon: 'download',
+                            tooltip: 'Tải ảnh về máy',
+                            onPressed: () => _saveToGallery(context),
+                            background: palette.feedPanel,
+                            borderColor: palette.feedInk,
+                            iconColor: palette.feedInk,
+                          ),
+                          const SizedBox(width: 8),
+                          PixelIconButton(
+                            key: const ValueKey('feed-delete'),
+                            icon: 'trash',
+                            tooltip: 'Chuyển vào thùng rác',
+                            onPressed: onDelete,
+                            background: palette.feedPanel,
+                            borderColor: palette.feedInk,
+                            iconColor: palette.feedInk,
+                          ),
+                          if (photoIndex != null && photoCount != null) ...[
+                            const Spacer(),
+                            Text(
+                              '$photoIndex/$photoCount',
+                              style: text.bodySmall?.copyWith(
+                                color: palette.feedMuted,
                               ),
-                              priorityName: priorityName,
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                PixelIconButton(
-                                  key: const ValueKey('feed-edit'),
-                                  icon: 'edit',
-                                  tooltip: 'Chỉnh sửa khoản chi',
-                                  onPressed: onEdit,
-                                  background: palette.feedPanel,
-                                  borderColor: palette.feedInk,
-                                  iconColor: palette.feedInk,
-                                ),
-                                const SizedBox(width: 8),
-                                PixelIconButton(
-                                  key: const ValueKey('feed-download'),
-                                  icon: 'download',
-                                  tooltip: 'Tải ảnh về máy',
-                                  onPressed: () => _saveToGallery(context),
-                                  background: palette.feedPanel,
-                                  borderColor: palette.feedInk,
-                                  iconColor: palette.feedInk,
-                                ),
-                                const SizedBox(width: 8),
-                                PixelIconButton(
-                                  key: const ValueKey('feed-delete'),
-                                  icon: 'trash',
-                                  tooltip: 'Chuyển vào thùng rác',
-                                  onPressed: onDelete,
-                                  background: palette.feedPanel,
-                                  borderColor: palette.feedInk,
-                                  iconColor: palette.feedInk,
-                                ),
-                                if (photoIndex != null &&
-                                    photoCount != null) ...[
-                                  const Spacer(),
-                                  Text(
-                                    '$photoIndex/$photoCount',
-                                    style: text.bodySmall?.copyWith(
-                                      color: palette.feedMuted,
-                                    ),
-                                  ),
-                                ],
-                              ],
                             ),
                           ],
-                        ),
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

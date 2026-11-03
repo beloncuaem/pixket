@@ -32,11 +32,16 @@ class PixelStatTile extends StatelessWidget {
                 const SizedBox(width: 6),
               ],
               Expanded(
-                child: Text(
-                  label.toUpperCase(),
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall
-                      ?.copyWith(color: palette.inkMuted),
+                // FittedBox thay ellipsis: nhãn "TUẦN NÀY"/"SỐ KHOẢN" co lại
+                // chứ không bị cắt giữa chữ trong ô 1/3 chiều ngang.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label.toUpperCase(),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(color: palette.inkMuted),
+                  ),
                 ),
               ),
             ],

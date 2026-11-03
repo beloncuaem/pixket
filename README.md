@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/Supabase-Cloud%20Database-3ECF8E?logo=supabase&logoColor=white" alt="Supabase" />
   <img src="https://img.shields.io/badge/State-Riverpod%202.6-blue" alt="Riverpod" />
   <img src="https://img.shields.io/badge/Database-PostgreSQL-4169E1" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Tests-372%20Passed%20(100%25)-success" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-374%20Passed%20(100%25)-success" alt="Tests" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
 </p>
 
@@ -79,7 +79,8 @@ không phải ảnh chụp từ thiết bị, và toàn bộ số liệu là d�
 ## 🚀 Tính năng nổi bật
 
 ### 1. 📸 Nhật ký ảnh kiểu Locket
-- Trang đầu tiên là **camera trực tiếp** với nút chụp, thư viện và đổi camera.
+- Trang đầu tiên là **camera trực tiếp**: ô ngắm vuông 1:1 nằm giữa nền sao, nút chụp
+  pixel dấu `+`, kèm thư viện và đổi camera.
 - Vuốt dọc để xem lần lượt các khoản chi có ảnh, **mới nhất trước**.
 - Ảnh toàn màn hình kèm danh mục, mức độ cần thiết, số tiền, ghi chú, ngày giờ.
 - Nút sửa/xóa là nút pixel viền vuông; xóa chuyển vào thùng rác kèm hoàn tác trong 5 giây.
@@ -117,9 +118,9 @@ không phải ảnh chụp từ thiết bị, và toàn bộ số liệu là d�
 
   | Hiệu ứng | Widget | Nội dung |
   |---|---|---|
-  | Bầu trời sao | `pixel_star_field.dart` | Chỉ ở chế độ tối: sao nhấp nháy 1400 ms, trôi 30 s, sao băng mỗi ~20–30 s; có ở màn chính, drawer, sheet tối, login/onboarding, lưới ảnh và trang xem ảnh |
-  | Chụp ảnh | `pixel_iris.dart` | Ống kính pixel khép–mở ~260 ms, `RepaintBoundary`, `onCovered` lúc che kín để mở form |
-  | Lưu khoản chi | `pixel_star_flash.dart` | 5 sao pixel lóe rồi tan ~350 ms tại vị trí nút lưu + toast |
+  | Bầu trời sao | `pixel_star_field.dart` | Chỉ ở chế độ tối: sao nhấp nháy 1400 ms, trôi 30 s, sao băng mỗi ~20–30 s, 8% sao mang một trong sáu màu accent; có ở màn chính, drawer, sheet tối, login/onboarding, lưới ảnh, trang xem ảnh và trang camera |
+  | Chụp ảnh | `pixel_ship_flight.dart` | Phi thuyền pixel bay ngang ~700 ms kéo đuôi cầu vồng sáu màu, `OverlayEntry` tự gỡ; chạy song song với việc cắt ảnh vuông nên không chặn luồng mở form |
+  | Lưu khoản chi | `pixel_star_flash.dart` | 12 sao pixel đủ sáu màu accent lóe rồi tan ~350 ms tại vị trí nút lưu + toast |
   | Đổi khu vực | `main_screen.dart` | `AnimatedSwitcher` fade + scale 180 ms |
   | `chart_spend_ramp` | `pixel_progress` / biểu đồ | Toggle duy nhất còn lại trong **Cài đặt → GIAO DIỆN & BIỂU ĐỒ**: tô theo bậc mức chi thay vì theo danh mục |
 
@@ -141,9 +142,12 @@ không phải ảnh chụp từ thiết bị, và toàn bộ số liệu là d�
 - Khi mất mạng hoặc upload thất bại, app báo lỗi và không lưu khoản chi.
 
 ### 6. 📊 Thống kê & Ngân sách
-- Biểu đồ pixel tự vẽ: thanh phân bổ theo danh mục, chồng tích lũy, cột theo mức độ cần thiết.
+- Biểu đồ pixel tự vẽ: **tròn thật** theo danh mục kèm hàng chú thích (màu + nhãn + % + số tiền),
+  hàng mức độ cần thiết, và cột theo ngày có in số tiền của ngày đó trên đầu cột.
 - Thống kê hôm nay/tuần/tháng/năm hoặc khoảng ngày tùy chọn.
 - Ngân sách tổng hoặc theo danh mục, thanh tiến trình đổi màu theo hạn mức.
+- Hạn mức đã lưu có hàng **CỘNG / TRỪ / XÓA**: nhập số tiền điều chỉnh rồi áp ngay lên
+  ngân sách tổng hoặc từng danh mục; xóa hỏi xác nhận trước khi bỏ hạn mức.
 - Vượt hạn mức hiển thị **"Quá ngân sách: X"**, không hiển thị số còn lại âm.
 - Cảnh báo một lần ở các mốc 80%, 90%, 100% ngân sách tháng.
 - Thùng rác cho phép khôi phục hoặc xóa hẳn khoản chi đã xóa.
@@ -165,11 +169,11 @@ không phải ảnh chụp từ thiết bị, và toàn bộ số liệu là d�
 | **Cài đặt cục bộ** | `sqflite` ^2.4.2 | Chỉ lưu onboarding và mức độ cần thiết |
 | **Giao diện** | `AppPalette` (ThemeExtension), font bundle VT323 + Be Vietnam Pro | Pixel sáng/tối, không dùng `google_fonts` |
 | **Icon** | `pixel_glyph_data.dart` + `CustomPainter` | 63 glyph 16×16 tự vẽ, không dùng `Icons.*` |
-| **Biểu đồ** | Widget pixel tự vẽ (`PixelShareBar`, `PixelStackedShare`, `PixelBarChart`) | Không dùng `fl_chart` |
+| **Biểu đồ** | Widget pixel tự vẽ (`PixelPieChart`, `PixelShareRow`, `PixelBarChart`) | Không dùng `fl_chart` |
 | **Camera & Ảnh** | `camera`, `image_picker`, `cached_network_image` | Chụp, chọn, cache ảnh cloud |
 | **Xử lý ảnh** | `image` ^4.12.0, `gal` ^2.3.3 | Cắt ô vuông 1:1 + nén JPEG 1200px, lưu ảnh vào thư viện máy |
 | **Môi trường** | `flutter_dotenv` ^5.2.1 | Đọc `.env` |
-| **Kiểm thử** | `flutter_test` | 372 Unit & Widget tests |
+| **Kiểm thử** | `flutter_test` | 374 Unit & Widget tests |
 
 ---
 
@@ -185,7 +189,7 @@ pixket/
 │   ├── core/
 │   │   ├── icons/             # pixel_glyph_data.dart (63 glyph 16×16)
 │   │   ├── theme/             # app_palette, app_theme, pixel_text_theme
-│   │   ├── constants/         # AppInfo (Pixket, 2.5.1+7), AppStrings
+│   │   ├── constants/         # AppInfo (Pixket, 2.6.0+8), AppStrings
 │   │   ├── config/            # supabase_config.dart
 │   │   └── utils/             # formatter, square_image, save_to_gallery, icon_helper, storage_paths
 │   ├── data/
@@ -206,7 +210,7 @@ pixket/
 │   └── widgets/
 │       ├── app_drawer.dart    # Drawer 3 gạch: chọn khu vực + tiện ích
 │       └── pixel/             # 27 widget pixel (button, chip, panel, chart, star field, iris, star flash, ...)
-├── test/                      # 372 Unit & Widget tests
+├── test/                      # 374 Unit & Widget tests
 ├── supabase_setup.sql         # Bảng + RLS + Storage
 ├── .env.example               # Mẫu biến môi trường
 └── pubspec.yaml
@@ -309,7 +313,7 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ```bash
 flutter analyze     # No issues found!
-flutter test        # 372 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
+flutter test        # 374 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
                     # cần PIXKET_GEN_ICONS=1 / PIXKET_GEN_SHOTS=1)
 ```
 
@@ -321,11 +325,12 @@ flutter test        # 372 passed, 7 skip (test sinh icon + 6 test sinh ảnh dem
 - **Widget Tests**: Login/Register/Quên mật khẩu/Đặt lại mật khẩu, onboarding, dashboard,
   form khoản chi, camera + ảnh toàn màn hình + lưới ảnh, thống kê, ngân sách, danh mục,
   thùng rác, cài đặt, AppDrawer, điều hướng chính (drawer + vuốt ngang, không tab bar),
-  hiệu ứng `PixelIris`/`PixelStarFlash`/`PixelStarField`, và bộ widget pixel (nút, chip,
+  hiệu ứng `PixelShipFlight`/`PixelStarFlash`/`PixelStarField`, và bộ widget pixel (nút, chip,
   panel, empty state, segmented, badge, ô nhập, hộp thoại xác nhận).
 - **Test chốt đường lùi**: `test/widget/legacy_cleanup_test.dart` bảo đảm `lib/` không còn
   `AppColors`, `Icons.`, `GlassCard`, `fl_chart`, `google_fonts`, gradient, 8 file widget
-  cũ, tab bar đáy và 5 widget dải 7 màu — kế hoạch sau này lỡ thêm lại sẽ bị test đỏ.
+  cũ, tab bar đáy, 5 widget dải 7 màu và ống kính `pixel_iris` — kế hoạch sau này lỡ thêm
+  lại sẽ bị test đỏ.
 
 ### Đã xác minh trên emulator Android API 35 (trước đợt redesign Pixel)
 - Onboarding và cấp quyền camera/thông báo.

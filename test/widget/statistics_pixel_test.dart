@@ -9,10 +9,10 @@ import 'package:pixket/providers/statistics_provider.dart';
 import 'package:pixket/screens/statistics/statistics_charts.dart';
 import 'package:pixket/screens/statistics/statistics_screen.dart';
 import 'package:pixket/widgets/pixel/pixel_bar_chart.dart';
+import 'package:pixket/widgets/pixel/pixel_pie_chart.dart';
 import 'package:pixket/widgets/pixel/pixel_screen_header.dart';
 import 'package:pixket/widgets/pixel/pixel_segmented.dart';
-import 'package:pixket/widgets/pixel/pixel_share_bar.dart';
-import 'package:pixket/widgets/pixel/pixel_stacked_share.dart';
+import 'package:pixket/widgets/pixel/pixel_share_row.dart';
 import 'package:pixket/widgets/pixel/pixel_stat_tile.dart';
 
 class _FakeStatsNotifier extends StateNotifier<StatisticsState>
@@ -95,17 +95,22 @@ void main() {
     expect(s.values, [10]);
   });
 
-  testWidgets('StatisticsCharts render 3 loại biểu đồ pixel', (tester) async {
+  testWidgets('StatisticsCharts render tròn, hàng chú thích và cột', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _harness(const SingleChildScrollView(child: StatisticsCharts())),
     );
-    expect(find.byType(PixelShareBar), findsNWidgets(2));
-    expect(find.byType(PixelStackedShare), findsOneWidget);
+    expect(find.byType(PixelPieChart), findsOneWidget);
+    // 2 hàng danh mục + 4 hàng mức độ cần thiết.
+    expect(find.byType(PixelShareRow), findsNWidgets(6));
     expect(find.byType(PixelBarChart), findsOneWidget);
     expect(find.text('THEO DANH MỤC'), findsOneWidget);
     expect(find.text('MỨC ĐỘ CẦN THIẾT'), findsOneWidget);
     expect(find.text('THEO NGÀY'), findsOneWidget);
     expect(find.text('Ăn uống chiếm 67% tổng chi.'), findsOneWidget);
+    // Nhãn bậc mức chi đã bỏ: cột to nhất của kỳ không còn bị gọi là vượt mức.
+    expect(find.text('Vượt mức'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -123,7 +128,8 @@ void main() {
       ),
     );
     expect(find.text('Chưa có dữ liệu trong khoảng này.'), findsWidgets);
-    expect(find.byType(PixelShareBar), findsNothing);
+    expect(find.byType(PixelPieChart), findsNothing);
+    expect(find.byType(PixelShareRow), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

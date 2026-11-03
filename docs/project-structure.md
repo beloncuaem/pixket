@@ -15,7 +15,7 @@ pixket/
 │   ├── core/
 │   │   ├── config/supabase_config.dart  # Đọc .env, khởi tạo Supabase, isInitialized
 │   │   ├── constants/
-│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.5.1, build 7, tagline
+│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.6.0, build 8, tagline
 │   │   │   └── app_strings.dart         # Nhãn cố định (mức độ cần thiết, v.v.)
 │   │   ├── icons/pixel_glyph_data.dart  # Bảng glyph pixel 16×16 (chuỗi hàng + palette index)
 │   │   ├── navigation/app_section.dart  # enum 4 khu vực: feed / dashboard / statistics / budget
@@ -89,17 +89,18 @@ pixket/
 │       └── pixel/                             # Bộ kit pixel dùng chung
 │           ├── app_icon.dart                  # AppIcon + PixelIconButton (vùng chạm 48dp)
 │           ├── feed_hud.dart                  # HUD tối cho camera/feed
-│           ├── pixel_badge.dart, pixel_button.dart, pixel_chip.dart,
-│           ├── pixel_dialog.dart, pixel_divider.dart, pixel_empty_state.dart,
-│           ├── pixel_expense_tile.dart, pixel_glyph.dart, pixel_loading.dart,
-│           ├── pixel_logo.dart, pixel_panel.dart, pixel_progress.dart,
-│           ├── pixel_receipt_image.dart, pixel_screen_header.dart,
-│           ├── pixel_segmented.dart, pixel_share_bar.dart, pixel_sheet.dart,
-│           ├── pixel_snack_bar.dart, pixel_stacked_share.dart,
-│           ├── pixel_stat_tile.dart, pixel_bar_chart.dart, pixel_text_field.dart,
-│           ├── pixel_star_field.dart    # Nền sao (chỉ dark): nhấp nháy + trôi + sao băng, PixelStarSafe keep-out
-│           ├── pixel_iris.dart          # Ống kính pixel khép–mở khi chụp, onCovered mở form
-│           └── pixel_star_flash.dart    # 5 sao pixel lóe rồi tan tại nút lưu
+│           ├── pixel_badge.dart, pixel_bar_chart.dart, pixel_button.dart,
+│           ├── pixel_chip.dart, pixel_dialog.dart, pixel_divider.dart,
+│           ├── pixel_empty_state.dart, pixel_expense_tile.dart, pixel_glyph.dart,
+│           ├── pixel_loading.dart, pixel_logo.dart, pixel_panel.dart,
+│           ├── pixel_progress.dart, pixel_receipt_image.dart,
+│           ├── pixel_screen_header.dart, pixel_segmented.dart, pixel_sheet.dart,
+│           ├── pixel_snack_bar.dart, pixel_stat_tile.dart, pixel_text_field.dart,
+│           ├── pixel_pie_chart.dart     # Biểu đồ tròn thật theo danh mục (drawArc + viền)
+│           ├── pixel_share_row.dart     # Hàng chú thích dùng chung: ô màu + nhãn + % + số tiền
+│           ├── pixel_star_field.dart    # Nền sao (chỉ dark): nhấp nháy + trôi + sao băng + 8% sao accent, keep-out
+│           ├── pixel_ship_flight.dart   # Phi thuyền bay ngang kéo đuôi cầu vồng khi chụp
+│           └── pixel_star_flash.dart    # 12 sao pixel đủ sáu accent lóe rồi tan tại nút lưu
 ├── test/
 │   ├── unit/                              # Model, formatter, state, palette, glyph, feed helper
 │   └── widget/                            # Screen, kit pixel, drawer, gate dọn dẹp
@@ -184,7 +185,8 @@ MainScreen (Scaffold + Drawer + PixelStarField nền, không bottomNavigationBar
 
 ### Locket feed
 
-- `PageView.builder` theo chiều dọc; trang 0 là camera trực tiếp.
+- `PageView.builder` theo chiều dọc; trang 0 là camera trực tiếp: preview vuông 1:1
+  (`ClipRect` + `FittedBox` cover) nằm giữa nền sao, bốn góc ngắm và nút chụp dấu `+`.
 - Trang 1..n: các khoản chi có ảnh, mới nhất trước (`buildFeedPhotos`).
 - Sau khi lưu khoản chi mới, feed tự cuộn tới ảnh vừa tạo.
 - Nút lưới ở góc phải mở `FeedGridScreen`; chạm ảnh để nhảy tới đúng trang trong feed.
@@ -217,25 +219,28 @@ MainScreen (Scaffold + Drawer + PixelStarField nền, không bottomNavigationBar
 
 ### Hiệu ứng thương hiệu
 
-Không còn khoá bật/tắt cho hiệu ứng chuyển động: sao, iris và sao lóe **luôn bật**;
+Không còn khoá bật/tắt cho hiệu ứng chuyển động: sao, phi thuyền và sao lóe **luôn bật**;
 chỉ `chart_spend_ramp` còn là toggle, lưu trong bảng `app_settings` (SQLite) qua
 `effectsProvider` (`lib/providers/app_settings_provider.dart`) và bật/tắt ở
 **Cài đặt → GIAO DIỆN & BIỂU ĐỒ**. Mọi hiệu ứng vẽ bậc rời (`floor`, không tween mượt),
 `isAntiAlias: false`, seed cố định (`20261102` cho sao, `20261103` cho sao lóe), và tôn
 trọng `MediaQuery.disableAnimations` (rút duration/giảm bậc nhưng vẫn hoàn tất, callback
-chạy đúng một lần). DB lỗi thì về mặc định, không crash.
+chạy đúng một lần; riêng phi thuyền thì không bay). Ngoại lệ `isAntiAlias: true` duy nhất
+là `pixel_pie_chart.dart` vì cạnh tròn thật cần khử răng cưa. DB lỗi thì về mặc định,
+không crash.
 
 | Hiệu ứng | Widget | Nội dung |
 |---|---|---|
-| Bầu trời sao (chỉ theme dark) | `pixel_star_field.dart` | 1 ô / 2200 px² (tối đa 220 ô): 62% ô 2 px + 38% ô 4 px, 10% nhuốm `palette.star`, 20% nhấp nháy chu kỳ 1400 ms; trôi theo sin ±3/±2 px chu kỳ 30 s; một sao băng (đầu 4 px + 6 ô đuôi 2 px, alpha tam giác) dài ~1,8 s mỗi chu kỳ; `PixelStarSafe` báo vùng keep-out (nở 4 px). Đặt ở màn chính, drawer, `PixelSheet`, login/onboarding, thùng rác, danh mục, lưới ảnh và toàn trang xem ảnh (một field full-bleed làm nền quanh ảnh vuông, một field riêng trong panel dưới) |
-| Chụp ảnh | `pixel_iris.dart` | 4 góc pixel khép (easeIn) rồi mở (easeOut) trong 260 ms, bọc `RepaintBoundary`; `onCovered` bắn ở mốc 0.5 và được gọi lại khi animation hoàn tất nên form mở đúng một lần |
-| Lưu khoản chi | `pixel_star_flash.dart` | 5 sao 4 cánh nở nhanh–tan chậm 350 ms (120 ms khi reduced motion) tại toạ độ nút lưu, gắn root overlay + `IgnorePointer`; kèm toast "Đã lưu khoản chi." |
+| Bầu trời sao (chỉ theme dark) | `pixel_star_field.dart` | 1 ô / 2200 px² (tối đa 220 ô): 62% ô 2 px + 38% ô 4 px, 8% mang một trong sáu màu accent (luân phiên đều theo lượt), phần còn lại 10% nhuốm `palette.star`, 20% nhấp nháy chu kỳ 1400 ms; trôi theo sin ±3/±2 px chu kỳ 30 s; một sao băng (đầu 4 px + 6 ô đuôi 2 px, alpha tam giác) dài ~1,8 s mỗi chu kỳ; `PixelStarSafe` báo vùng keep-out (nở 4 px). Đặt ở màn chính, drawer, `PixelSheet`, login/onboarding, thùng rác, danh mục, lưới ảnh, trang camera (nền quanh ô ngắm vuông) và toàn trang xem ảnh (một field full-bleed duy nhất, panel dưới trong suốt) |
+| Chụp ảnh | `pixel_ship_flight.dart` | Phi thuyền pixel 8×16 ô (thân `feedInk`, cửa sổ `sky`, vây `rose`) bay trái→phải trong 700 ms, nảy ±4 px và nâng dần 6% chiều cao; đuôi cầu vồng tối đa 6 sọc `palette.accents` cao 4 px gợn theo sin; fade 8% đầu / 25% cuối; gắn root overlay + `IgnorePointer` + `RepaintBoundary` và tự gỡ khi chạy xong. Không bay khi reduced motion |
+| Lưu khoản chi | `pixel_star_flash.dart` | 12 sao 4 cánh đủ sáu màu accent (mỗi sao một cỡ cánh và vị trí theo seed) nở nhanh–tan chậm 350 ms (120 ms khi reduced motion) tại toạ độ nút lưu, gắn root overlay + `IgnorePointer`; kèm toast "Đã lưu khoản chi." |
 | Đổi khu vực | `main_screen.dart` | `AnimatedSwitcher` fade + scale 0.98→1, 180 ms, easeOut/easeIn, `Duration.zero` khi reduced motion; child key theo khu vực nên chuyển cảnh hủy được giữa chừng |
-| `chart_spend_ramp` (toggle) | `pixel_progress`/`pixel_bar_chart`/`pixel_share_bar`/`pixel_stacked_share` | Tô theo bậc `rampFill(value/mốc)`; mốc = max của kỳ đang xem (progress = hạn mức). Luôn kèm nhãn chữ `rampLabel` (WCAG 1.4.1) |
+| `chart_spend_ramp` (toggle) | `pixel_progress`/`pixel_bar_chart` | Tô theo bậc `rampFill(value/mốc)`; mốc = hạn mức với progress (luôn kèm nhãn chữ `rampLabel` — WCAG 1.4.1), mốc = max của kỳ đang xem với cột theo ngày (tooltip chỉ còn ngày + số tiền, không nhãn bậc) |
 
 > Đã gỡ hoàn toàn `rainbow_rule.dart`, `rainbow_sweep.dart`, `pixel_confetti.dart`,
-> `mosaic_wipe.dart`, `pixel_tab_bar.dart` và 5 khoá `fx_*`; `legacy_cleanup_test.dart`
-> chốt không cho thêm lại.
+> `mosaic_wipe.dart`, `pixel_tab_bar.dart`, `pixel_iris.dart` (thay bằng phi thuyền) cùng
+> `pixel_share_bar.dart`/`pixel_stacked_share.dart` (thay bằng biểu đồ tròn + hàng chú thích)
+> và 5 khoá `fx_*`; `legacy_cleanup_test.dart` chốt không cho thêm lại.
 
 ## 5. Bảng dữ liệu
 
@@ -268,7 +273,7 @@ Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
 
 ```bash
 flutter analyze          # No issues found!
-flutter test             # 372 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
+flutter test             # 374 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
                          # cần PIXKET_GEN_ICONS=1 / PIXKET_GEN_SHOTS=1)
 ```
 
@@ -278,7 +283,7 @@ flutter test             # 372 passed, 7 skip (test sinh icon + 6 test sinh ản
 - Widget: onboarding/login/register/forgot password, dashboard, form khoản chi, camera/feed/grid,
   ảnh feed, thống kê, ngân sách, danh mục, thùng rác, cài đặt, `AppDrawer`,
   `main_navigation_test` (không tab bar đáy, đổi khu vực qua drawer, vuốt mép mở drawer,
-  sao chỉ hiện ở theme tối), hiệu ứng `PixelIris`/`PixelStarFlash`/`PixelStarField`, kit pixel
+  sao chỉ hiện ở theme tối), hiệu ứng `PixelShipFlight`/`PixelStarFlash`/`PixelStarField`, kit pixel
   và `legacy_cleanup_test` (gate dọn dẹp).
 - Test độ bền hiển thị: mỗi màn có case text scale 1.3× và/hoặc viewport hẹp 360dp;
   test vùng chạm 48dp cho icon, chip, ô glyph, expense tile.

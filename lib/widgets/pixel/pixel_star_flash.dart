@@ -5,21 +5,26 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_palette.dart';
 
 class _FlashStar {
-  const _FlashStar(this.dx, this.dy, this.accent);
+  const _FlashStar(this.dx, this.dy, this.accent, this.arm);
 
   final double dx, dy;
   final int accent;
+
+  /// Cánh sao lúc chưa nở; mỗi sao một cỡ để chùm lóe không đều tăm tắp.
+  final double arm;
 }
 
-/// 5 sao pixel lóe rồi tan trong ~350 ms tại vị trí lưu; seed cố định.
+/// 12 sao pixel đủ sáu màu accent, lóe rồi tan trong ~350 ms tại vị trí lưu;
+/// seed cố định nên hai lần lưu cho cùng một chùm sao.
 final List<_FlashStar> _stars = () {
   final rng = math.Random(20261103);
   return List<_FlashStar>.generate(
-    5,
+    12,
     (i) => _FlashStar(
-      (rng.nextDouble() - 0.5) * 96,
-      (rng.nextDouble() - 0.5) * 72,
+      (rng.nextDouble() - 0.5) * 150,
+      (rng.nextDouble() - 0.5) * 110,
       i % 6,
+      1 + rng.nextDouble() * 2,
     ),
   );
 }();
@@ -131,7 +136,7 @@ class _FlashPainter extends CustomPainter {
     final paint = Paint()..isAntiAlias = false;
 
     for (final star in _stars) {
-      final arm = 2 + 4 * grow;
+      final arm = star.arm + 4 * grow;
       final cx = center.dx + star.dx * (0.6 + 0.4 * grow);
       final cy = center.dy + star.dy * (0.6 + 0.4 * grow);
       paint.color = accents[star.accent % accents.length].withValues(

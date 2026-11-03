@@ -187,9 +187,10 @@ void main() {
   ) async {
     await tester.pumpWidget(wrap(photoPage()));
     final page = tester.getRect(find.byType(FeedPhotoPage));
-    // Một field full-bleed làm nền cả trang, một field riêng cho panel dưới.
-    expect(find.byType(PixelStarField), findsNWidgets(2));
-    expect(tester.getSize(find.byType(PixelStarField).first), page.size);
+    // Một trường sao duy nhất phủ full-bleed: panel dưới trong suốt nên nền
+    // sao chạy liền từ mép trên xuống mép dưới.
+    expect(find.byType(PixelStarField), findsOneWidget);
+    expect(tester.getSize(find.byType(PixelStarField)), page.size);
   });
 
   testWidgets('trang ảnh không còn glass pill và placeholder cũ', (

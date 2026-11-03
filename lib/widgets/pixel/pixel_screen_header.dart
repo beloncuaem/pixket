@@ -5,6 +5,8 @@ import 'app_icon.dart';
 import 'pixel_logo.dart';
 
 /// Header pixel dùng cho mọi màn trừ feed/camera (màn đó có HUD tối riêng).
+/// Nền trong suốt và không gạch phân cách để nền sao của MainScreen chạy liền
+/// từ mép trên màn hình xuống nội dung.
 class PixelScreenHeader extends StatelessWidget {
   const PixelScreenHeader({
     super.key,
@@ -14,7 +16,6 @@ class PixelScreenHeader extends StatelessWidget {
     this.onBackTap,
     this.leading,
     this.trailing,
-    this.background,
   });
 
   final String title;
@@ -23,7 +24,6 @@ class PixelScreenHeader extends StatelessWidget {
   final VoidCallback? onBackTap;
   final Widget? leading;
   final Widget? trailing;
-  final Color? background;
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +33,6 @@ class PixelScreenHeader extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minHeight: 64),
       padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
-      decoration: BoxDecoration(
-        color: background ?? palette.canvas,
-        border: Border(bottom: BorderSide(color: palette.lineStrong, width: 3)),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

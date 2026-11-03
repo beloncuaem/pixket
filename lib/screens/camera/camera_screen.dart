@@ -20,9 +20,10 @@ import '../../widgets/hamburger_button.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/feed_hud.dart';
 import '../../widgets/pixel/pixel_button.dart';
-import '../../widgets/pixel/pixel_iris.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_panel.dart';
+import '../../widgets/pixel/pixel_ship_flight.dart';
+import '../../widgets/pixel/pixel_star_field.dart';
 import 'expense_form_sheet.dart';
 import 'feed_grid_screen.dart';
 import 'feed_helpers.dart';
@@ -153,16 +154,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     try {
       final picture = await _controller!.takePicture();
       if (!mounted) return;
-      // Việc cắt chạy trên isolate ngay trong lúc mống mắt đóng, nên onCovered
-      // chỉ đợi phần còn lại của nó.
+      // Phi thuyền bay qua không chặn luồng: việc cắt ảnh vuông chạy song song
+      // trên isolate, xong là mở form ngay.
       final squared = writeSquareCopy(File(picture.path));
-      await PixelIris.play(
-        context,
-        onCovered: () async {
-          final file = await squared;
-          if (mounted) _openExpenseForm(imagePath: file.path);
-        },
-      );
+      PixelShipFlight.launch(context);
+      final file = await squared;
+      if (mounted) _openExpenseForm(imagePath: file.path);
     } catch (error) {
       debugPrint('Error taking picture: $error');
       if (mounted) _showSnackBar('Không thể chụp ảnh. Vui lòng thử lại.');
@@ -538,11 +535,31 @@ class _CameraFeedPage extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
+          const Positioned.fill(child: PixelStarField()),
           if (controller != null)
-            _FullScreenCameraPreview(controller: controller!)
-          else
-            ColoredBox(color: palette.feedPanel),
-          if (controller != null) const _ViewfinderCorners(),
+            Center(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Ô vuông ngắm nhỏ hơn cạnh khả dụng 24 px để nền sao còn
+                  // chỗ hở quanh khung; vùng cắt vẫn đúng tâm preview.
+                  final side =
+                      math.min(constraints.maxWidth, constraints.maxHeight) -
+                      24;
+                  return SizedBox(
+                    width: side,
+                    height: side,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: _SquareCameraPreview(controller: controller!),
+                        ),
+                        const _ViewfinderCorners(),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
           if (isInitializing && controller == null)
             const Center(child: PixelLoading(label: 'Đang mở camera…')),
           if (errorMessage != null)
@@ -578,9 +595,11 @@ class _CameraFeedPage extends StatelessWidget {
   }
 }
 
-class _FullScreenCameraPreview extends StatelessWidget {
+/// Preview cắt giữa đúng ô vuông: cover vào khung rồi clip, khớp vùng mà
+/// [writeSquareCopy] cắt từ ảnh thật.
+class _SquareCameraPreview extends StatelessWidget {
   final CameraController controller;
-  const _FullScreenCameraPreview({required this.controller});
+  const _SquareCameraPreview({required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -588,17 +607,12 @@ class _FullScreenCameraPreview extends StatelessWidget {
     if (previewSize == null) return CameraPreview(controller);
 
     return ClipRect(
-      child: OverflowBox(
-        alignment: Alignment.center,
-        maxWidth: double.infinity,
-        maxHeight: double.infinity,
-        child: FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: previewSize.height,
-            height: previewSize.width,
-            child: CameraPreview(controller),
-          ),
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: previewSize.height,
+          height: previewSize.width,
+          child: CameraPreview(controller),
         ),
       ),
     );
@@ -710,6 +724,8 @@ class _ViewfinderCorners extends StatelessWidget {
   }
 }
 
+/// Nút chụp: ô vuông nền đêm, viền kem 4 px, dấu cộng kem — đồng bộ với các
+/// nút HUD quanh nó thay vì khối lục nổi bật.
 class _ShutterButton extends StatelessWidget {
   const _ShutterButton({required this.onPressed, required this.enabled});
 
@@ -719,6 +735,7 @@ class _ShutterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final ink = enabled ? palette.feedInk : palette.feedMuted;
     return Semantics(
       button: true,
       label: 'Chụp khoản chi',
@@ -728,15 +745,11 @@ class _ShutterButton extends StatelessWidget {
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: enabled ? palette.mint : palette.feedPanel,
-            border: Border.all(color: palette.feedInk, width: 4),
+            color: palette.feedPanel,
+            border: Border.all(color: ink, width: 4),
           ),
           child: Center(
-            child: AppIcon(
-              name: 'camera',
-              size: 32,
-              color: enabled ? palette.onAccent : palette.feedMuted,
-            ),
+            child: AppIcon(name: 'plus', size: 32, color: ink),
           ),
         ),
       ),

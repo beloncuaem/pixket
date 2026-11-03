@@ -12,6 +12,7 @@ import '../../providers/budget_provider.dart';
 import '../../providers/category_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/pixel_button.dart';
+import '../../widgets/pixel/pixel_dialog.dart';
 import '../../widgets/pixel/pixel_empty_state.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_panel.dart';
@@ -38,6 +39,8 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   int _monthOffset = 0;
   final _totalBudgetController = TextEditingController();
   final Map<int, TextEditingController> _categoryControllers = {};
+  final _totalAdjustController = TextEditingController();
+  final Map<int, TextEditingController> _adjustControllers = {};
 
   DateTime get _monthDate {
     final now = DateTime.now();
@@ -59,7 +62,11 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   @override
   void dispose() {
     _totalBudgetController.dispose();
+    _totalAdjustController.dispose();
     for (var controller in _categoryControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _adjustControllers.values) {
       controller.dispose();
     }
     super.dispose();
@@ -71,6 +78,11 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         () =>
             TextEditingController(text: CurrencyFormatter.toEditableText(seed)),
       );
+
+  /// Ô "số tiền điều chỉnh" của một danh mục; khác ô ngân sách vì cộng/trừ áp
+  /// lên số đã lưu chứ không lên nội dung đang gõ dở.
+  TextEditingController _adjustControllerFor(int id) =>
+      _adjustControllers.putIfAbsent(id, TextEditingController.new);
 
   /// Nạp lại ô nhập từ dữ liệu đang hiển thị (đầu phiên và sau mỗi lần đổi tháng).
   void _seedControllers() {
@@ -101,49 +113,137 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     ref.read(budgetProvider.notifier).loadBudgets(_queryMonth);
   }
 
-  Future<void> _saveBudget() async {
-    if (_isSavingBudget) return;
+  /// Mọi thao tác ghi ngân sách đi qua đây: chặn bấm đúp, báo nguyên văn lỗi
+  /// validation từ provider, và trả về `true` khi đã lưu để caller dọn ô nhập.
+  Future<bool> _runSave(Future<void> Function() save) async {
+    if (_isSavingBudget) return false;
     setState(() => _isSavingBudget = true);
     try {
-      if (_mode == BudgetMode.total) {
-        final total =
-            CurrencyFormatter.parseInput(_totalBudgetController.text) ?? 0.0;
-        await ref
-            .read(budgetProvider.notifier)
-            .setTotalBudget(month: _queryMonth, amount: total);
-      } else {
-        final Map<int, double> catBudgets = {};
-        _categoryControllers.forEach((id, controller) {
-          final val = CurrencyFormatter.parseInput(controller.text);
-          if (val != null && val > 0) {
-            catBudgets[id] = val;
-          }
-        });
-        await ref
-            .read(budgetProvider.notifier)
-            .setCategoryBudgets(
-              month: _queryMonth,
-              categoryBudgets: catBudgets,
-            );
-      }
-
-      if (mounted) {
-        showPixelSnackBar(
-          context,
-          'Đã lưu ngân sách!',
-          tone: PixelTone.success,
-        );
-      }
+      await save();
+      if (!mounted) return false;
+      showPixelSnackBar(context, 'Đã lưu ngân sách!', tone: PixelTone.success);
+      return true;
     } catch (e) {
-      if (mounted) {
-        final message = e is BudgetValidationException
-            ? e.message
-            : 'Lỗi khi lưu ngân sách';
-        showPixelSnackBar(context, message, tone: PixelTone.danger);
-      }
+      if (!mounted) return false;
+      final message = e is BudgetValidationException
+          ? e.message
+          : 'Lỗi khi lưu ngân sách';
+      showPixelSnackBar(context, message, tone: PixelTone.danger);
+      return false;
     } finally {
       if (mounted) setState(() => _isSavingBudget = false);
     }
+  }
+
+  Future<void> _saveBudget() async {
+    if (_mode == BudgetMode.total) {
+      final total =
+          CurrencyFormatter.parseInput(_totalBudgetController.text) ?? 0.0;
+      await _runSave(
+        () => ref
+            .read(budgetProvider.notifier)
+            .setTotalBudget(month: _queryMonth, amount: total),
+      );
+      return;
+    }
+    final Map<int, double> catBudgets = {};
+    _categoryControllers.forEach((id, controller) {
+      final val = CurrencyFormatter.parseInput(controller.text);
+      if (val != null && val > 0) {
+        catBudgets[id] = val;
+      }
+    });
+    await _runSave(
+      () => ref
+          .read(budgetProvider.notifier)
+          .setCategoryBudgets(month: _queryMonth, categoryBudgets: catBudgets),
+    );
+  }
+
+  /// Bản sao ngân sách theo danh mục đã lưu trong tháng đang xem.
+  Map<int, double> _savedCategoryBudgets() =>
+      Map<int, double>.from(ref.read(budgetProvider).categoryBudgets);
+
+  /// Đọc ô điều chỉnh và nhắc người dùng khi trống; `null` nghĩa là không lưu.
+  double? _readDelta(TextEditingController controller) {
+    final delta = CurrencyFormatter.parseInput(controller.text);
+    if (delta == null || delta <= 0) {
+      showPixelSnackBar(
+        context,
+        'Nhập số tiền cần điều chỉnh trước.',
+        tone: PixelTone.warning,
+      );
+      return null;
+    }
+    return delta;
+  }
+
+  /// [sign] = 1 để cộng, -1 để trừ; kết quả không âm (trừ quá tay thì về 0).
+  Future<void> _adjustTotal(int sign) async {
+    final delta = _readDelta(_totalAdjustController);
+    if (delta == null) return;
+    final current = ref.read(budgetProvider).totalBudget?.amount ?? 0;
+    final next = (current + sign * delta).clamp(0, double.infinity).toDouble();
+    final saved = await _runSave(
+      () => ref
+          .read(budgetProvider.notifier)
+          .setTotalBudget(month: _queryMonth, amount: next),
+    );
+    if (saved) _totalAdjustController.clear();
+  }
+
+  Future<void> _adjustCategory(int id, int sign) async {
+    final controller = _adjustControllerFor(id);
+    final delta = _readDelta(controller);
+    if (delta == null) return;
+    final budgets = _savedCategoryBudgets();
+    final next = (budgets[id] ?? 0) + sign * delta;
+    if (next <= 0) {
+      budgets.remove(id);
+    } else {
+      budgets[id] = next;
+    }
+    final saved = await _runSave(
+      () => ref
+          .read(budgetProvider.notifier)
+          .setCategoryBudgets(month: _queryMonth, categoryBudgets: budgets),
+    );
+    if (saved) controller.clear();
+  }
+
+  Future<void> _deleteTotalBudget() async {
+    final confirmed = await showPixelConfirm(
+      context,
+      title: 'Xóa ngân sách tổng?',
+      message:
+          'Tháng $_monthLabel sẽ không còn ngân sách tổng. '
+          'Các khoản đã chi vẫn được giữ nguyên.',
+      confirmLabel: 'XÓA',
+    );
+    if (!confirmed || !mounted) return;
+    final saved = await _runSave(
+      () => ref
+          .read(budgetProvider.notifier)
+          .setTotalBudget(month: _queryMonth, amount: 0),
+    );
+    if (saved) _totalAdjustController.clear();
+  }
+
+  Future<void> _deleteCategoryBudget(int id, String categoryName) async {
+    final confirmed = await showPixelConfirm(
+      context,
+      title: 'Xóa ngân sách "$categoryName"?',
+      message: 'Tháng $_monthLabel sẽ không còn hạn mức cho danh mục này.',
+      confirmLabel: 'XÓA',
+    );
+    if (!confirmed || !mounted) return;
+    final budgets = _savedCategoryBudgets()..remove(id);
+    final saved = await _runSave(
+      () => ref
+          .read(budgetProvider.notifier)
+          .setCategoryBudgets(month: _queryMonth, categoryBudgets: budgets),
+    );
+    if (saved) _adjustControllerFor(id).clear();
   }
 
   @override
@@ -298,6 +398,13 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                     color: isOver ? palette.danger : palette.success,
                   ),
                 ),
+                _buildAdjustRow(
+                  fieldKey: 'totalAdjust',
+                  controller: _totalAdjustController,
+                  onAdd: () => _adjustTotal(1),
+                  onSubtract: () => _adjustTotal(-1),
+                  onDelete: _deleteTotalBudget,
+                ),
               ],
             ),
           )
@@ -412,6 +519,13 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   color: isOver ? palette.danger : palette.success,
                 ),
               ),
+              _buildAdjustRow(
+                fieldKey: 'categoryAdjust-$id',
+                controller: _adjustControllerFor(id),
+                onAdd: () => _adjustCategory(id, 1),
+                onSubtract: () => _adjustCategory(id, -1),
+                onDelete: () => _deleteCategoryBudget(id, category.name),
+              ),
             ] else
               Text(
                 'Đã chi ${CurrencyFormatter.format(spent)}',
@@ -420,6 +534,62 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Hàng điều chỉnh nhanh cho một hạn mức đã lưu: cộng/trừ đúng số tiền đang
+  /// nhập vào ô, hoặc xóa hẳn hạn mức sau khi hỏi lại.
+  Widget _buildAdjustRow({
+    required String fieldKey,
+    required TextEditingController controller,
+    required VoidCallback onAdd,
+    required VoidCallback onSubtract,
+    required VoidCallback onDelete,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 12),
+        PixelTextField(
+          key: ValueKey(fieldKey),
+          label: 'Số tiền điều chỉnh (VND)',
+          hint: '200.000',
+          controller: controller,
+          keyboardType: TextInputType.number,
+          textCapitalization: TextCapitalization.none,
+          inputFormatters: const [ThousandsSeparatorInputFormatter()],
+        ),
+        const SizedBox(height: 8),
+        // `Wrap` thay cho `Row` + `Expanded`: ba nhãn CỘNG/TRỪ/XÓA giữ nguyên
+        // chữ trên màn hẹp thay vì bị cắt giữa chừng.
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            PixelButton(
+              key: ValueKey('$fieldKey-add'),
+              label: 'CỘNG',
+              icon: 'plus',
+              variant: PixelButtonVariant.secondary,
+              onPressed: _isSavingBudget ? null : onAdd,
+            ),
+            PixelButton(
+              key: ValueKey('$fieldKey-subtract'),
+              label: 'TRỪ',
+              icon: 'minus',
+              variant: PixelButtonVariant.secondary,
+              onPressed: _isSavingBudget ? null : onSubtract,
+            ),
+            PixelButton(
+              key: ValueKey('$fieldKey-delete'),
+              label: 'XÓA',
+              icon: 'trash',
+              variant: PixelButtonVariant.danger,
+              onPressed: _isSavingBudget ? null : onDelete,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

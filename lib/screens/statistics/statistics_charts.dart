@@ -12,8 +12,8 @@ import '../../widgets/pixel/app_icon.dart';
 import '../../widgets/pixel/pixel_bar_chart.dart';
 import '../../widgets/pixel/pixel_loading.dart';
 import '../../widgets/pixel/pixel_panel.dart';
-import '../../widgets/pixel/pixel_share_bar.dart';
-import '../../widgets/pixel/pixel_stacked_share.dart';
+import '../../widgets/pixel/pixel_pie_chart.dart';
+import '../../widgets/pixel/pixel_share_row.dart';
 
 typedef DailySeries = ({
   List<DateTime> dates,
@@ -41,8 +41,11 @@ DailySeries dailySeries(Map<String, double> dailyTotals) {
   return (dates: dates, values: values, valueTexts: texts);
 }
 
-/// Ba biểu đồ pixel (danh mục, mức độ cần thiết, theo ngày) + nhận xét.
-/// Màn Thống kê và screen khác chỉ cần nhúng widget này.
+/// Glyph của bốn mức ưu tiên, cùng thứ tự với [AppStrings.priorityLabels].
+const List<String> _priorityGlyphs = ['check', 'sparkle', 'gift', 'close'];
+
+/// Ba khối thống kê (tròn theo danh mục, hàng mức độ cần thiết, cột theo
+/// ngày) + nhận xét. Màn Thống kê và screen khác chỉ cần nhúng widget này.
 class StatisticsCharts extends ConsumerWidget {
   const StatisticsCharts({super.key});
 
@@ -55,10 +58,6 @@ class StatisticsCharts extends ConsumerWidget {
     final nameById = {
       for (final c in categories)
         if (c.id != null) c.id!: c.name,
-    };
-    final iconById = {
-      for (final c in categories)
-        if (c.id != null) c.id!: c.icon,
     };
 
     if (stats.isLoading && stats.totalAmount == 0) {
@@ -75,11 +74,28 @@ class StatisticsCharts extends ConsumerWidget {
         stats.priorityTotals[p] ?? 0,
     ];
     final hasPriority = priorityValues.any((v) => v > 0);
+    final priorityTotal = priorityValues.fold<double>(
+      0,
+      (sum, v) => sum + (v > 0 ? v : 0),
+    );
+
+    // Lát tròn và hàng chú thích dùng chung một accent ổn định theo tên danh
+    // mục nên ô màu trong legend luôn khớp màu lát cắt.
+    final catSlices = <PixelPieSlice>[];
+    for (final entry in catEntries) {
+      final name = nameById[entry.key] ?? 'Khác';
+      catSlices.add(
+        PixelPieSlice(
+          label: name,
+          value: entry.value,
+          valueText: CurrencyFormatter.format(entry.value),
+          color: palette.accentForCategory(name),
+        ),
+      );
+    }
 
     final effects = ref.watch(effectsProvider);
-    // Mốc tham chiếu = max của kỳ đang xem (spec chốt #9).
-    final catMax = catEntries.isEmpty ? 0.0 : catEntries.first.value;
-    final priorityMax = priorityValues.fold<double>(0, (a, b) => b > a ? b : a);
+    // Mốc tham chiếu = max của kỳ đang xem, giờ chỉ còn tô cột theo ngày.
     final dayMax = series.values.fold<double>(0, (a, b) => b > a ? b : a);
     final on = effects.chartSpendRamp;
 
@@ -92,22 +108,23 @@ class StatisticsCharts extends ConsumerWidget {
             children: [
               Text('THEO DANH MỤC', style: text.labelLarge),
               const SizedBox(height: 10),
-              if (catEntries.isEmpty)
+              if (catSlices.isEmpty)
                 Text(
                   'Chưa có dữ liệu trong khoảng này.',
                   style: text.bodyMedium?.copyWith(color: palette.inkMuted),
                 )
-              else
-                for (final entry in catEntries)
-                  PixelShareBar(
-                    label: nameById[entry.key] ?? 'Khác',
-                    glyph: iconById[entry.key] ?? 'tag',
-                    value: entry.value,
+              else ...[
+                Center(child: PixelPieChart(slices: catSlices)),
+                const SizedBox(height: 10),
+                for (final slice in catSlices)
+                  PixelShareRow(
+                    label: slice.label,
+                    color: slice.color,
+                    value: slice.value,
                     total: stats.totalAmount,
-                    valueText: CurrencyFormatter.format(entry.value),
-                    useSpendRamp: on,
-                    reference: on ? catMax : null,
+                    valueText: slice.valueText,
                   ),
+              ],
             ],
           ),
         ),
@@ -124,19 +141,15 @@ class StatisticsCharts extends ConsumerWidget {
                   style: text.bodyMedium?.copyWith(color: palette.inkMuted),
                 )
               else
-                PixelStackedShare(
-                  labels: AppStrings.priorityLabels,
-                  glyphs: const ['check', 'sparkle', 'gift', 'close'],
-                  values: priorityValues,
-                  colors: [
-                    for (var p = 0; p < AppStrings.priorityLabels.length; p++)
-                      palette.priorityColor(p),
-                  ],
-                  valueTexts: [
-                    for (final v in priorityValues) CurrencyFormatter.format(v),
-                  ],
-                  reference: on ? priorityMax : null,
-                ),
+                for (var p = 0; p < AppStrings.priorityLabels.length; p++)
+                  PixelShareRow(
+                    label: AppStrings.priorityLabels[p],
+                    glyph: _priorityGlyphs[p],
+                    color: palette.priorityColor(p),
+                    value: priorityValues[p],
+                    total: priorityTotal,
+                    valueText: CurrencyFormatter.format(priorityValues[p]),
+                  ),
             ],
           ),
         ),

@@ -34,6 +34,7 @@ class PixelStar {
     required this.x,
     required this.y,
     required this.cell,
+    required this.accent,
     required this.tinted,
     required this.twinkle,
     required this.delay,
@@ -43,26 +44,39 @@ class PixelStar {
   final double cell; // 2 hoặc 4 px
   final bool tinted, twinkle;
 
+  /// Index trong `AppPalette.accents`, hoặc -1 khi sao không mang màu accent.
+  final int accent;
+
   double get opacity => cell == 2 ? 0.55 : 0.8;
 }
 
 /// Sinh sao thuần: seed cố định nên không nhảy khi setState; chỉ gọi lại khi
 /// Size đổi. Mật độ 1 ô / 2200 px2 (tối đa 220 ô); 62% ô 2 px, 38% ô 4 px;
-/// 10% nhuốm màu star; 20% nhấp nháy.
+/// 8% mang một trong sáu màu accent, phần còn lại 10% nhuốm màu star;
+/// 20% nhấp nháy.
 List<PixelStar> buildStarField(Size size) {
   final random = math.Random(20261102);
   final count = math.min((size.width * size.height / 2200).round(), 220);
-  return [
-    for (var i = 0; i < count; i++)
+  final stars = <PixelStar>[];
+  // Đếm lượt riêng cho sao accent: sáu màu luân phiên đều nhau thay vì phụ
+  // thuộc vị trí i (có thể bỏ sót màu trên màn nhỏ).
+  var accentTurn = 0;
+  for (var i = 0; i < count; i++) {
+    final accent = random.nextDouble() < 0.08 ? accentTurn++ % 6 : -1;
+    final tintRoll = random.nextDouble();
+    stars.add(
       PixelStar(
         x: random.nextDouble() * size.width,
         y: random.nextDouble() * size.height,
         cell: random.nextDouble() < 0.62 ? 2 : 4,
-        tinted: random.nextDouble() < 0.10,
+        accent: accent,
+        tinted: accent < 0 && tintRoll < 0.10,
         twinkle: random.nextDouble() < 0.20,
         delay: random.nextDouble(),
       ),
-  ];
+    );
+  }
+  return stars;
 }
 
 /// Sao bị chặn nếu tâm rơi vào rect keep-out đã nở 4 px.
@@ -251,9 +265,10 @@ class _StarPainter extends CustomPainter {
           opacity *= 0.35;
         }
       }
-      paint.color = (star.tinted ? palette.star : palette.ink).withValues(
-        alpha: opacity,
-      );
+      final color = star.accent >= 0
+          ? palette.accentAt(star.accent)
+          : (star.tinted ? palette.star : palette.ink);
+      paint.color = color.withValues(alpha: opacity);
       canvas.drawRect(
         Rect.fromLTWH(
           center.dx - star.cell / 2,

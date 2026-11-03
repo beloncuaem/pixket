@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:pixket/core/constants/app_info.dart';
 import 'package:pixket/core/theme/app_theme.dart';
 import 'package:pixket/data/models/category.dart';
 import 'package:pixket/data/models/expense.dart';
@@ -207,7 +208,7 @@ void main() {
     expect(find.text('Quản lý danh mục'), findsOneWidget);
     expect(find.text('Thùng rác'), findsOneWidget);
     expect(find.text('Chế độ tối'), findsOneWidget);
-    expect(find.text('Phiên bản 2.5.1 • PIXEL JOURNAL'), findsOneWidget);
+    expect(find.text(AppInfo.aboutLabel), findsOneWidget);
     expect(find.byType(SwitchListTile), findsNothing);
     expect(find.byType(ListTile), findsNothing);
     expect(find.byType(Card), findsNothing);

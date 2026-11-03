@@ -38,7 +38,18 @@ void main() {
       expect(a[i].x, b[i].x);
       expect(a[i].y, b[i].y);
       expect(a[i].cell, b[i].cell);
+      expect(a[i].accent, b[i].accent);
+      expect(a[i].tinted, b[i].tinted);
     }
+  });
+
+  test('một phần nhỏ sao mang màu accent và đủ cả sáu màu', () {
+    final stars = buildStarField(const Size(1200, 1600));
+    final accented = stars.where((star) => star.accent >= 0).toList();
+    expect(accented.length / stars.length, closeTo(0.08, 0.05));
+    expect(accented.map((star) => star.accent).toSet(), {0, 1, 2, 3, 4, 5});
+    // Sao accent đã có màu riêng nên không nhuốm thêm màu star.
+    expect(accented.where((star) => star.tinted), isEmpty);
   });
 
   test('mật độ 1 ô / 2200 px2, chặn trần 220 ô', () {

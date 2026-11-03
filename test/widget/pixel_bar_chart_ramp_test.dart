@@ -52,7 +52,9 @@ void main() {
     expect(containers, contains(const Color(0xFF123456)));
   });
 
-  testWidgets('tooltip kèm nhãn bậc mức chi', (tester) async {
+  testWidgets('tooltip chỉ còn ngày và số tiền, không nhãn bậc mức chi', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
@@ -68,6 +70,7 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('bar-0')));
     await tester.pump();
-    expect(find.textContaining('Vượt mức'), findsOneWidget);
+    expect(find.textContaining('90₫'), findsWidgets);
+    expect(find.textContaining('Vượt mức'), findsNothing);
   });
 }

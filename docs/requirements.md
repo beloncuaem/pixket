@@ -51,13 +51,14 @@ khách hay ngoại tuyến.
 | FR-28 | Bộ icon pixel tự vẽ (lưới 16×16, `CustomPainter`) thay Material Icons và emoji; `IconHelper` giữ API cũ, chỉ đổi render sang `AppIcon`. | Đã có |
 | FR-29 | `AppPalette` (ThemeExtension) là nguồn màu duy nhất, tương phản WCAG ở cả hai theme; bỏ gradient và glassmorphism. | Đã có |
 | FR-30 | Component pixel dùng chung cho mọi màn: panel, button, chip, progress, segmented, text field, dialog/sheet/snackbar, empty/loading/stat/badge/divider, expense tile. | Đã có |
-| FR-31 | Biểu đồ tự vẽ bằng khối pixel (tỉ trọng danh mục, mức độ cần thiết, theo ngày) kèm nhãn chữ và `Semantics`; đã gỡ `fl_chart`. | Đã có |
+| FR-31 | Biểu đồ tự vẽ: tròn thật theo danh mục (`PixelPieChart`), hàng chú thích tỉ trọng dùng chung (ô màu + nhãn + % + số tiền), cột theo ngày in số tiền ngay trên đầu cột, kèm nhãn chữ và `Semantics`; đã gỡ `fl_chart`. | Đã có |
 | FR-32 | Vùng chạm ≥ 48×48 dp, chữ không chỉ dựa vào màu, lỗi hiển thị dưới field, test ở text scale 1.3×. | Đã có, cần xác minh thêm trên thiết bị |
 | FR-33 | Ảnh khoản chi chỉ render qua `PixelReceiptImage` với placeholder "Không tải được ảnh"; feed/lưới/thùng rác/danh mục theo ngôn ngữ Pixel. | Đã có |
-| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.5.1` / build `7`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
-| FR-35 | Bộ nhận diện v2.4: 63 glyph đa màu phong cách tàu vũ trụ, bầu trời sao ở nền tối, hiệu ứng iris khi chụp và sao lóe khi lưu; đã gỡ mọi dải 7 màu, pháo giấy, mosaic và tab bar đáy. Logo máy ảnh ống kính cầu vồng của bản này được thay bằng mark Lens Orbit (FR-37). | Đã có |
+| FR-34 | Phiên bản app lấy từ `AppInfo` (`2.6.0` / build `8`), khớp `pubspec.yaml`, hiển thị ở drawer và Cài đặt. | Đã có |
+| FR-35 | Bộ nhận diện v2.4: 63 glyph đa màu phong cách tàu vũ trụ, bầu trời sao ở nền tối (8% sao mang màu accent), hiệu ứng khi chụp là phi thuyền bay ngang kéo đuôi cầu vồng (thay ống kính iris của v2.4) và 12 sao lóe khi lưu; đã gỡ mọi dải 7 màu, pháo giấy, mosaic và tab bar đáy. Logo máy ảnh ống kính cầu vồng của bản này được thay bằng mark Lens Orbit (FR-37). | Đã có |
 | FR-36 | Tải ảnh khoản chi về thư viện máy từ trang ảnh (`gal`), lấy signed URL nếu đã upload, ngược lại dùng tệp cục bộ; thiếu quyền hoặc thiếu ảnh thì báo tiếng Việt. | Đã có, cần xác minh trên thiết bị |
 | FR-37 | Logo "Lens Orbit" dựng thủ tục từ lưới 24×24 (`buildLogoGrid`): vành ống kính khía sáu rãnh, quỹ đạo nghiêng, vì sao vàng, hành tinh và sao nền chỉ vẽ ở theme tối; cùng một mark cho header, drawer, icon launcher và icon thương hiệu. | Đã có |
+| FR-38 | Đợt chỉnh UI sau khi người dùng test v2.5.1 trên máy thật: camera là ô ngắm vuông 1:1 nằm giữa nền sao với nút chụp dấu `+` viền kem; trang xem ảnh dùng một nền sao liền mạch, bỏ thanh ngăn; header mọi màn trong suốt để nền sao chạy liền từ mép trên; nhãn stat tile co lại thay vì bị cắt; thống kê theo danh mục đổi sang biểu đồ tròn thật + hàng chú thích, mức độ cần thiết bỏ thanh màu (chỉ nhãn + % + số tiền), cột theo ngày có số tiền, bỏ nhãn "Vượt mức" gây hiểu nhầm khi chưa đặt ngân sách; hạn mức đã lưu thì điều chỉnh bằng CỘNG/TRỪ/XÓA thay vì gõ lại toàn bộ. | Đã có, cần xác minh trên thiết bị |
 
 ## 4. Quy tắc dữ liệu
 
@@ -105,11 +106,11 @@ khách hay ngoại tuyến.
 ## 8. Tiêu chí nghiệm thu đã xác minh
 
 - `flutter analyze`: không có issue nào.
-- `flutter test`: 372 bài pass, 7 bài skip có điều kiện (1 bài sinh icon launcher cần
+- `flutter test`: 374 bài pass, 7 bài skip có điều kiện (1 bài sinh icon launcher cần
   `PIXKET_GEN_ICONS=1`, 6 bài sinh ảnh demo cần `PIXKET_GEN_SHOTS=1`); gồm 7 bài gate dọn dẹp
   trong `test/widget/legacy_cleanup_test.dart`:
-  không còn `AppColors`, `Icons.*`, 8 file widget cũ, tab bar đáy + 5 widget dải 7 màu,
-  mọi ảnh render qua `PixelReceiptImage`, `pubspec.yaml` khớp `AppInfo`.
+  không còn `AppColors`, `Icons.*`, 8 file widget cũ, tab bar đáy + 5 widget dải 7 màu +
+  ống kính `pixel_iris`, mọi ảnh render qua `PixelReceiptImage`, `pubspec.yaml` khớp `AppInfo`.
 - `flutter build apk --debug`: **không chạy được trong phiên này** vì máy phát triển chưa có
   Android SDK/JDK (`flutter build apk --debug` báo "No Android SDK found"). APK sẽ được build
   bởi workflow GitHub Actions.

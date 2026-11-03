@@ -33,6 +33,7 @@ const _legacyEffects = [
   'lib/widgets/pixel/rainbow_sweep.dart',
   'lib/widgets/pixel/rainbow_rule.dart',
   'lib/widgets/pixel/pixel_confetti.dart',
+  'lib/widgets/pixel/pixel_iris.dart',
 ];
 
 void main() {
@@ -55,6 +56,7 @@ void main() {
         'RainbowSweep',
         'RainbowRule',
         'PixelConfetti',
+        'PixelIris',
         'bottomNavigationBar',
       ]) {
         expect(_filesContaining(needle), isEmpty, reason: needle);
@@ -97,8 +99,8 @@ void main() {
     test('pubspec và AppInfo cùng một phiên bản', () {
       final pubspec = File('pubspec.yaml').readAsStringSync();
       expect(pubspec, contains('version: ${AppInfo.version}+${AppInfo.build}'));
-      expect(AppInfo.version, '2.5.1');
-      expect(AppInfo.build, '7');
+      expect(AppInfo.version, '2.6.0');
+      expect(AppInfo.build, '8');
       expect(AppInfo.tagline, 'PIXEL JOURNAL');
     });
 
@@ -113,9 +115,10 @@ void main() {
         'lib/widgets/pixel/pixel_receipt_image.dart',
         'lib/widgets/pixel/pixel_screen_header.dart',
         'lib/widgets/pixel/pixel_expense_tile.dart',
-        'lib/widgets/pixel/pixel_share_bar.dart',
-        'lib/widgets/pixel/pixel_stacked_share.dart',
+        'lib/widgets/pixel/pixel_pie_chart.dart',
+        'lib/widgets/pixel/pixel_share_row.dart',
         'lib/widgets/pixel/pixel_bar_chart.dart',
+        'lib/widgets/pixel/pixel_ship_flight.dart',
         'lib/widgets/pixel/feed_hud.dart',
       ]) {
         expect(File(path).existsSync(), isTrue, reason: path);
