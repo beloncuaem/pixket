@@ -1,26 +1,20 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../database/database_helper.dart';
-
+/// Cài đặt cấp thiết bị, đọc được cả khi chưa đăng nhập (cờ onboarding,
+/// theme, khoá hiệu ứng). Từng nằm trong SQLite; chuyển sang
+/// shared_preferences vì sqflite không chạy được trên web.
+///
+/// Giá trị bool vẫn lưu dạng chuỗi 'true'/'false' để giữ đúng ngữ nghĩa cũ
+/// và để migration từ DB SQLite cũ chỉ là chép chuỗi nguyên trạng.
 class AppSettingsRepository {
   Future<String?> getString(String key) async {
-    final db = await DatabaseHelper.instance.database;
-    final rows = await db.query(
-      'app_settings',
-      columns: ['value'],
-      where: 'key = ?',
-      whereArgs: [key],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : rows.first['value'] as String;
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getString(key);
   }
 
   Future<void> setString(String key, String value) async {
-    final db = await DatabaseHelper.instance.database;
-    await db.insert('app_settings', {
-      'key': key,
-      'value': value,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(key, value);
   }
 
   Future<bool> getBool(String key, {required bool fallback}) async {
@@ -34,7 +28,7 @@ class AppSettingsRepository {
       setString(key, value ? 'true' : 'false');
 
   Future<void> remove(String key) async {
-    final db = await DatabaseHelper.instance.database;
-    await db.delete('app_settings', where: 'key = ?', whereArgs: [key]);
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove(key);
   }
 }
