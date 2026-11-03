@@ -69,100 +69,111 @@ class FeedPhotoPage extends StatelessWidget {
 
     return ColoredBox(
       color: palette.feedBg,
-      child: Column(
+      child: Stack(
         children: [
-          SizedBox(height: topInset + feedHudBarHeight),
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: PixelReceiptImage.fromExpense(
-                    expense,
-                    fit: fit,
-                    radius: 4,
-                    semanticLabel:
-                        'Ảnh khoản chi ${expense.caption.isEmpty ? expense.amount.toInt() : expense.caption}',
-                  ),
-                ),
-              ),
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: palette.feedPanel,
-              border: Border(top: BorderSide(color: palette.mint, width: 2)),
-            ),
-            child: Stack(
-              children: [
-                // Panel nền tối nên có sao; IgnorePointer giữ nút bấm hoạt động.
-                const Positioned.fill(child: PixelStarField()),
-                SafeArea(
-                  top: false,
+          // Nền sao phủ toàn trang, không chỉ riêng panel: khoảng trống hai bên
+          // ảnh vuông và dải dưới HUD hết là viền đen. Ảnh và panel phía trên
+          // đều đặc nên sao không bao giờ đè lên nội dung.
+          const Positioned.fill(child: PixelStarField()),
+          Column(
+            children: [
+              SizedBox(height: topInset + feedHudBarHeight),
+              Expanded(
+                child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        FeedCaptionPanel(
-                          expense: expense,
-                          categoryName: categoryName,
-                          categoryGlyph: IconHelper.normalizeIconKey(
-                            category?.icon ?? 'tag',
-                          ),
-                          priorityName: priorityName,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            PixelIconButton(
-                              key: const ValueKey('feed-edit'),
-                              icon: 'edit',
-                              tooltip: 'Chỉnh sửa khoản chi',
-                              onPressed: onEdit,
-                              background: palette.feedPanel,
-                              borderColor: palette.feedInk,
-                              iconColor: palette.feedInk,
-                            ),
-                            const SizedBox(width: 8),
-                            PixelIconButton(
-                              key: const ValueKey('feed-download'),
-                              icon: 'download',
-                              tooltip: 'Tải ảnh về máy',
-                              onPressed: () => _saveToGallery(context),
-                              background: palette.feedPanel,
-                              borderColor: palette.feedInk,
-                              iconColor: palette.feedInk,
-                            ),
-                            const SizedBox(width: 8),
-                            PixelIconButton(
-                              key: const ValueKey('feed-delete'),
-                              icon: 'trash',
-                              tooltip: 'Chuyển vào thùng rác',
-                              onPressed: onDelete,
-                              background: palette.feedPanel,
-                              borderColor: palette.feedInk,
-                              iconColor: palette.feedInk,
-                            ),
-                            if (photoIndex != null && photoCount != null) ...[
-                              const Spacer(),
-                              Text(
-                                '$photoIndex/$photoCount',
-                                style: text.bodySmall?.copyWith(
-                                  color: palette.feedMuted,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: PixelReceiptImage.fromExpense(
+                        expense,
+                        fit: fit,
+                        radius: 4,
+                        semanticLabel:
+                            'Ảnh khoản chi ${expense.caption.isEmpty ? expense.amount.toInt() : expense.caption}',
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: palette.feedPanel,
+                  border: Border(
+                    top: BorderSide(color: palette.mint, width: 2),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Panel nền tối nên có sao; IgnorePointer giữ nút bấm hoạt động.
+                    const Positioned.fill(child: PixelStarField()),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FeedCaptionPanel(
+                              expense: expense,
+                              categoryName: categoryName,
+                              categoryGlyph: IconHelper.normalizeIconKey(
+                                category?.icon ?? 'tag',
+                              ),
+                              priorityName: priorityName,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                PixelIconButton(
+                                  key: const ValueKey('feed-edit'),
+                                  icon: 'edit',
+                                  tooltip: 'Chỉnh sửa khoản chi',
+                                  onPressed: onEdit,
+                                  background: palette.feedPanel,
+                                  borderColor: palette.feedInk,
+                                  iconColor: palette.feedInk,
+                                ),
+                                const SizedBox(width: 8),
+                                PixelIconButton(
+                                  key: const ValueKey('feed-download'),
+                                  icon: 'download',
+                                  tooltip: 'Tải ảnh về máy',
+                                  onPressed: () => _saveToGallery(context),
+                                  background: palette.feedPanel,
+                                  borderColor: palette.feedInk,
+                                  iconColor: palette.feedInk,
+                                ),
+                                const SizedBox(width: 8),
+                                PixelIconButton(
+                                  key: const ValueKey('feed-delete'),
+                                  icon: 'trash',
+                                  tooltip: 'Chuyển vào thùng rác',
+                                  onPressed: onDelete,
+                                  background: palette.feedPanel,
+                                  borderColor: palette.feedInk,
+                                  iconColor: palette.feedInk,
+                                ),
+                                if (photoIndex != null &&
+                                    photoCount != null) ...[
+                                  const Spacer(),
+                                  Text(
+                                    '$photoIndex/$photoCount',
+                                    style: text.bodySmall?.copyWith(
+                                      color: palette.feedMuted,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

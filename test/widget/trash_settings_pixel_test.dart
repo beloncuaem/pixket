@@ -207,7 +207,7 @@ void main() {
     expect(find.text('Quản lý danh mục'), findsOneWidget);
     expect(find.text('Thùng rác'), findsOneWidget);
     expect(find.text('Chế độ tối'), findsOneWidget);
-    expect(find.text('Phiên bản 2.5.0 • PIXEL JOURNAL'), findsOneWidget);
+    expect(find.text('Phiên bản 2.5.1 • PIXEL JOURNAL'), findsOneWidget);
     expect(find.byType(SwitchListTile), findsNothing);
     expect(find.byType(ListTile), findsNothing);
     expect(find.byType(Card), findsNothing);

@@ -10,6 +10,7 @@ import 'package:pixket/screens/camera/feed_grid_screen.dart';
 import 'package:pixket/screens/camera/feed_photo_page.dart';
 import 'package:pixket/widgets/pixel/pixel_badge.dart';
 import 'package:pixket/widgets/pixel/pixel_receipt_image.dart';
+import 'package:pixket/widgets/pixel/pixel_star_field.dart';
 
 const String _objectPath = '0f1c2b3d-4e5f-4a6b-8c9d-0e1f2a3b4c5d/a.png';
 
@@ -179,6 +180,16 @@ void main() {
       ),
     );
     expect(find.text('3/12'), findsOneWidget);
+  });
+
+  testWidgets('nền sao phủ toàn trang, không để viền đen quanh ảnh', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(photoPage()));
+    final page = tester.getRect(find.byType(FeedPhotoPage));
+    // Một field full-bleed làm nền cả trang, một field riêng cho panel dưới.
+    expect(find.byType(PixelStarField), findsNWidgets(2));
+    expect(tester.getSize(find.byType(PixelStarField).first), page.size);
   });
 
   testWidgets('trang ảnh không còn glass pill và placeholder cũ', (

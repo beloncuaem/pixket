@@ -15,7 +15,7 @@ pixket/
 │   ├── core/
 │   │   ├── config/supabase_config.dart  # Đọc .env, khởi tạo Supabase, isInitialized
 │   │   ├── constants/
-│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.5.0, build 6, tagline
+│   │   │   ├── app_info.dart            # Tên "Pixket", version 2.5.1, build 7, tagline
 │   │   │   └── app_strings.dart         # Nhãn cố định (mức độ cần thiết, v.v.)
 │   │   ├── icons/pixel_glyph_data.dart  # Bảng glyph pixel 16×16 (chuỗi hàng + palette index)
 │   │   ├── navigation/app_section.dart  # enum 4 khu vực: feed / dashboard / statistics / budget
@@ -227,7 +227,7 @@ chạy đúng một lần). DB lỗi thì về mặc định, không crash.
 
 | Hiệu ứng | Widget | Nội dung |
 |---|---|---|
-| Bầu trời sao (chỉ theme dark) | `pixel_star_field.dart` | 1 ô / 2200 px² (tối đa 220 ô): 62% ô 2 px + 38% ô 4 px, 10% nhuốm `palette.star`, 20% nhấp nháy chu kỳ 1400 ms; trôi theo sin ±3/±2 px chu kỳ 30 s; một sao băng (đầu 4 px + 6 ô đuôi 2 px, alpha tam giác) dài ~1,8 s mỗi chu kỳ; `PixelStarSafe` báo vùng keep-out (nở 4 px). Đặt ở màn chính, drawer, `PixelSheet`, login/onboarding, thùng rác, danh mục, lưới ảnh và panel trang xem ảnh |
+| Bầu trời sao (chỉ theme dark) | `pixel_star_field.dart` | 1 ô / 2200 px² (tối đa 220 ô): 62% ô 2 px + 38% ô 4 px, 10% nhuốm `palette.star`, 20% nhấp nháy chu kỳ 1400 ms; trôi theo sin ±3/±2 px chu kỳ 30 s; một sao băng (đầu 4 px + 6 ô đuôi 2 px, alpha tam giác) dài ~1,8 s mỗi chu kỳ; `PixelStarSafe` báo vùng keep-out (nở 4 px). Đặt ở màn chính, drawer, `PixelSheet`, login/onboarding, thùng rác, danh mục, lưới ảnh và toàn trang xem ảnh (một field full-bleed làm nền quanh ảnh vuông, một field riêng trong panel dưới) |
 | Chụp ảnh | `pixel_iris.dart` | 4 góc pixel khép (easeIn) rồi mở (easeOut) trong 260 ms, bọc `RepaintBoundary`; `onCovered` bắn ở mốc 0.5 và được gọi lại khi animation hoàn tất nên form mở đúng một lần |
 | Lưu khoản chi | `pixel_star_flash.dart` | 5 sao 4 cánh nở nhanh–tan chậm 350 ms (120 ms khi reduced motion) tại toạ độ nút lưu, gắn root overlay + `IgnorePointer`; kèm toast "Đã lưu khoản chi." |
 | Đổi khu vực | `main_screen.dart` | `AnimatedSwitcher` fade + scale 0.98→1, 180 ms, easeOut/easeIn, `Duration.zero` khi reduced motion; child key theo khu vực nên chuyển cảnh hủy được giữa chừng |
@@ -268,7 +268,7 @@ Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
 
 ```bash
 flutter analyze          # No issues found!
-flutter test             # 371 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
+flutter test             # 372 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
                          # cần PIXKET_GEN_ICONS=1 / PIXKET_GEN_SHOTS=1)
 ```
 
