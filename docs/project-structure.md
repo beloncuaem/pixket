@@ -206,6 +206,9 @@ MainScreen (Scaffold + Drawer + PixelStarField nền, không bottomNavigationBar
   ống kính **6 cung cầu vồng** + đồng tử + điểm sáng, gờ shutter màu bơ; bản `simple`
   16 ô dùng cho favicon/launcher nhỏ. Icon launcher Android được sinh lại từ chính logo này
   (`test/tool/launcher_icons_test.dart`, chạy với `PIXKET_GEN_ICONS=1`).
+- Ảnh demo trong `docs/screenshots/` cũng do test sinh:
+  `test/tool/demo_screenshots_test.dart`, chạy với `PIXKET_GEN_SHOTS=1`, render
+  6 màn bằng widget thật nên không cần thiết bị.
 - `PixelPanel` viền cứng 2–3px, bóng lệch `(3,4)` không blur; `PixelButton`/`PixelChip`/
   `PixelIconButton` có vùng chạm ≥ 48dp.
 - Tiêu đề và số dùng VT323, chữ nội dung dùng Be Vietnam Pro (bundle trong `assets/fonts/`).
@@ -263,7 +266,8 @@ Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
 
 ```bash
 flutter analyze          # No issues found!
-flutter test             # 371 passed, 1 skip (test sinh icon cần PIXKET_GEN_ICONS=1)
+flutter test             # 371 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
+                         # cần PIXKET_GEN_ICONS=1 / PIXKET_GEN_SHOTS=1)
 ```
 
 - Unit: model, formatter VND/ngày, giới hạn ngày khoản chi, parse số có dấu nghìn,

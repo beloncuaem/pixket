@@ -36,6 +36,46 @@ không có bản sao dữ liệu tài chính trên thiết bị và không cần
 
 ---
 
+## 📸 Demo
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/01-feed.png" width="220" alt="Nhật ký ảnh kiểu Locket" /><br/>
+      <b>Nhật ký ảnh</b><br/>Ảnh khoản chi toàn màn hình + HUD pixel
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/02-dashboard.png" width="220" alt="Tổng quan chi tiêu" /><br/>
+      <b>Tổng quan</b><br/>Chi tháng, ngân sách, giao dịch gần đây
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/03-statistics.png" width="220" alt="Thống kê biểu đồ pixel" /><br/>
+      <b>Thống kê</b><br/>Biểu đồ pixel theo danh mục và ngày
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/04-budget.png" width="220" alt="Ngân sách tháng" /><br/>
+      <b>Ngân sách</b><br/>Thanh ramp mức chi của tháng
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/05-drawer.png" width="220" alt="Drawer điều hướng" /><br/>
+      <b>Drawer</b><br/>Điều hướng, hồ sơ cloud, đổi giao diện
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/06-categories.png" width="220" alt="Quản lý danh mục" /><br/>
+      <b>Danh mục</b><br/>Bộ glyph 16×16 tự vẽ theo danh mục
+    </td>
+  </tr>
+</table>
+
+Ảnh render bằng `flutter test` trên đúng widget pixel hiện tại (khung nhìn 360×800 dp),
+không phải ảnh chụp từ thiết bị, và toàn bộ số liệu là dữ liệu demo đặt sẵn trong
+`test/tool/demo_screenshots_test.dart`. Muốn dựng lại ảnh:
+`PIXKET_GEN_SHOTS=1 flutter test test/tool/demo_screenshots_test.dart`.
+
+---
+
 ## 🚀 Tính năng nổi bật
 
 ### 1. 📸 Nhật ký ảnh kiểu Locket
@@ -263,7 +303,8 @@ File: `build/app/outputs/flutter-apk/app-release.apk`
 
 ```bash
 flutter analyze     # No issues found!
-flutter test        # 371 passed, 1 skip (test sinh icon, cần PIXKET_GEN_ICONS=1)
+flutter test        # 371 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
+                    # cần PIXKET_GEN_ICONS=1 / PIXKET_GEN_SHOTS=1)
 ```
 
 - **Unit Tests**: model, formatter VND/ngày, `ThousandsSeparatorInputFormatter`,
