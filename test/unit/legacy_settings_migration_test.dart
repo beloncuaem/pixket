@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +15,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  // debugDefaultTargetPlatformOverride là global: không reset thì nền tảng giả
+  // của test này rò rỉ sang test khác.
+  tearDown(() => debugDefaultTargetPlatformOverride = null);
 
   test('chép cả 3 key từ DB cũ sang shared_preferences', () async {
     await LegacySettingsMigration(readLegacySettings: _fullLegacyDb).run();
@@ -101,5 +106,32 @@ void main() {
     await LegacySettingsMigration(readLegacySettings: countingReader).run();
 
     expect(reads, 1);
+  });
+
+  test('desktop bỏ qua hẳn: không đọc DB cũ, không set cờ', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    var reads = 0;
+    Future<Map<String, String>> countingReader() async {
+      reads++;
+      return _fullLegacyDb();
+    }
+
+    await LegacySettingsMigration(readLegacySettings: countingReader).run();
+
+    expect(reads, 0);
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getBool(LegacySettingsMigration.flagKey), isNull);
+  });
+
+  test('Android vẫn migrate: guard mới không chặn nền tảng thật', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+
+    await LegacySettingsMigration(readLegacySettings: _fullLegacyDb).run();
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getString('onboarding_complete'), 'true');
+    expect(preferences.getString('theme_mode'), 'dark');
+    expect(preferences.getString('chart_spend_ramp'), 'false');
+    expect(preferences.getBool(LegacySettingsMigration.flagKey), isTrue);
   });
 }

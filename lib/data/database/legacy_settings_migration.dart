@@ -27,10 +27,24 @@ class LegacySettingsMigration {
 
   static const String _databaseFileName = 'pixket.db';
 
+  /// Chỉ mobile mới từng có `pixket.db`: sqflite không có implementation cho
+  /// Windows/Linux (không nằm trong generated_plugins.cmake, cũng không có
+  /// sqflite_common_ffi), nên desktop không có gì để migrate.
+  static const Set<TargetPlatform> _supportedPlatforms = {
+    TargetPlatform.android,
+    TargetPlatform.iOS,
+  };
+
   final LegacySettingsReader _readLegacySettings;
 
   Future<void> run() async {
+    // kIsWeb phải đứng trước: trên web defaultTargetPlatform là nền tảng trình
+    // duyệt đoán (Chrome trên Android báo android), nên chỉ lọc theo platform
+    // sẽ để migration chạy trên PWA rồi ném MissingPluginException ở đó.
     if (kIsWeb) return;
+    // Desktop bỏ qua hẳn: nếu vẫn thử đọc thì mỗi lần khởi động lại ném, bị
+    // catch nuốt và không set cờ — thành vòng lặp lỗi vô nghĩa vĩnh viễn.
+    if (!_supportedPlatforms.contains(defaultTargetPlatform)) return;
 
     final preferences = await SharedPreferences.getInstance();
     if (preferences.getBool(flagKey) ?? false) return;
