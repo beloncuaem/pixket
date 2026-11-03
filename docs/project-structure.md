@@ -10,7 +10,7 @@
 pixket/
 ├── assets/fonts/                        # VT323 + Be Vietnam Pro bundle offline (kèm OFL)
 ├── lib/
-│   ├── main.dart                        # Entry point: dotenv, Supabase, SQLite, ProviderScope
+│   ├── main.dart                        # Entry point: dotenv, migration SQLite cũ, Supabase, ProviderScope
 │   ├── app.dart                         # MaterialApp, theme, onboarding/auth gate
 │   ├── core/
 │   │   ├── config/supabase_config.dart  # Đọc .env, khởi tạo Supabase, isInitialized
@@ -35,7 +35,7 @@ pixket/
 │   │       ├── square_image.dart            # Cắt ô vuông 1:1 + nén JPEG 1200px + marker _sq
 │   │       └── storage_paths.dart           # storagePathOf: URL public cũ → path trong bucket
 │   ├── data/
-│   │   ├── database/database_helper.dart    # SQLite: onboarding + mức độ cần thiết
+│   │   ├── database/legacy_settings_migration.dart # Migration một lần: đọc cài đặt từ DB SQLite cũ sang shared_preferences
 │   │   ├── models/                          # Expense, Category, Budget, PriorityLevel
 │   │   └── repositories/
 │   │       ├── auth_repository.dart         # Email/Google OAuth + quên mật khẩu + preflight
@@ -45,8 +45,9 @@ pixket/
 │   │       ├── category_repository.dart
 │   │       ├── budget_repository.dart       # Chọn dòng ngân sách tổng mới nhất
 │   │       ├── budget_alert_repository.dart
-│   │       ├── app_settings_repository.dart # onboarding (SQLite)
-│   │       ├── priority_repository.dart     # mức độ cần thiết (SQLite)
+│   │       ├── app_settings_repository.dart # onboarding + theme + effect (shared_preferences)
+│   │       ├── priority_repository.dart     # mức độ cần thiết (Supabase, read-only)
+│   │       ├── priority_row_reader.dart     # Seam đọc priority_levels, tiêm được cho test
 │   │       └── supabase_storage_service.dart
 │   ├── providers/                             # Riverpod StateNotifier
 │   │   ├── auth_provider.dart
@@ -220,7 +221,7 @@ MainScreen (Scaffold + Drawer + PixelStarField nền, không bottomNavigationBar
 ### Hiệu ứng thương hiệu
 
 Không còn khoá bật/tắt cho hiệu ứng chuyển động: sao, phi thuyền và sao lóe **luôn bật**;
-chỉ `chart_spend_ramp` còn là toggle, lưu trong bảng `app_settings` (SQLite) qua
+chỉ `chart_spend_ramp` còn là toggle, lưu trong `shared_preferences` qua
 `effectsProvider` (`lib/providers/app_settings_provider.dart`) và bật/tắt ở
 **Cài đặt → GIAO DIỆN & BIỂU ĐỒ**. Mọi hiệu ứng vẽ bậc rời (`floor`, không tween mượt),
 `isAntiAlias: false`, seed cố định (`20261102` cho sao, `20261103` cho sao lóe), và tôn
@@ -244,14 +245,15 @@ không crash.
 
 ## 5. Bảng dữ liệu
 
-### SQLite
+### SQLite (chỉ còn migration một lần)
 
-Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
+App không còn bảng SQLite nào. `legacy_settings_migration.dart` đọc `pixket.db`
+cũ đúng một lần để chép các khoá `onboarding_complete`, `theme_mode`,
+`chart_spend_ramp` sang `shared_preferences`; cài mới không có DB cũ nên bỏ qua.
+Release kế tiếp sẽ gỡ hẳn `sqflite` và xóa file migration.
 
-| Bảng | Nội dung |
-| --- | --- |
-| `priority_levels` | Danh sách mức độ cần thiết (seed mặc định) |
-| `app_settings` | Trạng thái onboarding |
+Cài đặt thiết bị (onboarding, theme, hiệu ứng) nay nằm trong `shared_preferences`;
+danh sách mức độ cần thiết nay đọc từ bảng hệ thống `priority_levels` trên Supabase.
 
 ### Supabase PostgreSQL
 
@@ -262,6 +264,7 @@ Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
 | `expenses` | Khoản chi theo `user_id`, ảnh là đường dẫn trong bucket |
 | `budgets` | Ngân sách theo `user_id` và tháng; mỗi tháng một dòng tổng (`category_id IS NULL`) nhờ unique index `uniq_budgets_total_per_month` |
 | `budget_alerts` | Đánh dấu đã gửi cảnh báo 80/90/100% theo tháng |
+| `priority_levels` | Bảng hệ thống read-only: 4 mức độ cần thiết (màu seed sẵn, mọi user đọc chung) |
 | `expense-receipts` | Storage bucket **private** chứa ảnh hóa đơn |
 
 > Bản cũ dùng `upsert` cho ngân sách tổng nên có thể sinh nhiều dòng trùng.
@@ -273,7 +276,7 @@ Chỉ dùng cho tùy chọn cục bộ, không chứa dữ liệu tài chính:
 
 ```bash
 flutter analyze          # No issues found!
-flutter test             # 374 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
+flutter test             # 400 passed, 7 skip (test sinh icon + 6 test sinh ảnh demo,
                          # cần PIXKET_GEN_ICONS=1 / PIXKET_GEN_SHOTS=1)
 ```
 
@@ -300,7 +303,7 @@ flutter test             # 374 passed, 7 skip (test sinh icon + 6 test sinh ản
 1. Giữ nguyên scheme/host deep link nếu đổi package Android; cập nhật đồng thời Supabase Redirect URLs.
 2. Không commit `.env`; chỉ commit `.env.example`.
 3. Nếu thêm provider OAuth mới, cập nhật preflight trong `auth_repository.dart` và tài liệu troubleshooting.
-4. Nếu đổi cấu trúc bảng, cập nhật cả `database_helper.dart`, `supabase_setup.sql` và model `toMap/fromMap`.
+4. Nếu đổi cấu trúc bảng, cập nhật `supabase_setup.sql` và model `toMap/fromMap`.
 5. Cảnh báo ngân sách nối với `NotificationService` ở các mốc 80/90/100% và được đánh dấu
    trong bảng `budget_alerts`; kiểm tra quyền thông báo nếu không nhận được.
 6. Database tạo trước v2.2 cần chạy phần dọn dữ liệu + unique index của `budgets` trong
