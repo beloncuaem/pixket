@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'app.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/notification_service.dart';
-import 'data/database/database_helper.dart';
+import 'data/database/legacy_settings_migration.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +16,7 @@ void main() async {
     debugPrint = (String? message, {int? wrapWidth}) {};
   }
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await DatabaseHelper.instance.database;
+  await LegacySettingsMigration().run();
   await SupabaseConfig.initialize();
   await NotificationService.instance.initialize();
   runApp(const ProviderScope(child: PixketApp()));
