@@ -65,9 +65,10 @@ void main() {
         "package:camera/camera.dart",
         "package:flutter_local_notifications",
       ]),
-      allowed: {
-        'lib/core/services/notification_service.dart',
-      },
+      // R3 đã đóng từ Task 6: plugin notification nằm sau
+      // `receipt_notifier_io.dart`, `gal` sau `gallery_saver_io.dart`, `camera` sau
+      // `photo_capture_io.dart`.
+      allowed: const <String>{},
       rule: 'R3',
     );
   });

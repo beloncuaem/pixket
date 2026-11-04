@@ -1,13 +1,18 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-class NotificationService {
-  NotificationService._();
+import 'receipt_notifier_core.dart';
 
-  static final instance = NotificationService._();
+/// Nhánh mobile: dời nguyên văn từ `NotificationService`, giữ cả channel
+/// `budget_alerts` lẫn hai chuỗi tiếng Việt để người dùng không thấy tin nhắn đổi
+/// giọng chỉ vì app đổi cấu trúc.
+class IoReceiptNotifier extends ReceiptNotifier {
+  IoReceiptNotifier();
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
+  @override
   Future<void> initialize() async {
     if (_isInitialized) return;
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -18,6 +23,7 @@ class NotificationService {
     _isInitialized = true;
   }
 
+  @override
   Future<void> requestPermission() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
@@ -31,6 +37,7 @@ class NotificationService {
     await ios?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
+  @override
   Future<void> showBudgetAlert({
     required int threshold,
     required String monthLabel,
@@ -38,18 +45,22 @@ class NotificationService {
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
         'budget_alerts',
-        'Cảnh báo ngân sách',
+        budgetAlertTitle,
         channelDescription: 'Thông báo khi mức chi vượt ngưỡng ngân sách',
         importance: Importance.high,
         priority: Priority.high,
       ),
       iOS: DarwinNotificationDetails(),
     );
+    // `id` là threshold: ba mốc 80/90/100 thay thế nhau trong khay thông báo chứ
+    // không chồng thành ba tin giống nhau.
     await _plugin.show(
       threshold,
-      'Cảnh báo ngân sách',
-      'Bạn đã sử dụng $threshold% ngân sách tháng $monthLabel.',
+      budgetAlertTitle,
+      budgetAlertBody(threshold, monthLabel),
       details,
     );
   }
 }
+
+ReceiptNotifier receiptNotifier = IoReceiptNotifier();

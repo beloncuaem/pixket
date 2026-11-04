@@ -1171,32 +1171,53 @@ Bản web không crash, nó **im lặng** (spec Plan 2 mục 2), nên đây là 
 
 ```dart
 abstract class ReceiptNotifier {
+  const ReceiptNotifier();
   Future<void> initialize();
   Future<void> requestPermission();
   Future<void> showBudgetAlert({required int threshold, required String monthLabel});
 }
-ReceiptNotifier receiptNotifier = ...;
+ReceiptNotifier receiptNotifier = ...;   // façade + `_core` giữ abstract, mỗi nhánh tự định nghĩa impl
+
+// Chuỗi tiếng Việt đặt ở `_core` để hai nhánh không drift (như gallerySaveUnsupportedMessage):
+const String budgetAlertTitle = 'Cảnh báo ngân sách';
+String budgetAlertBody(int threshold, String monthLabel);
+
+// Vòng ngưỡng tách khỏi notifier thành hàm top-level trong budget_provider.dart, tiêm
+// repository để test không cần mạng (Ruling U — snippet `threshold:` trực tiếp không pin được
+// vòng lặp mà Step 2 yêu cầu tách):
+const List<int> budgetAlertThresholds = [80, 90, 100];
+Future<void> notifyBudgetCrossing(
+  ReceiptNotifier notifier, {
+  required double usageRatio,                       // 0..1, chính là BudgetState.budgetUsagePercent
+  required String monthLabel,
+  required Future<bool> Function(int threshold) hasSent,
+  required Future<void> Function(int threshold) markSent,
+});
 ```
 
-- [ ] **Step 1: `receipt_notifier_io.dart`** = dời nguyên văn `notification_service.dart` (giữ nguyên chuỗi `'Cảnh báo ngân sách'` và body `'Bạn đã sử dụng $threshold% ngân sách tháng $monthLabel.'`, giữ nguyên channel id/name `budget_alerts`/`Cảnh báo ngân sách`). `_web.dart`: `initialize()` kiểm tra `'Notification' in web.globalThis`; `requestPermission()` = `web.Notification.requestPermission()`; `showBudgetAlert` = `web.Notification(title, body: ...)` qua `JsObject`. `_stub.dart` ném `UnsupportedError('Pixket chưa gửi được cảnh báo trên nền tảng này.')`.
+- [ ] **Step 1: `receipt_notifier_io.dart`** = dời nguyên văn `notification_service.dart` (giữ nguyên chuỗi `'Cảnh báo ngân sách'` và body `'Bạn đã sử dụng $threshold% ngân sách tháng $monthLabel.'`, giữ nguyên channel id/name `budget_alerts`/`Cảnh báo ngân sách`). `_web.dart`: `initialize()` là no-op (Notification là API có sẵn của browser); `requestPermission()` = `web.Notification.requestPermission().toDart`; `showBudgetAlert` = `web.Notification(budgetAlertTitle, web.NotificationOptions(body: budgetAlertBody(...)))`, chỉ chạy khi `web.Notification.permission == 'granted'`. `_stub.dart` ném `UnsupportedError('Pixket chưa gửi được cảnh báo trên nền tảng này.')`.
+  *(Ruling V — bản này đã sửa hai chỗ không làm được như văn cũ:* `package:web` 1.1.1 **không** có `globalThis` (grep `globalThis` trong `web-1.1.1/lib` = 0 kết quả) nên phép thử `'Notification' in web.globalThis` không có binding để viết, và `JsObject` là API interop cũ. Thay bằng probe `web.Notification.permission` bọc try/catch: Safari chế độ riêng tư và non-secure context không có `Notification`, đụng vào là `TypeError`, nên "nền tảng thiếu API" phải thành *không báo được* chứ không thành lỗi lật màn ngân sách. *Ruling W:* `NotificationPermission` chỉ là `typedef = String` (`web-1.1.1/lib/src/dom/notifications.dart:25`) nên so sánh `== 'granted'` trực tiếp, dùng binding có sẵn của `package:web` cho khớp convention hai seam trước.)
 
 - [ ] **Step 2: Test failing cho logic ngưỡng gọi seam**
 
 `test/unit/receipt_notifier_test.dart`:
 
 ```dart
-  test('vượt ngưỡng gọi showBudgetAlert đúng threshold và monthLabel', () async {
-    final recorder = _RecordingNotifier();
-    await notifyBudgetCrossing(recorder, threshold: 90, monthLabel: '11/2026');
-    expect(recorder.calls, [(90, '11/2026')]);
+  test('vượt 92% thì báo đúng hai mốc 80 và 90, bỏ mốc 100', () async {
+    expect(await _run(0.92), [(80, '11/2026'), (90, '11/2026')]);
   });
 ```
+
+`_run(usageRatio, {alreadySent})` bọc nguyên vòng ngưỡng với `hasSent`/`markSent` giả; trong
+`markSent` nó kiểm tra `notifier.calls.length == marked.length + 1`, tức **báo xong mới được đánh dấu** —
+thứ tự đảo thì một lần báo lỗi sẽ nuốt mốc đó tới tận tháng sau. Bốn case còn lại khoá biên (đúng 80% vẫn
+báo, 79% không báo), mốc đã gửi, và `budgetAlertTitle`/`budgetAlertBody` đúng từng ký tự so với bản cũ.
 
 Đọc `budget_provider.dart:150-175` để lấy đúng hàm đang phát hiện vượt ngưỡng; nếu hiện nó nằm inline trong notifier thì tách ra thành `notifyBudgetCrossing(ReceiptNotifier notifier, {required int threshold, required String monthLabel})` trong `budget_provider.dart` và gọi nó từ chỗ cũ — test này không được bắt buộc dùng fake mạng.
 
 - [ ] **Step 3: Wiring + verify + commit**
 
-`main.dart:21` → `await receiptNotifier.initialize();`. `onboarding_screen.dart:53` → `await receiptNotifier.requestPermission();` (web: hỏi quyền Notifications, browser tự hỏi, không xin trước — nếu muốn đúng spec cha mục 8 "bỏ qua cả hai lời gọi trên web" thì bọc `if (!kIsWeb)` và ghi comment lý do; chọn một, reviewer sẽ kiểm cả hai đường). Xóa `lib/core/services/notification_service.dart`. Allowlist R3 → `const {}`.
+`main.dart:21` → `await receiptNotifier.initialize();`. `onboarding_screen.dart:53` → `await receiptNotifier.requestPermission();`, **không** bọc `if (!kIsWeb)` (Ruling T: browser không bao giờ tự hỏi quyền Notification, nên bỏ lời gọi này trên web là để cảnh báo ngân sách vĩnh viễn không bật — tự vứt tính năng Task 6 thêm vào. Spec cha mục 8 tự nó đã định `requestPermission()` → `Notification.requestPermission()`. Câu "bỏ qua cả hai lời gọi" ở spec Plan 2 mục 4.2 chỉ đúng cho camera và đã được sửa kèm lý do). `_finish()` chạy từ một nút bấm nên vẫn có user activation mà Chrome đòi. Xóa `lib/core/services/notification_service.dart` (và `lib/core/services/` khi đó rỗng, mất theo). Allowlist R3 → `const {}`.
 
 ```bash
 /c/flutter/bin/flutter analyze && /c/flutter/bin/flutter test && /c/flutter/bin/flutter build web

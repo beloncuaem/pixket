@@ -65,7 +65,7 @@ void main() {
     expect(find.text('BẮT ĐẦU'), findsOneWidget);
     expect(tester.takeException(), isNull);
     // KHÔNG tap 'BỎ QUA'/'BẮT ĐẦU': _finish() gọi Permission.camera.request()
-    // và NotificationService -> MissingPluginException trong flutter_test.
+    // và receiptNotifier.requestPermission() -> MissingPluginException trong flutter_test.
   });
 
   testWidgets('Login có 2 PixelTextField, nút đăng nhập và Quên mật khẩu?', (

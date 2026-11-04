@@ -19,7 +19,7 @@ pixket/
 │   │   │   └── app_strings.dart         # Nhãn cố định (mức độ cần thiết, v.v.)
 │   │   ├── icons/pixel_glyph_data.dart  # Bảng glyph pixel 16×16 (chuỗi hàng + palette index)
 │   │   ├── navigation/app_section.dart  # enum 4 khu vực: feed / dashboard / statistics / budget
-│   │   ├── services/notification_service.dart
+│   │   ├── platform/                   # Seam nền tảng: façade + `_core`/`_io`/`_web`/`_stub`
 │   │   ├── theme/
 │   │   │   ├── app_palette.dart         # AppPalette (ThemeExtension) — nguồn màu duy nhất
 │   │   │   ├── app_theme.dart           # Sinh ThemeData từ AppPalette
@@ -304,7 +304,8 @@ flutter test             # 400 passed, 7 skip (test sinh icon + 6 test sinh ản
 2. Không commit `.env`; chỉ commit `.env.example`.
 3. Nếu thêm provider OAuth mới, cập nhật preflight trong `auth_repository.dart` và tài liệu troubleshooting.
 4. Nếu đổi cấu trúc bảng, cập nhật `supabase_setup.sql` và model `toMap/fromMap`.
-5. Cảnh báo ngân sách nối với `NotificationService` ở các mốc 80/90/100% và được đánh dấu
+5. Cảnh báo ngân sách nối với seam `ReceiptNotifier` (`lib/core/platform/receipt_notifier.dart`) ở
+   các mốc 80/90/100% và được đánh dấu
    trong bảng `budget_alerts`; kiểm tra quyền thông báo nếu không nhận được.
 6. Database tạo trước v2.2 cần chạy phần dọn dữ liệu + unique index của `budgets` trong
    `supabase_setup.sql`.

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../core/services/notification_service.dart';
+import '../../core/platform/receipt_notifier.dart';
 import '../../core/theme/app_palette.dart';
 import '../../providers/app_settings_provider.dart';
 import '../../widgets/pixel/app_icon.dart';
@@ -52,9 +52,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     // Trên web browser tự hỏi quyền máy ảnh đúng lúc `<input capture>` mở, nên
     // xin trước ở đây là thừa (và gọi plugin lúc chưa quyết quyền là lỗi treo
-    // đã đo ở audit Lượt 1).
+    // đã đo ở audit Lượt 1). Quyền thông báo thì khác: `Notification.requestPermission()`
+    // không có "đúng lúc" nào do browser khởi động, gọi ở đây là nút bấm nên vẫn
+    // hợp lệ, và bỏ nó trên web sẽ khiến cảnh báo ngân sách vĩnh viễn không bật.
     if (!kIsWeb) await Permission.camera.request();
-    await NotificationService.instance.requestPermission();
+    await receiptNotifier.requestPermission();
     await ref.read(appSettingsProvider.notifier).completeOnboarding();
   }
 

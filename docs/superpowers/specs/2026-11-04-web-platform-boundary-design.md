@@ -89,8 +89,13 @@ Harness có sẵn để bắt chước: `_filesContaining()` trong `test/widget/
 vẫn import `cached_network_image` và phạm R2.
 
 Ngoài 6 seam, một chỗ đổi hành vi nữa nằm trong code chung: `onboarding_screen.dart:52-53` xin quyền
-camera + notification upfront. Trên web phải **bỏ qua cả hai lời gọi** để browser tự hỏi đúng lúc
-(spec cha mục 8). Đây là guard `kIsWeb`, không phải seam thứ 7.
+camera + notification upfront. Trên web chỉ **bỏ lời gọi camera** (`Permission.camera.request()`), vì
+browser tự hỏi đúng lúc `<input capture>` mở. Lời gọi quyền thông báo thì **giữ cho mọi nền tảng**:
+spec cha mục 8 tự nó đã định `requestPermission()` → `Notification.requestPermission()`, mà browser
+không bao giờ tự hỏi quyền Notification — bỏ lời gọi ở onboarding nghĩa là cảnh báo ngân sách trên web
+vĩnh viễn không bật, tức vứt đúng tính năng seam #6 thêm vào. Đây là chỗ bản Plan 2 ban đầu ("bỏ qua cả
+hai lời gọi") tự mâu thuẫn với spec cha, sửa 2026-11-04 ở lượt Task 6. Guard `kIsWeb` vẫn chỉ là guard,
+không phải seam thứ 7.
 
 ### 4.3 Bytes là đơn vị tiền tệ
 

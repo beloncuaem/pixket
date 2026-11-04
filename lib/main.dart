@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'app.dart';
 import 'core/config/supabase_config.dart';
-import 'core/services/notification_service.dart';
+import 'core/platform/receipt_notifier.dart';
 import 'data/database/legacy_settings_migration.dart';
 
 void main() async {
@@ -18,6 +18,6 @@ void main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await LegacySettingsMigration().run();
   await SupabaseConfig.initialize();
-  await NotificationService.instance.initialize();
+  await receiptNotifier.initialize();
   runApp(const ProviderScope(child: PixketApp()));
 }

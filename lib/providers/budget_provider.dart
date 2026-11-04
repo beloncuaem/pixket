@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../core/services/notification_service.dart';
+import '../core/platform/receipt_notifier.dart';
 import '../data/models/budget.dart';
 import '../data/repositories/budget_alert_repository.dart';
 import '../data/repositories/budget_repository.dart';
@@ -75,6 +75,30 @@ class BudgetState {
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
+  }
+}
+
+/// Các mốc phần trăm ngân sách sẽ gửi cảnh báo, theo thứ tự tăng dần.
+const List<int> budgetAlertThresholds = [80, 90, 100];
+
+/// Gửi cảnh báo cho mọi mốc đã vượt mà tháng này chưa gửi. `hasSent` và `markSent`
+/// là repository thật (mạng + Supabase) ở prod, còn test tiêm hai hàm giả để khóa
+/// đúng thứ tự "báo trước, đánh dấu sau" mà không cần mạng.
+Future<void> notifyBudgetCrossing(
+  ReceiptNotifier notifier, {
+  required double usageRatio,
+  required String monthLabel,
+  required Future<bool> Function(int threshold) hasSent,
+  required Future<void> Function(int threshold) markSent,
+}) async {
+  for (final threshold in budgetAlertThresholds) {
+    // `usageRatio` là tỷ lệ 0..1, tức chính là `BudgetState.budgetUsagePercent`.
+    if (usageRatio * 100 < threshold || await hasSent(threshold)) continue;
+    await notifier.showBudgetAlert(
+      threshold: threshold,
+      monthLabel: monthLabel,
+    );
+    await markSent(threshold);
   }
 }
 
@@ -157,21 +181,25 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
   }
 
   Future<void> _sendNewAlerts() async {
-    final usagePercent = state.budgetUsagePercent;
+    final usageRatio = state.budgetUsagePercent;
     if (state.totalBudgetAmount <= 0) return;
+    final monthLabel = DateFormat('MM/yyyy').format(
+      DateTime.parse('${state.month}-01'),
+    );
     try {
-      for (final threshold in [80, 90, 100]) {
-        if (usagePercent * 100 < threshold ||
-            await _alertRepository.hasSent(state.month, threshold)) {
-          continue;
-        }
-        await NotificationService.instance.showBudgetAlert(
-          threshold: threshold,
-          monthLabel: DateFormat('MM/yyyy')
-              .format(DateTime.parse('${state.month}-01')),
-        );
-        await _alertRepository.markSent(state.month, threshold);
-      }
+      await notifyBudgetCrossing(
+        receiptNotifier,
+        usageRatio: usageRatio,
+        monthLabel: monthLabel,
+        hasSent: (threshold) => _alertRepository.hasSent(
+          state.month,
+          threshold,
+        ),
+        markSent: (threshold) => _alertRepository.markSent(
+          state.month,
+          threshold,
+        ),
+      );
     } catch (_) {
       // Cảnh báo ngân sách không được chặn việc tải ngân sách.
     }
