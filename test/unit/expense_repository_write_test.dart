@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:image/image.dart' as img;
 
+import 'package:pixket/core/platform/local_draft_store_io.dart';
 import 'package:pixket/core/utils/square_image.dart';
 import 'package:pixket/data/models/expense.dart';
 import 'package:pixket/data/repositories/expense_repository.dart';
@@ -15,10 +16,27 @@ import 'package:pixket/data/repositories/supabase_storage_service.dart';
 /// Storage path thật có segment đầu là id người dùng dạng UUID.
 const String u = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 
+Uint8List jpegOf(int width, int height) =>
+    img.encodeJpg(img.Image(width: width, height: height), quality: 90);
+
+/// Một lần repository gọi uploadReceiptImage, ghi lại đúng bytes đã nhận.
+class _UploadCall {
+  const _UploadCall(
+    this.bytes, {
+    required this.extension,
+    required this.squared,
+  });
+
+  final Uint8List bytes;
+  final String extension;
+  final bool squared;
+}
+
 class _FakeStorage extends SupabaseStorageService {
   static const String squarePath = '$u/migrated_sq.jpg';
 
-  final List<String> uploads = [];
+  final List<_UploadCall> capturedUploadCalls = [];
+  final List<String> uploadedPaths = [];
   final List<String> deleted = [];
   final List<String> squareUploads = [];
   final Map<String, String> signed;
@@ -26,9 +44,19 @@ class _FakeStorage extends SupabaseStorageService {
   _FakeStorage({this.signed = const {}});
 
   @override
-  Future<String> uploadReceiptImage(String localFilePath) async {
-    uploads.add(localFilePath);
-    return '$u/${localFilePath.split('/').last}';
+  Future<String> uploadReceiptImage(
+    Uint8List bytes, {
+    required String extension,
+    required bool squared,
+  }) async {
+    capturedUploadCalls.add(
+      _UploadCall(bytes, extension: extension, squared: squared),
+    );
+    final path =
+        '$u/upload_${capturedUploadCalls.length}'
+        '${squared ? squareImageSuffix : '.$extension'}';
+    uploadedPaths.add(path);
+    return path;
   }
 
   @override
@@ -135,8 +163,9 @@ void main() {
       ),
       throwsStateError,
     );
-    expect(storage.uploads, [image]);
-    expect(storage.deleted, ['$u/IMG_1.jpg']);
+    expect(storage.capturedUploadCalls.single.bytes, [1, 2, 3]);
+    expect(storage.capturedUploadCalls.single.squared, isFalse);
+    expect(storage.deleted, ['$u/upload_1.jpg']);
   });
 
   test('insert lưu path thay vì URL và không xóa ảnh cũ', () async {
@@ -154,7 +183,7 @@ void main() {
     );
 
     expect(id, 77);
-    expect(writer.inserted?['image_url'], '$u/IMG_1.jpg');
+    expect(writer.inserted?['image_url'], '$u/upload_1.jpg');
     expect(storage.deleted, isEmpty);
   });
 
@@ -174,7 +203,7 @@ void main() {
 
     expect(writer.updatedId, 5);
     expect(writer.updated?['image_url'], '$u/old.jpg');
-    expect(storage.uploads, isEmpty);
+    expect(storage.capturedUploadCalls, isEmpty);
   });
 
   test('thiếu ảnh khi đang có ảnh thì giữ nguyên dòng cũ', () async {
@@ -274,19 +303,31 @@ void main() {
     );
   });
 
-  test('writeSquareCopy đặt marker _sq cạnh tệp gốc', () async {
-    final source = File('${tempDir.path}/IMG_2.jpg');
-    await source.writeAsBytes(
-      img.encodeJpg(img.Image(width: 1600, height: 900)),
+  test('draft đã vuông (_sq) được repository upload mà không cắt lại', () async {
+    final store = IoLocalDraftStore(dir: tempDir);
+    final handle = await store.save(
+      jpegOf(1200, 1200),
+      extension: 'jpg',
+      squared: true,
+    );
+    expect(isSquareImagePath(handle), isTrue);
+
+    final uploaded = await ExpenseRepository(
+      storageService: storage,
+      writer: _RecordingWriter(),
+    ).saveExpense(
+      expenseId: null,
+      imageSource: handle,
+      values: {'caption': 'A', 'amount': 1000},
     );
 
-    final squared = await writeSquareCopy(source);
-
-    expect(squared.path, endsWith(squareImageSuffix));
-    expect(isSquareImagePath(squared.path), isTrue);
-    expect(await squared.exists(), isTrue);
-    // Ảnh đã vuông đi qua writeSquareCopy phải trả chính nó, không nén lần hai.
-    expect(await writeSquareCopy(squared), same(squared));
+    expect(uploaded, isNotNull);
+    expect(storage.capturedUploadCalls.single.squared, isTrue);
+    // bytes đi upload đúng là bytes của draft: không decode lại ảnh đã vuông.
+    expect(
+      storage.capturedUploadCalls.single.bytes,
+      await store.readBytes(handle),
+    );
   });
 }
 

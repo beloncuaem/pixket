@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/supabase_config.dart';
+import '../../core/platform/local_draft_store.dart';
 import '../../core/utils/square_image.dart';
 import '../../core/utils/storage_paths.dart';
 import '../models/expense.dart';
@@ -58,12 +57,20 @@ class ExpenseRepository {
     final stored = storagePathOf(value);
     if (stored != null) return (path: stored, uploaded: false);
 
-    if (await File(value).exists()) {
+    final bytes = await localDraftStore.readBytes(value);
+    if (bytes != null) {
       // Chốt chặn cuối cho tỉ lệ vuông: mọi đường ghi ảnh đều đi qua đây, kể cả
-      // khi UI gửi lên một tệp chưa cắt.
-      final squared = await writeSquareCopy(File(value));
+      // khi UI gửi lên một ảnh chưa cắt.
+      final squared = isSquareImagePath(value)
+          ? bytes
+          : await squareBytes(bytes) ?? bytes;
+      final extension = value.split('.').last.toLowerCase();
       return (
-        path: await _storage.uploadReceiptImage(squared.path),
+        path: await _storage.uploadReceiptImage(
+          squared,
+          extension: extension,
+          squared: isSquareImagePath(value) || !identical(squared, bytes),
+        ),
         uploaded: true,
       );
     }

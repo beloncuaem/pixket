@@ -55,4 +55,30 @@ void main() {
       expect(cropToSquareBytes(Uint8List.fromList([1, 2, 3, 4])), isNull);
     });
   });
+
+  group('squareBytes (nền IO)', () {
+    test('trả bytes vuông đúng cạnh squareImageSide cho ảnh to', () async {
+      final out = await squareBytes(jpeg(2000, 1500));
+      expect(out, isNotNull);
+      final decoded = img.decodeImage(out!)!;
+      expect(decoded.width, squareImageSide);
+      expect(decoded.height, squareImageSide);
+    });
+
+    test('ảnh nhỏ hơn cạnh chuẩn vẫn vuông, không phóng lên', () async {
+      final out = await squareBytes(jpeg(300, 200));
+      final decoded = img.decodeImage(out!)!;
+      expect(decoded.width, 200);
+      expect(decoded.height, 200);
+    });
+
+    test('bytes rác trả null để caller giữ ảnh gốc', () async {
+      expect(await squareBytes(Uint8List.fromList([1, 2, 3, 4])), isNull);
+    });
+
+    test('squareBytes cho kết quả giống hệt cropToSquareBytes', () async {
+      final source = jpeg(1800, 1200);
+      expect(await squareBytes(source), equals(cropToSquareBytes(source)));
+    });
+  });
 }

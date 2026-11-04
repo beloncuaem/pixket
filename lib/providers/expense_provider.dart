@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/platform/local_draft_store.dart';
 import '../core/utils/square_image.dart';
 import '../core/utils/storage_paths.dart';
 import '../data/models/expense.dart';
@@ -188,10 +188,7 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
       }
     } else {
       final local = expense.imagePath;
-      if (local != null) {
-        final file = File(local);
-        if (await file.exists()) await file.delete();
-      }
+      if (local != null) await localDraftStore.delete(local);
     }
 
     // Ảnh phải xóa xong trước để không còn object mồ côi.

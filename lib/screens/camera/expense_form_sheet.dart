@@ -1,8 +1,9 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/platform/local_draft_store.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/amount_input_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -126,13 +127,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         await ref.read(expenseProvider.notifier).addExpense(newExpense);
         _didSave = true;
 
-        // Ảnh đã nằm trên Cloud, xóa bản tạm trên máy.
-        final localFile = File(sourceImagePath);
-        if (await localFile.exists()) {
-          try {
-            await localFile.delete();
-          } catch (_) {}
-        }
+        // Ảnh đã nằm trên Cloud, xóa bản tạm khỏi store.
+        await localDraftStore.delete(sourceImagePath);
       }
       if (!mounted) return;
       // Lấy toạ độ trước khi pop: sheet đóng là mất render box của nút.
@@ -172,8 +168,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         !_isEditing &&
         draftPath != null &&
         storagePathOf(draftPath) == null) {
-      final file = File(draftPath);
-      if (file.existsSync()) file.delete();
+      unawaited(localDraftStore.delete(draftPath));
     }
     _captionController.dispose();
     _amountController.dispose();

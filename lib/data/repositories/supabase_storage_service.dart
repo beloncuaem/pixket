@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,19 +15,17 @@ class SupabaseStorageService {
   static const int signedUrlTtlSeconds = 3600;
 
   /// Tải ảnh lên storage, trả về path dạng `<user_id>/<file>` (không trả URL).
-  Future<String> uploadReceiptImage(String localFilePath) async {
+  Future<String> uploadReceiptImage(
+    Uint8List bytes, {
+    required String extension,
+    required bool squared,
+  }) async {
     final client = SupabaseConfig.client;
     final user = client?.auth.currentUser;
     if (client == null || user == null) {
       throw StateError('Vui lòng đăng nhập để lưu ảnh lên Cloud.');
     }
 
-    final file = File(localFilePath);
-    if (!await file.exists()) {
-      throw StateError('Không tìm thấy ảnh để tải lên Cloud.');
-    }
-
-    final extension = localFilePath.split('.').last.toLowerCase();
     final contentType = switch (extension) {
       'png' => 'image/png',
       'webp' => 'image/webp',
@@ -38,16 +34,16 @@ class SupabaseStorageService {
     };
     // Marker `_sq` đi thẳng vào tên object để biết ảnh nào đã vuông mà không
     // cần thêm cột vào bảng expenses.
-    final marker = isSquareImagePath(localFilePath) ? '_sq' : '';
+    final marker = squared ? '_sq' : '';
     final fileName =
-        '${DateTime.now().millisecondsSinceEpoch}_${file.lengthSync()}$marker.$extension';
+        '${DateTime.now().millisecondsSinceEpoch}_${bytes.length}$marker.$extension';
     final storagePath = '${user.id}/$fileName';
 
     await client.storage
         .from(bucketName)
-        .upload(
+        .uploadBinary(
           storagePath,
-          file,
+          bytes,
           fileOptions: FileOptions(contentType: contentType, upsert: false),
         );
 

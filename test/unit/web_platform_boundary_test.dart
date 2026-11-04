@@ -38,16 +38,9 @@ void main() {
   test('R1: dart:io chỉ trong *_io.dart', () {
     expectBoundary(
       found: importing(files, ["import 'dart:io'"]),
-      allowed: {
-        'lib/core/utils/save_to_gallery.dart',
-        'lib/core/utils/square_image.dart',
-        'lib/data/repositories/expense_repository.dart',
-        'lib/data/repositories/supabase_storage_service.dart',
-        'lib/providers/expense_provider.dart',
-        'lib/screens/camera/camera_screen.dart',
-        'lib/screens/camera/expense_form_sheet.dart',
-        'lib/widgets/pixel/pixel_receipt_image.dart',
-      },
+      // seam render mà Task 5 sở hữu: file duy nhất còn nợ dart:io sau Task 2,
+      // allowlist chỉ rỗng khi Task 5 thay nó bằng ReceiptCacheImage.
+      allowed: const <String>{'lib/widgets/pixel/pixel_receipt_image.dart'},
       rule: 'R1',
     );
   });

@@ -1,8 +1,9 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:gal/gal.dart';
 import 'package:http/http.dart' as http;
+
+import '../platform/local_draft_store.dart';
 
 /// Lưu ảnh khoản chi vào thư viện của máy. Trả về thông báo tiếng Việt cho
 /// người dùng, hoặc null khi thành công.
@@ -50,9 +51,5 @@ Future<Uint8List?> _readBytes({
 
   final path = localPath?.trim();
   if (path == null || path.isEmpty) return null;
-  final file = File(path);
-  if (!await file.exists()) {
-    throw StateError('không tìm thấy $path');
-  }
-  return file.readAsBytes();
+  return localDraftStore.readBytes(path);
 }

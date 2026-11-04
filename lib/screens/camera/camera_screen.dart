@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/platform/local_draft_store.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/square_image.dart';
@@ -153,13 +153,17 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
     setState(() => _isCapturing = true);
     try {
       final picture = await _controller!.takePicture();
+      final bytes = await picture.readAsBytes();
+      final squared = await squareBytes(bytes);
+      final draft = await localDraftStore.save(
+        squared ?? bytes,
+        extension: 'jpg',
+        squared: squared != null,
+      );
       if (!mounted) return;
-      // Phi thuyền bay qua không chặn luồng: việc cắt ảnh vuông chạy song song
-      // trên isolate, xong là mở form ngay.
-      final squared = writeSquareCopy(File(picture.path));
+      // Phi thuyền bay qua không chặn luồng: cắt ảnh xong là mở form ngay.
       PixelShipFlight.launch(context);
-      final file = await squared;
-      if (mounted) _openExpenseForm(imagePath: file.path);
+      _openExpenseForm(imagePath: draft);
     } catch (error) {
       debugPrint('Error taking picture: $error');
       if (mounted) _showSnackBar('Không thể chụp ảnh. Vui lòng thử lại.');
@@ -177,9 +181,15 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         imageQuality: 80,
       );
       if (image == null || !mounted) return;
-      final squared = await writeSquareCopy(File(image.path));
+      final bytes = await image.readAsBytes();
+      final squared = await squareBytes(bytes);
+      final draft = await localDraftStore.save(
+        squared ?? bytes,
+        extension: image.path.split('.').last.toLowerCase(),
+        squared: squared != null,
+      );
       if (!mounted) return;
-      await _openExpenseForm(imagePath: squared.path);
+      await _openExpenseForm(imagePath: draft);
     } catch (error) {
       debugPrint('Error picking image: $error');
       if (mounted) _showSnackBar('Không thể mở thư viện ảnh.');
@@ -596,7 +606,7 @@ class _CameraFeedPage extends StatelessWidget {
 }
 
 /// Preview cắt giữa đúng ô vuông: cover vào khung rồi clip, khớp vùng mà
-/// [writeSquareCopy] cắt từ ảnh thật.
+/// [squareBytes] cắt từ ảnh thật.
 class _SquareCameraPreview extends StatelessWidget {
   final CameraController controller;
   const _SquareCameraPreview({required this.controller});

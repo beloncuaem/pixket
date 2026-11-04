@@ -48,7 +48,9 @@ void main() {
         name: 'pixket_1',
       );
 
-      expect(message, 'Không lưu được ảnh về máy.');
+      // Store trả null chứ không ném: luồng tải ảnh gộp trường hợp này vào
+      // thông báo "chưa có ảnh" như khoản chi không có ảnh.
+      expect(message, 'Khoản chi này chưa có ảnh để tải.');
     },
   );
 }
