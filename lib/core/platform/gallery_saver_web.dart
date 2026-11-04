@@ -1,0 +1,49 @@
+import 'dart:js_interop';
+import 'dart:typed_data';
+
+import 'package:web/web.dart' as web;
+
+import 'gallery_saver.dart';
+
+/// Nhánh web: trình duyệt không có "thư viện ảnh" để ghi vào, cách duy nhất là
+/// đẩy một tệp xuống mục Tải xuống của browser — blob URL + `<a download>` rồi
+/// click. Không plugin nào tham gia, nên R3 không còn nợ gì ở đây.
+class WebGallerySaver extends GallerySaver {
+  const WebGallerySaver();
+
+  /// Tải tệp xuống luôn khả dụng trên browser, không cần quyền nào.
+  @override
+  bool get isSupported => true;
+
+  @override
+  Future<String?> saveImage(Uint8List bytes, {required String name}) async {
+    // Blob tự mô tả là JPEG vì đó là định dạng duy nhất `squareBytes` và luồng
+    // upload produce trên web; tên tệp cũng phải có đuôi, vì browser dùng nguyên
+    // chuỗi `download` làm tên mà không tự thêm như `gal` vẫn làm.
+    final blob = web.Blob(
+      <JSAny>[bytes.toJS].toJS,
+      web.BlobPropertyBag(type: 'image/jpeg'),
+    );
+    final url = web.URL.createObjectURL(blob);
+    final anchor = web.HTMLAnchorElement()
+      ..href = url
+      ..download = name.contains('.') ? name : '$name.jpg';
+    final body = web.document.body;
+
+    try {
+      // Firefox bỏ qua click trên neo chưa gắn vào tài liệu, nên phải attach;
+      // body vắng mặt chỉ xảy ra ngoài ngữ cảnh trang, khi đó click vẫn chạy
+      // trên Chrome/Edge và chúng ta không còn chỗ nào để gắn.
+      body?.appendChild(anchor);
+      anchor.click();
+    } finally {
+      // Revoke trong mọi nhánh: blob URL giữ cả tấm ảnh trong bộ nhớ cho tới khi
+      // hết trang, mà người dùng có thể bấm lưu nhiều lần trong một phiên.
+      if (body != null) body.removeChild(anchor);
+      web.URL.revokeObjectURL(url);
+    }
+    return null;
+  }
+}
+
+GallerySaver gallerySaver = const WebGallerySaver();

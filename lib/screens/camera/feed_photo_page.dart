@@ -1,11 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
+import '../../core/platform/local_draft_store.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/utils/save_to_gallery.dart';
 import '../../core/utils/square_image.dart';
+import '../../core/utils/storage_paths.dart';
 import '../../data/models/category.dart';
 import '../../data/models/expense.dart';
 import '../../data/models/priority_level.dart';
@@ -44,7 +48,7 @@ class FeedPhotoPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     final error = await saveReceiptToGallery(
       signedUrl: expense.displayImageUrl,
-      localPath: expense.imagePath,
+      bytes: await _localReceiptBytes(expense.imagePath),
       name: 'pixket_${expense.id ?? DateTime.now().millisecondsSinceEpoch}',
     );
     messenger.showSnackBar(
@@ -166,6 +170,17 @@ class FeedPhotoPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Bytes của ảnh còn nằm trên máy: handle draft hoặc đường dẫn legacy cạnh tệp
+/// tạm của camera. null khi giá trị đang lưu là path Cloud — khi đó
+/// `saveReceiptToGallery` tự lấy qua signed URL, dùng đúng phép thử
+/// `storagePathOf` mà `expense_image_mapping` đã dùng để quyết định ký URL.
+Future<Uint8List?> _localReceiptBytes(String? storedValue) async {
+  final value = storedValue?.trim();
+  if (value == null || value.isEmpty) return null;
+  if (storagePathOf(value) != null) return null;
+  return localDraftStore.readBytes(value);
 }
 
 /// Panel thông tin khoản chi phía dưới ảnh.

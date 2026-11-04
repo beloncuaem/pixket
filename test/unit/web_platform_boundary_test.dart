@@ -69,7 +69,6 @@ void main() {
       ]),
       allowed: {
         'lib/core/services/notification_service.dart',
-        'lib/core/utils/save_to_gallery.dart',
       },
       rule: 'R3',
     );
