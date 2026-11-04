@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:web/web.dart' as web;
 
-import 'gallery_saver.dart';
+import 'gallery_saver_core.dart';
 
 /// Nhánh web: trình duyệt không có "thư viện ảnh" để ghi vào, cách duy nhất là
 /// đẩy một tệp xuống mục Tải xuống của browser — blob URL + `<a download>` rồi
@@ -31,11 +31,13 @@ class WebGallerySaver extends GallerySaver {
       ..href = url
       ..download = name.contains('.') ? name : '$name.jpg';
     final body = web.document.body;
+    var attached = false;
     try {
       // Firefox bỏ qua click trên neo chưa gắn vào tài liệu, nên phải attach;
       // body vắng mặt chỉ xảy ra ngoài ngữ cảnh trang, khi đó click vẫn chạy
       // trên Chrome/Edge và chúng ta không còn chỗ nào để gắn.
       body?.appendChild(anchor);
+      attached = true;
       anchor.click();
     } catch (_) {
       // Gắn neo hoặc click hỏng là browser từ chối ngay trước mắt: nói thẳng
@@ -43,8 +45,10 @@ class WebGallerySaver extends GallerySaver {
       web.URL.revokeObjectURL(url);
       return gallerySaveFailedMessage;
     } finally {
-      // Neo gắn tạm thì phải gỡ, kể cả khi click thành công.
-      if (body != null) body.removeChild(anchor);
+      // Chỉ gỡ khi thực sự đã gắn: gỡ một neo chưa attach là DOMException, mà DOMException
+      // ném ra trong finally sẽ thay thế thông báo ở nhánh catch và người dùng nhận câu
+      // chung của caller thay vì câu có thủ phạm.
+      if (attached) body?.removeChild(anchor);
     }
     // Revoke ở task sau: nhả blob URL ngay sau click là race đã biết — có
     // browser kịp khởi động tải trước khi URL chết, có browser thì không, và ta

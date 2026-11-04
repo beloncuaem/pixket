@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:gal/gal.dart';
 
-import 'gallery_saver.dart';
+import 'gallery_saver_core.dart';
 
 /// Nhánh mobile/desktop: `gal` tự xin quyền và tự thêm đuôi tệp, nên tên được
 /// trao nguyên bản như người dùng thấy trong thư viện.

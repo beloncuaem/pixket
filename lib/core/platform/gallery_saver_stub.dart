@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'gallery_saver.dart';
+import 'gallery_saver_core.dart';
 
 GallerySaver gallerySaver = const _UnsupportedGallerySaver();
 
