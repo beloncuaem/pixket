@@ -911,14 +911,21 @@ abstract class PhotoCapture {
   bool get isReady;
   String? get errorMessage;
   bool get supportsLiveViewfinder;
+  bool get canSwitchCamera;      // Ruling: thay cho gate `_cameras.length > 1` cũ trong screen
+  bool get isTakingPicture;      // Ruling M: screen phải đọc được TRƯỚC khi setState(_isCapturing)
   Future<void> useNextCamera();
+  void dispose();                // seam global, không có thì camera bị chiếm sau khi thoát screen
   /// null khi người dùng hủy.
   Future<Uint8List?> capture();
   Future<({Uint8List bytes, String extension})?> pickFromGallery();
-  Widget buildViewfinder(BuildContext context, {double aspectRatio});
+  Widget buildViewfinder(BuildContext context);   // Ruling L: `aspectRatio` đã xóa — framing vuông
+                                                   // là bất biến của `squareBytes`, giữ tham số = API nói dối
 }
 PhotoCapture photoCapture = ...;  // per-platform global
 ```
+
+Interface này là **thứ đã đo**, không phải dự tính: Task 3 giao `4fbef23` + `f711379`,
+`flutter test` = 433 pass / 8 skip, R3 allowlist = `{save_to_gallery.dart, notification_service.dart}`.
 
 - [ ] **Step 1: Test failing cho `_io`**
 
