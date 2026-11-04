@@ -77,7 +77,7 @@ không có `Platform`/`Directory`):
 badge "không có Web" là do đọc sai; (2) package **có conditional import**
 `lib/src/config/config.dart:3-4` (`if (dart.library.js_interop) '_config_web.dart'`), và
 `_config_web.dart:17-18` default là `NonStoringObjectProvider()` + `MemoryCacheSystem()` — tức cache
-**không ghi đĩa** trên web; `cached_network_image` càng rõ hơn, `.../cached_network_image_provider.dart:7-8`
+**không ghi đĩa** trên web; `cached_network_image` càng rõ hơn, `.../cached_network_image_provider.dart:7-10`
 nối thẳng `cached_network_image_web` cho web. Hệ quả: **chưa có bằng chứng `CachedNetworkImage` ném**
 trên web, và câu hỏi mở đúng là "ảnh có render và có được eviction đúng không", không phải "có crash
 không". Chưa đo trong trình duyệt vì feed cần đăng nhập (audit Plan 2 mục 5, Lượt 2). Vì vậy mục tiêu
@@ -597,7 +597,7 @@ Không thể khẳng định PWA hoạt động chỉ bằng `flutter test`. Ph�
 - `cached_network_image` / `flutter_cache_manager` — giải nén bản 3.4.5 + 3.4.8 để xác nhận 4 tệp
   `dart:io` vô điều kiện. **Sửa 2026-11-04:** kết luận "không có Web ở cả bản mới nhất" là đọc sai —
   pubspec `flutter_cache_manager-3.4.5` có khai báo `web:`, và cả hai package đều có conditional
-  import cho web (`config.dart:3-4`, `cached_network_image_provider.dart:7-8`).
+  import cho web (`config.dart:3-4`, `cached_network_image_provider.dart:7-10`).
 - `sqflite_common_ffi_web` — pub.dev (experimental; không chọn vì 2 bảng quá nhỏ)
 - `dart:io` không khả dụng trên web — api.flutter.dev/flutter/dart-io/
 - `compute()` bản web — đọc trực tiếp `packages/flutter/lib/src/foundation/_isolates_web.dart`
