@@ -1,8 +1,10 @@
 import 'dart:typed_data';
 
-// Façade conditional: impl thật được chọn theo nền tảng, còn code chung chỉ
-// biết lớp này. Không có tệp `_core.dart` riêng vì lý do duy nhất khiến nó cần
-// tồn tại — plugin `gal` — đã nằm trọn trong `_io.dart` ở dưới.
+// Façade conditional: impl thật chọn theo nền tảng, code chung chỉ biết lớp dưới
+// đây. Hai seam trước tách lớp trừu tượng sang `_core.dart` để impl không phải
+// import lại façade; ở đây brief khai đúng bốn file nên để chung một chỗ, và các
+// impl import trở lại file này — vòng import hợp lệ trong Dart, dart2js compile
+// bình thường (`flutter build web` exit 0).
 export 'gallery_saver_stub.dart'
     if (dart.library.io) 'gallery_saver_io.dart'
     if (dart.library.js_interop) 'gallery_saver_web.dart';

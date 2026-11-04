@@ -17,9 +17,11 @@ class WebGallerySaver extends GallerySaver {
 
   @override
   Future<String?> saveImage(Uint8List bytes, {required String name}) async {
-    // Blob tự mô tả là JPEG vì đó là định dạng duy nhất `squareBytes` và luồng
-    // upload produce trên web; tên tệp cũng phải có đuôi, vì browser dùng nguyên
-    // chuỗi `download` làm tên mà không tự thêm như `gal` vẫn làm.
+    // Browser không đoán định dạng từ bytes: blob phải tự khai. JPEG vì đó là
+    // định dạng `squareBytes` sinh ra trên web và là định dạng của gần hết ảnh
+    // đã upload; chữ ký seam không có tham số extension nên không chính xác hơn
+    // được. Tên cũng phải có đuôi, vì browser dùng nguyên chuỗi `download` làm
+    // tên tệp chứ không tự thêm đuôi như `gal` vẫn làm.
     final blob = web.Blob(
       <JSAny>[bytes.toJS].toJS,
       web.BlobPropertyBag(type: 'image/jpeg'),
