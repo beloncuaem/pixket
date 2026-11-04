@@ -67,21 +67,33 @@ không có `Platform`/`Directory`):
 | `lib/screens/camera/expense_form_sheet.dart` | dòng 130, 131, 133, 175 — draft file exists/delete |
 | `lib/widgets/pixel/pixel_receipt_image.dart` | dòng 180 — `File(localPath!)` để hiển thị |
 
-**Dependency phải bọc — vì runtime, không vì compile:** `flutter_cache_manager` 3.4.5 (kéo theo
-`cached_network_image` 3.4.1) import `dart:io` **vô điều kiện** trong chuỗi export chính
-(`cache_store.dart:2`, `cache_object_provider.dart:1`, `json_cache_info_repository.dart:2`,
-`compat/file_service_compat.dart:1`). Vì dart2js stub `dart:io`, thứ này **vẫn compile** trên web
-(đã đo, xem khung ở mục 4.1) rồi mới ném lúc chạy — nên lập luận "bắt buộc phải bọc" vẫn đúng, chỉ
-là vì hành vi chứ không vì build. Badge pub.dev của cả bản mới nhất đều **không có Web**.
+**Dependency phải bọc — vì hành vi, không vì compile:** `flutter_cache_manager` 3.4.5 import
+`dart:io` **vô điều kiện** ở 4 tệp (`cache_store.dart:2`, `cache_object_provider.dart:1`,
+`json_cache_info_repository.dart:2`, `compat/file_service_compat.dart:1`), và dart2js stub
+`dart:io` nên chúng **vẫn compile** trên web (đã đo, mục 4.1).
+
+*Sửa 2026-11-04 (audit Plan 2):* hai khẳng định sau trong bản cũ là **sai**, đã đo lại trong pub cache:
+(1) pubspec của package **có khai báo nhánh `web:`** (`flutter_cache_manager-3.4.5/pubspec.yaml:36`) —
+badge "không có Web" là do đọc sai; (2) package **có conditional import**
+`lib/src/config/config.dart:3-4` (`if (dart.library.js_interop) '_config_web.dart'`), và
+`_config_web.dart:17-18` default là `NonStoringObjectProvider()` + `MemoryCacheSystem()` — tức cache
+**không ghi đĩa** trên web; `cached_network_image` càng rõ hơn, `.../cached_network_image_provider.dart:7-8`
+nối thẳng `cached_network_image_web` cho web. Hệ quả: **chưa có bằng chứng `CachedNetworkImage` ném**
+trên web, và câu hỏi mở đúng là "ảnh có render và có được eviction đúng không", không phải "có crash
+không". Chưa đo trong trình duyệt vì feed cần đăng nhập (audit Plan 2 mục 5, Lượt 2). Vì vậy mục tiêu
+của seam `receipt_cache` là **hành vi cache/eviction khác nhau giữa nền tảng**, không phải sửa crash;
+còn runtime ném đã đo thật trên web thì nằm ở nhánh `File`/`Image.file` của `dart:io`
+(`Error picking image: Unsupported operation: _Namespace`).
 
 ### 4.2 Bảng web-support (đo lại 2026-11-04; cột phiên bản là bản **lock**, pubspec chỉ pin `^`)
 
-**Import `dart:io` vô điều kiện — phải bọc (compile vẫn chạy, runtime ném):**
+**Import `dart:io` vô điều kiện — phải bọc (compile vẫn chạy; ném hay không là chuyện *từng đường
+dẫn*, xem đoạn sửa phía trên):**
 
 | Package | Lock | Lý do |
 |---|---|---|
-| `flutter_cache_manager` | 3.4.5 | `dart:io` vô điều kiện trong export chain |
-| `cached_network_image` | 3.4.1 | phụ thuộc `flutter_cache_manager` |
+| `flutter_cache_manager` | 3.4.5 | 4 tệp import `dart:io` vô điều kiện, nhưng `Config` có nhánh `_config_web.dart` → cache không ghi đĩa trên web (sửa 2026-11-04) |
+| `cached_network_image` | 3.4.1 | có `_image_loader` cho web qua conditional import; vẫn phạm luật R2 vì code chung không được import nó |
 
 **Không có implementation cho web — phải có nhánh web:**
 
@@ -582,8 +594,10 @@ Không thể khẳng định PWA hoạt động chỉ bằng `flutter test`. Ph�
   `supabase_flutter` · `flutter_dotenv` 5.2.1 · `shared_preferences` · `flutter_secure_storage` ·
   `permission_handler` — badge nền tảng trên pub.dev
 - `flutter_local_notifications` changelog — web support thêm ở 22.0.0; issue #481
-- `cached_network_image` / `flutter_cache_manager` — pub.dev (không có Web ở cả bản mới nhất),
-  và giải nén bản 3.4.5 + 3.4.8 để xác nhận `dart:io` vô điều kiện
+- `cached_network_image` / `flutter_cache_manager` — giải nén bản 3.4.5 + 3.4.8 để xác nhận 4 tệp
+  `dart:io` vô điều kiện. **Sửa 2026-11-04:** kết luận "không có Web ở cả bản mới nhất" là đọc sai —
+  pubspec `flutter_cache_manager-3.4.5` có khai báo `web:`, và cả hai package đều có conditional
+  import cho web (`config.dart:3-4`, `cached_network_image_provider.dart:7-8`).
 - `sqflite_common_ffi_web` — pub.dev (experimental; không chọn vì 2 bảng quá nhỏ)
 - `dart:io` không khả dụng trên web — api.flutter.dev/flutter/dart-io/
 - `compute()` bản web — đọc trực tiếp `packages/flutter/lib/src/foundation/_isolates_web.dart`
@@ -601,5 +615,21 @@ Không thể khẳng định PWA hoạt động chỉ bằng `flutter test`. Ph�
   `Bad state: no such table: app_settings` trong output của
   `test/unit/legacy_settings_migration_test.dart` là `StateError` **do test giả lập** (dòng 72, 82),
   không phải lỗi thật của sqflite trên nền tảng — đừng trích chúng làm bằng chứng.
+
+**Bổ sung 2026-11-04 (Lượt 1 của audit runtime Plan 2, commit audit `817ae66`, bản debug):**
+
+- Chuỗi thật khi chạm `dart:io` trên web là `Unsupported operation: _Namespace` (cụ thể
+  `Error picking image: Unsupported operation: _Namespace`), **không phải** `MissingPluginException`.
+  Ở bản release chuỗi này biến mất khỏi log vì `lib/main.dart:15-17` tắt `debugPrint`; người dùng chỉ
+  còn thấy `Không thể mở thư viện ảnh.` → mọi tiêu chí "không còn lỗi X" của Plan 2 phải đo trên bản debug.
+- Boot trên web **sạch**: không có `MissingPluginException` nào ở onboarding/login (kể cả
+  `permission_handler`, vì plugin trả `null` khi `kIsWeb`), và email/password login chạy được.
+- `camera` **có** implementation web (`camera_web` đăng ký trong `.dart_tool/.../web_plugin_registrant.dart`),
+  ống ngắm 1280x720 chạy thật → phủ nhận giả định "`camera` plugin không có web" ở spec Plan 2 mục 4.
+  `takePicture()` thì **chưa đo**.
+- `flutter_dotenv` nhúng `.env` vào build web và nó phục vụ công khai tại `/assets/.env`
+  (đã xác nhận tệp tồn tại, 382 byte; **không đọc nội dung**). Hiện chỉ chứa `SUPABASE_URL` +
+  `SUPABASE_ANON_KEY` — hai giá trị vốn đã công khai với mọi SPA — nên đây là vấn đề vệ sinh cấu hình
+  cho Plan 3 (deploy), không phải một rò rỉ secret đang hoạt động.
 - Máy dev không có Google Chrome, chỉ có Microsoft Edge; `build/web` đã render được bằng Chromium
   của Playwright.

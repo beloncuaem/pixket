@@ -81,8 +81,10 @@ Không viết code. Đây là bước mà spec Plan 2 mục 5 yêu cầu làm tr
 
 ```bash
 cd .worktrees/web-boundary
-/c/flutter/bin/flutter build web          # kỳ vọng: exit 0, "√ Built build\web"
-python -m http.server --directory build/web 8080   # chạy nền
+/c/flutter/bin/flutter build web --debug   # kỳ vọng: exit 0, "√ Built build\web". BUỘC --debug:
+                                           # bản release tắt debugPrint (main.dart:15-17) nên chuỗi
+                                           # "Unsupported operation: ..." biến mất khỏi console
+python -m http.server --directory build/web 3000   # chạy nền; 3000 là cổng Supabase OAuth callback
 ```
 
 - [ ] **Step 2: Lượt 1 — chưa đăng nhập**
@@ -246,7 +248,11 @@ git commit -m "test: boundary test cho ranhx giới dart:io va plugin"
 
 ## Task 2: Bytes pipeline — `squareBytes` + `LocalDraftStore` + upload nhận bytes
 
-Đây là task lớn nhất và là chỗ duy nhất đổi chữ ký công khai. Sau nó, `lib/` **không còn file nào ngoài `_io.dart` import `dart:io`** (allowlist R1 rỗng), và mọi ảnh đi trong app là `Uint8List` + handle chuỗi mờ. `flutter build web` vẫn sạch và `writeSquareCopy` biến mất.
+Đây là task lớn nhất và là chỗ duy nhất đổi chữ ký công khai. Sau nó, `lib/` **không còn file nào ngoài
+`_io.dart` import `dart:io` — trừ đúng một file `lib/widgets/pixel/pixel_receipt_image.dart`**
+*(Ruling A: file này thuộc seam render của Task 5, nên allowlist R1 chỉ rỗng ở Task 5, không phải ở
+đây)*, và mọi ảnh đi trong app là `Uint8List` + handle chuỗi mờ. `flutter build web` vẫn sạch và
+`writeSquareCopy` biến mất.
 
 **Files:**
 - Modify: `pubspec.yaml` (thêm `web: ^1.1.1` vào `dependencies`)
@@ -255,7 +261,7 @@ git commit -m "test: boundary test cho ranhx giới dart:io va plugin"
 - Create: `lib/core/platform/local_draft_store.dart`, `_core.dart`, `_io.dart`, `_web.dart`, `_stub.dart`
 - Modify: `lib/core/utils/save_to_gallery.dart` (`File(path)` → store), `lib/data/repositories/supabase_storage_service.dart:20-55`, `lib/data/repositories/expense_repository.dart:54-72`, `lib/providers/expense_provider.dart:192`, `lib/screens/camera/camera_screen.dart:155-187`, `lib/screens/camera/expense_form_sheet.dart:114-135,168-181`
 - Test: `test/unit/square_image_test.dart`, `test/unit/expense_repository_write_test.dart:277-289`, `test/unit/save_to_gallery_test.dart:45-47`, `test/widget/expense_form_pixel_test.dart`, `test/web/square_bytes_web_test.dart`, `test/web/local_draft_store_web_test.dart`
-- Modify: `test/unit/web_platform_boundary_test.dart` (allowlist R1 → `const {}`)
+- Modify: `test/unit/web_platform_boundary_test.dart` (allowlist R1 → `const {'lib/widgets/pixel/pixel_receipt_image.dart'}`)
 
 **Interfaces:**
 - Consumes: Task 1 (giữ allowlist đỏ là fail).
@@ -811,7 +817,9 @@ Thay `_pickFromGallery` (dòng 171-187) bằng cùng hình dạng, dùng `await 
 
 `lib/core/utils/square_image_io.dart`: **xóa** `writeSquareCopy` (không cho vào `_io` như dự tính đầu — sau bước này không còn caller nào, và spec cha mục 7.1 ghi rõ nó bị xóa).
 
-`test/unit/web_platform_boundary_test.dart`: allowlist R1 → `const <String>{}`.
+`test/unit/web_platform_boundary_test.dart`: allowlist R1 →
+`const <String>{'lib/widgets/pixel/pixel_receipt_image.dart'}` *(Ruling A — file này là seam render,
+Task 5 mới xóa được; comment trong test ghi rõ "owned by Task 5")*.
 
 - [ ] **Step 13: Chạy toàn bộ**
 
@@ -873,7 +881,18 @@ git commit -m "feat!: anh em pipeline anh go qua bytes va tach dart:io sau seam"
 
 ## Task 3: `PhotoCapture` — ống ngắm và chọn ảnh
 
-`camera` plugin không có web; screen phải ngừng nhập nó trực tiếp. Sau task này allowlist R3 chỉ còn `save_to_gallery.dart` (gal) và `notification_service.dart`.
+`camera` không được import thẳng trong screen nữa; screen phải ngừng nhập plugin trực tiếp. Sau task
+này allowlist R3 chỉ còn `save_to_gallery.dart` (gal) và `notification_service.dart`.
+
+*(Sửa theo Lượt 1 audit — Ruling E:)* giả định "`camera` plugin không có web" trong bản plan đầu là
+**sai**: `camera_web` có đăng ký plugin và ống ngắm chạy thật 1280x720 trên web. Nhưng `takePicture()`
+**chưa đo**, và Lượt 1 còn đo được: khi browser chưa quyết quyền (`permission = 'prompt'`) thì bản web
+**treo vĩnh viễn ở màn "Đang mở camera…"** — indicator đó là `camera_screen.dart:564`, và screen không
+tự xin quyền (không có `permission_handler` trong file này), nên `getUserMedia` bị từ chối là không bao
+giờ hết trạng thái khởi tạo. Vì vậy `_web.dart` vẫn giữ `image_picker` làm đường an toàn (không tự bật
+ống ngắm, không xin quyền lúc mở screen, và phải có đường thoát khỏi trạng thái "Đang mở camera…");
+`camera_web` chỉ được cân nhắc ở Plan 3, sau khi đo được `takePicture()` — **không** nới task này thành
+"port camera_web".
 
 **Files:**
 - Create: `lib/core/platform/photo_capture.dart`, `_core.dart`, `_io.dart`, `_web.dart`, `_stub.dart`
@@ -963,7 +982,11 @@ git commit -m "feat: tach ong ngam camera sau seam PhotoCapture"
 
 **Files:**
 - Create: `lib/core/platform/gallery_saver.dart`, `_io.dart`, `_web.dart`, `_stub.dart`
-- Modify: `lib/core/utils/save_to_gallery.dart`, callers của `saveReceiptToGallery` (`grep -rn saveReceiptToGallery lib` — `pixel_share_row.dart` / feed), `test/unit/save_to_gallery_test.dart`, allowlist R1/R3, `test/unit/web_platform_boundary_test.dart`
+- Modify: `lib/core/utils/save_to_gallery.dart`, callers của `saveReceiptToGallery` — *(Ruling B, đã
+  grep lại trên worktree `8868aee`: chỉ **một** caller trong `lib/` là
+  `lib/screens/camera/feed_photo_page.dart:45`; bản plan đầu ghi nhầm `pixel_share_row.dart` — file đó
+  không import `gal` và không gọi hàm này)*, `test/unit/save_to_gallery_test.dart`, allowlist R1/R3,
+  `test/unit/web_platform_boundary_test.dart`
 
 **Interfaces:**
 - Consumes: `localDraftStore` (Task 2) cho nhánh đọc bytes.
@@ -1045,7 +1068,7 @@ git commit -m "fix: luu anh ve may qua seam, bao dung ly do khi nen tang khong h
 
 **Files:**
 - Create: `lib/core/platform/receipt_cache_image.dart`, `_io.dart`, `_web.dart`, `_stub.dart`, `receipt_cache.dart`, `_io.dart`, `_web.dart`, `_stub.dart`
-- Modify: `lib/widgets/pixel/pixel_receipt_image.dart` (dòng 1-49 resolver, 144-190 render), `lib/app.dart:4,66-71`, `lib/providers/expense_provider.dart:4,187`, `test/widget/pixel_receipt_image_test.dart`, `test/unit/pixel_receipt_image_test.dart`, `test/widget/legacy_cleanup_test.dart:87-97`, allowlist R2
+- Modify: `lib/widgets/pixel/pixel_receipt_image.dart` (dòng 1-49 resolver, 144-190 render), `lib/app.dart:4,66-71`, `lib/providers/expense_provider.dart:4,187`, `test/widget/pixel_receipt_image_test.dart`, `test/unit/pixel_receipt_image_test.dart`, `test/widget/legacy_cleanup_test.dart:87-97`, allowlist **R1 và R2**
 - Test mới: `test/widget/receipt_cache_image_test.dart`
 
 **Interfaces:**
@@ -1109,7 +1132,9 @@ Dòng 87-97: điều kiện loại trừ hiện chỉ tha cho `pixel_receipt_ima
 
 `app.dart`: bỏ `import 'package:flutter_cache_manager/flutter_cache_manager.dart';`, `_clearUserCaches()` gọi `clearReceiptCache()`. `expense_provider.dart`: bỏ import `cached_network_image`, dòng 187 → `await evictReceiptImage(url, cacheKey: storedPath);`.
 
-Allowlist R2 → `const {}`.
+Allowlist **R1 và R2** → `const <String>{}`. Đây là lúc R1 đóng lại:
+`pixel_receipt_image.dart` không còn import `dart:io` vì nhánh render tệp đã dời sang
+`receipt_cache_image_io.dart`.
 
 Run: `/c/flutter/bin/flutter analyze` / `flutter test` / `flutter build web` → sạch / pass / exit 0.
 

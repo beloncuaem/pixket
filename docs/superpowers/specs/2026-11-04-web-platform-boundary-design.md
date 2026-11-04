@@ -17,14 +17,16 @@ tham chiếu chứ không chép lại, và chỉ thêm những gì Plan 2 đo m�
 Plan 2 **không** tạo file `web/manifest.json` mới, **không** service worker, **không** deploy. Plan 3
 nhận từ Plan 2: một bản `build/web` chạy được thật, một báo cáo audit, và danh sách việc còn lại.
 
-## 2. Bốn premise của spec cha đã bị bác, và cách nó đổi thiết kế
+## 2. Sáu premise của spec cha đã bị bác, và cách nó đổi thiết kế
 
 | Premise cũ | Đo lại (bằng chứng ở mục 10) | Hệ quả cho Plan 2 |
 |---|---|---|
 | "`flutter build web` hiện đang fail vì `dart:io`" (mục 2 + 4.1) | Build **exit 0**, `√ Built build\web`, 53,6s trên `01dd660` với đủ 8 file import `dart:io` và `flutter_cache_manager` còn nguyên. dart2js stub `dart:io`; plugin channel chỉ thiếu lúc chạy | Tiêu chí "build sạch" không còn là đích. Plan 2 **mở đầu bằng audit runtime** (mục 5) và chỉ nghiệm thu bằng trình duyệt |
-| "`flutter_cache_manager` gãy compile, bắt buộc bọc" (mục 4.1/4.2) | Compile sạch thật; vẫn **phải** bọc, nhưng vì nó import `dart:io` vô điều kiện và sẽ ném khi chạy | Boundary test (mục 4) vẫn là chốt chống hồi quy, và là **chốt tự động duy nhất** — vì compiler im lặng |
+| "`flutter_cache_manager` gãy compile, bắt buộc bọc" (mục 4.1/4.2) | Compile sạch thật; vẫn **phải** bọc, nhưng vì luật cấu trúc (seam render/eviction), **không** vì "sẽ ném khi chạy" — *Lượt 1 audit đo lại:* pubspec của `flutter_cache_manager` 3.4.5 có khai báo `web:` và package có conditional import `_config_web.dart` (cache không ghi đĩa trên web) | Boundary test (mục 4) vẫn là chốt chống hồi quy, và là **chốt tự động duy nhất** — vì compiler im lặng |
 | "`flutter_local_notifications` 18: `initialize()` ném runtime" (mục 4.2) | Không ném: 8 nhánh `if (kIsWeb)`; `initialize()` trả `true` (:114), `show()` return sớm (:219) → web **âm thầm không hiện gì** | `ReceiptNotifier` bản Web là **thêm tính năng**, không phải sửa crash → xếp cuối thứ tự làm (mục 6), không chặn luồng nào |
 | "Migration cho người dùng Android/**Windows**"; "Bản Android và **Windows** không đổi hành vi" (mục 6.3, 14.3) | `sqflite` 2.4.4 chỉ đăng ký plugin android/ios/macos theo pubspec của package → Windows chưa từng có `pixket.db` | Plan 2 **không cam kết và không nghiệm thu Windows**. iOS được giữ nguyên hành vi nhưng không build-test (không có Xcode) |
+| "`camera` không có implementation web, bản web phải dùng `image_picker`" (mục 4.2 seam 3) | *Lượt 1 audit (debug build):* `camera_web` **có** đăng ký plugin và ống ngắm chạy thật ở 1280x720. `takePicture()` **chưa đo** | Seam `PhotoCapture` vẫn bắt buộc (screen không được import `camera` trực tiếp), nhưng bản web **không bắt buộc** tụt sang `image_picker`: giữ `image_picker` làm mặc định an toàn, `camera_web` là lựa chọn chọn-sau, chỉ khi Lượt 2 đo được `takePicture()` |
+| "`CachedNetworkImage` sẽ ném `MissingPluginException` trên web ⇒ bấm ảnh là vỡ" (dòng dự đoán của seam 5) | Chưa đo được (feed cần đăng nhập). Bằng chứng trong pub cache nghiêng về **render được, không persist**: `config.dart:3-4` + `_config_web.dart:17-18` (`NonStoringObjectProvider`, `MemoryCacheSystem`) | Seam 5 vẫn làm, nhưng nghiệm thu là **hành vi render + eviction đúng**, không phải "hết lỗi trong console"; `pixel_receipt_image.dart:176` `errorWidget` đổi lỗi ảnh thành placeholder im lặng nên phải nhìn bằng mắt, không nhìn bằng console |
 
 Bản vá đã ghi trực tiếp vào spec cha, có nhãn "(sửa 2026-11-04)" tại mục 2, 4.1, 4.2, 6.3, 8, 12.2,
 14 và mục 15.
@@ -60,8 +62,9 @@ Test mới `test/unit/web_platform_boundary_test.dart` duyệt đệ quy `lib/` 
 - **R2** — không file nào ngoài `*_io.dart` import `package:flutter_cache_manager` hoặc
   `package:cached_network_image` (spec cha mục 12.1 đã nêu 2 package này).
 - **R3** — không file nào ngoài `*_io.dart` import `package:gal`, `package:camera`,
-  `package:flutter_local_notifications`. *Bổ sung so với spec cha:* ba package này compile được trên
-  web nhưng `MissingPluginException` khi chạy, nên mức nguy hiểm như nhau mà spec cha chưa chốt.
+  `package:flutter_local_notifications`. *Bổ sung so với spec cha:* cả ba compile được trên web;
+  `gal` và `flutter_local_notifications` thì không có nhánh web (ném / im lặng), còn `camera` **có**
+  `camera_web` (Lượt 1 audit) — nên R3 giữ nguyên vì lý do cấu trúc: screen không được biết plugin.
 
 `*_web.dart` được phép dùng `dart:js_interop` / `package:web`. `kIsWeb` được phép xuất hiện ở code
 chung (guard runtime), không bị R1–R3 chạm tới. Test chỉ quét `lib/`, không quét `test/` vì test chạy
@@ -119,11 +122,17 @@ cho 4 file spec cha mục 12.3 đã nêu và 2 file spec cha **chưa** nêu:
 ## 5. Task 0 — audit runtime, làm trước khi viết bất kỳ dòng nào
 
 Lý do: dart2js và plugin stub im lặng lúc compile, nên danh sách "chỗ phải sửa" phải lấy từ máy đo,
-không từ suy luận. Bản spec cha được viết từ suy luận và đã sai 4 chỗ (mục 2).
+không từ suy luận. Bản spec cha được viết từ suy luận và đã sai 4 chỗ (mục 2); Lượt 1 của chính Task 0
+lại bác thêm 2 chỗ nữa (2 dòng cuối mục 2) — nên các hàng đợi "chưa đo" trong audit là một phần của
+phương pháp, không phải thiếu sót.
 
 **Cách chạy**
-1. `flutter build web` (đã có `build/web` trên `01dd660`; rebuild nếu `lib/` đổi).
-2. Serve tĩnh: `python -m http.server --directory build/web 8080` (Python 3.14.6 có sẵn trên máy).
+1. `flutter build web --debug` *(buộc, sửa theo Lượt 1 audit)*. Bản release gán `debugPrint` thành
+   hàm rỗng (`lib/main.dart:15-17`) nên mọi chuỗi `Unsupported operation: ...` — đúng thứ ta cần đo —
+   biến mất khỏi console, người dùng chỉ còn thấy thông báo tiếng Việt.
+2. Serve tĩnh: `python -m http.server --directory build/web 3000` *(sửa theo audit: Supabase cấu hình
+   OAuth callback về `localhost:3000`, serve cổng khác thì Google login chết bằng `ERR_CONNECTION_REFUSED`
+   và đó là lỗi cấu hình, không phải lỗi seam)*.
 3. Điều khiển bằng Chromium của Playwright MCP (đã chứng minh render được app; **máy này không có
    Google Chrome**, chỉ có Edge).
 4. Lượt 1 — chưa đăng nhập: onboarding → màn hình login → bấm Google OAuth → bấm nhập email sai →
