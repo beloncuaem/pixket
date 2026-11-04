@@ -1,6 +1,15 @@
-# Khai báo tag để `@Tags(['web'])` trong `test/web/` có nghĩa: thiếu file này runner
-# in cảnh báo "A tag was used that wasn't specified in dart_test.yaml" và cờ bị vô hiệu.
-# Các test web vẫn CHẠY trên VM (chúng khoá nhánh IO của façade), nên không có `add_tags`;
-# nhánh chỉ-browser thật được chứng minh bởi bước Chrome trong CI (Task 7 Step 1c).
+# Khai báo tag để `@Tags([...])` trong test có nghĩa: thiếu file này runner in
+# cảnh báo "A tag was used that wasn't specified in dart_test.yaml" và cờ bị vô hiệu.
+# Hai test web vẫn CHẠY trên VM (chúng khoá nhánh IO của façade), nên không có
+# `add_tags`; nhánh chỉ-browser thật được chứng minh bởi bước Chrome trong CI
+# (Task 7 Step 1c).
 tags:
   web:
+    description: >-
+      Test khoá nhánh web của các seam. Chạy được trên VM lẫn Chrome; trên VM thì
+      conditional export chọn nhánh `dart.library.io`, nên mấy case này không chứng
+      minh được code web — chỉ `flutter test --platform chrome` (CI) mới chứng minh.
+  io:
+    description: >-
+      Test cần hệ tệp thật (`dart:io`), vì vậy chỉ chạy trên VM; browser không có
+      `Directory.systemTemp` và `File`.
