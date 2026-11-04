@@ -3,9 +3,10 @@ library;
 
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pixket/core/platform/local_draft_store.dart';
-import 'package:pixket/core/platform/local_draft_store_web.dart';
+import 'package:pixket/core/platform/local_draft_store_web.dart' as web_store;
 import 'package:pixket/core/utils/square_image.dart';
 
 Uint8List bytes3(int seed) => Uint8List.fromList([seed, seed + 1, seed + 2]);
@@ -14,7 +15,7 @@ void main() {
   // Kiểu khai báo lấy từ façade để test chứng minh seam expose lớp web.
   late LocalDraftStore store;
 
-  setUp(() => store = WebLocalDraftStore());
+  setUp(() => store = web_store.WebLocalDraftStore());
 
   test('handle là key pixket-draft://, không phải blob URL', () async {
     final handle = await store.save(
@@ -62,4 +63,16 @@ void main() {
     expect(await store.readBytes('pixket-draft://9.jpg'), isNull);
     expect(await store.exists('pixket-draft://9.jpg'), isFalse);
   });
+
+  test(
+    'façade conditional-export resolve đúng lớp web',
+    () {
+      expect(localDraftStore, isA<web_store.WebLocalDraftStore>());
+    },
+    // Repo không có dart_test.yaml nên `flutter test` trên VM cũng nạp thư mục
+    // test/web; ở đó façade resolve sang IoLocalDraftStore và assert này chắc
+    // chắn sai. skip theo kIsWeb giữ cho nó chỉ đo khi thật sự chạy trên
+    // browser (`--platform chrome`, Task 7), đúng chỗ nó có nghĩa.
+    skip: !kIsWeb,
+  );
 }

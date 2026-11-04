@@ -21,6 +21,14 @@ void main() {
     expect(decoded.height, squareImageSide);
   });
 
+  test('web squareBytes không phóng ảnh nhỏ hơn cạnh chuẩn', () async {
+    final out = await squareBytes(jpegOf(300, 200));
+    expect(out, isNotNull);
+    final decoded = img.decodeImage(out!)!;
+    expect(decoded.width, 200);
+    expect(decoded.height, 200);
+  });
+
   test('web squareBytes trả null cho bytes rác', () async {
     expect(await squareBytes(Uint8List.fromList([1, 2, 3, 4])), isNull);
   });

@@ -12,6 +12,7 @@ import 'square_image_core.dart';
 /// Không chạy trên isolate nào cả vì đây là code native của browser — mà trên
 /// web `compute()` vốn chạy cùng thread, nên cách này mới không đơ UI.
 Future<Uint8List?> squareBytes(Uint8List source) async {
+  web.ImageBitmap? opened;
   try {
     final blob = web.Blob(
       <JSAny>[source.toJS].toJS,
@@ -23,11 +24,16 @@ Future<Uint8List?> squareBytes(Uint8List source) async {
           web.ImageBitmapOptions(imageOrientation: 'from-image'),
         )
         .toDart;
+    opened = bitmap;
 
     final side = math.min(bitmap.width, bitmap.height);
     if (side <= 0) return null;
 
-    final canvas = web.OffscreenCanvas(squareImageSide, squareImageSide);
+    // Cùng quy tắc với bản core (square_image_core.dart): canvas chỉ bị hạ về
+    // [squareImageSide] khi cạnh cắt lớn hơn nó. Để cứng 1200×1200 sẽ phóng ảnh
+    // 300×200 lên sáu lần, khác hẳn hành vi IO mà unit test đang khoá lại.
+    final canvasSide = side > squareImageSide ? squareImageSide : side;
+    final canvas = web.OffscreenCanvas(canvasSide, canvasSide);
     final context =
         canvas.getContext('2d') as web.OffscreenCanvasRenderingContext2D?;
     if (context == null) return null;
@@ -39,8 +45,8 @@ Future<Uint8List?> squareBytes(Uint8List source) async {
       side,
       0,
       0,
-      squareImageSide,
-      squareImageSide,
+      canvasSide,
+      canvasSide,
     );
 
     final encoded = await canvas
@@ -57,5 +63,9 @@ Future<Uint8List?> squareBytes(Uint8List source) async {
     // Ảnh rác khiến createImageBitmap reject chứ không trả bitmap rỗng, mà chữ
     // ký của squareBytes hứa null — không ném — để caller giữ nguyên ảnh gốc.
     return null;
+  } finally {
+    // close() là lời gọi duy nhất nhả bitmap native; GC của browser không đụng
+    // tới nó, nên mỗi lần cắt phải đóng ở cả nhánh ném lẫn hai nhánh return null.
+    opened?.close();
   }
 }

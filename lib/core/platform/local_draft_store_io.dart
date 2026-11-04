@@ -39,6 +39,13 @@ class IoLocalDraftStore extends LocalDraftStore {
 
   @override
   Future<Uint8List?> readBytes(String handle) async {
+    // readBytes/exists cố ý KHÔNG neo [_root]: ảnh legacy trước seam bytes vẫn
+    // là đường dẫn tuyệt đối cạnh tệp tạm của camera plugin (`writeSquareCopy`
+    // cũ ghi `pixket_<micros>_sq.jpg` vào chính thư mục đó), và đường dẫn ấy
+    // đang chảy vào đây từ expense_repository._resolveImage (dòng 60) khi sửa
+    // khoản chi cũ và từ save_to_gallery._readBytes (dòng 54) khi lưu ảnh về
+    // thư viện. Chặn như `delete` bên dưới sẽ biến hai luồng Android đó thành
+    // StateError thay vì đọc được ảnh.
     final file = File(handle);
     if (!await file.exists()) return null;
     return file.readAsBytes();
@@ -49,7 +56,13 @@ class IoLocalDraftStore extends LocalDraftStore {
 
   @override
   Future<void> delete(String handle) async {
-    final file = File(handle);
+    // `handle` đến từ `expense.imagePath` — dữ liệu đọc về từ DB, kẻ khác có
+    // thể ghi được (lib/providers/expense_provider.dart:191), nên nó không được
+    // biến thành lệnh xóa tệp tùy ý. Chỉ xóa khi đường dẫn resolve nằm trong
+    // thư mục draft; mọi trường hợp còn lại coi như vô sự vì delete hứa không
+    // ném.
+    final file = await _insideDrafts(handle);
+    if (file == null) return;
     if (await file.exists()) {
       try {
         await file.delete();
@@ -57,6 +70,27 @@ class IoLocalDraftStore extends LocalDraftStore {
         // Không làm mất luồng chính vì một tệp tạm không xóa được.
       }
     }
+  }
+
+  /// File của [handle] khi nó nằm thật sự dưới [_root] sau khi đã đi hết
+  /// symlink; null khi đường dẫn bịa, đã mất, hoặc trốn khỏi thư mục draft.
+  Future<File?> _insideDrafts(String handle) async {
+    final String resolved;
+    try {
+      resolved = await File(handle).resolveSymbolicLinks();
+    } on FileSystemException {
+      return null;
+    }
+    final root = await _root.resolveSymbolicLinks();
+    return _isUnder(resolved, root) ? File(resolved) : null;
+  }
+
+  /// So sánh theo prefix có dấu ngăn cách, để `.../pixket_drafts_evil/x.jpg`
+  /// không được tính là con của `.../pixket_drafts`.
+  bool _isUnder(String path, String root) {
+    final normalizedPath = path.replaceAll(r'\', '/');
+    final normalizedRoot = root.replaceAll(r'\', '/');
+    return normalizedPath.startsWith('$normalizedRoot/');
   }
 }
 
