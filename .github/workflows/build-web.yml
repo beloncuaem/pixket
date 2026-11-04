@@ -1,0 +1,65 @@
+name: Build web
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Ran ranh gioi nen tang va build ban web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+
+      - name: Tạo .env cho build web
+        run: |
+          set -euo pipefail
+          # `.env` là asset bắt buộc trong pubspec nên build web fail nếu thiếu tệp,
+          # kể cả với code không gọi mạng. PR từ fork không được cấp secrets nên ở
+          # đây dùng giá trị giả; chỉ bước build APK mới đòi secret thật.
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "Không có secret: dùng .env giả cho analyze/test/build."
+            printf 'SUPABASE_URL=https://example.supabase.co\nSUPABASE_ANON_KEY=anon-key-placeholder\n' > .env
+          else
+            printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' \
+              "${SUPABASE_URL}" "${SUPABASE_ANON_KEY}" > .env
+            echo "Đã ghi .env từ secret (không in giá trị)."
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Cài dependency
+        run: flutter pub get
+
+      - name: flutter analyze
+        run: flutter analyze
+
+      # dart2js stub `dart:io` nên `flutter build web` exit 0 kể cả khi code gọi API
+      # chỉ có trên desktop/mobile. Hai bước dưới là chốt chống hồi quy duy nhất có
+      # giá trị: một là kiểm tra cấu trúc import, hai là chạy nhánh web bằng browser
+      # thật (xem docs/superpowers/specs/2026-11-04-web-platform-boundary-design.md).
+      - name: Kiểm tra ranh giới nền tảng (R1-R3)
+        run: flutter test test/unit/web_platform_boundary_test.dart
+
+      - name: Test nhánh web bằng Chrome thật
+        run: flutter test --platform chrome test/web
+
+      - name: flutter build web
+        run: flutter build web --release --base-href /pixket/
