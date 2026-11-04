@@ -30,7 +30,9 @@ linter:
   # producing the lint.
   rules:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # Bật để needle `import 'dart:io'` trong boundary test không thể bị qua mặt
+    # bằng nháy kép: cả repo chỉ còn một cách viết chuỗi.
+    prefer_single_quotes: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

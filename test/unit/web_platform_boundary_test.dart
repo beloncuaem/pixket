@@ -8,12 +8,13 @@ import 'package:flutter_test/flutter_test.dart';
 /// Allowlist là cơ chế thắt dần: nó khai những chỗ còn nợ. Một tệp đã được bọc
 /// mà vẫn nằm trong allowlist cũng làm test đỏ, để không ai nợ thay cho không.
 void main() {
-  List<String> libFiles() => Directory('lib')
-      .listSync(recursive: true, followLinks: false)
-      .whereType<File>()
-      .map((f) => f.path.replaceAll(r'\', '/'))
-      .where((p) => p.endsWith('.dart'))
-      .toList();
+  List<String> libFiles() =>
+      Directory('lib')
+          .listSync(recursive: true, followLinks: false)
+          .whereType<File>()
+          .map((f) => f.path.replaceAll(r'\', '/'))
+          .where((p) => p.endsWith('.dart'))
+          .toList();
 
   List<String> importing(List<String> files, List<String> needles) => [
     for (final path in files)
@@ -28,16 +29,31 @@ void main() {
     final violations = found
         .where((p) => !p.endsWith('_io.dart') && !allowed.contains(p))
         .toList();
-    expect(violations, isEmpty, reason: '$rule: còn file chung chạm boundary ($violations).');
+    expect(
+      violations,
+      isEmpty,
+      reason: '$rule: còn file chung chạm boundary ($violations).',
+    );
     final stale = allowed.where((p) => !found.contains(p)).toList();
-    expect(stale, isEmpty, reason: '$rule: allowlist cũ, xóa $stale khỏi danh sách nợ.');
+    expect(
+      stale,
+      isEmpty,
+      reason: '$rule: allowlist cũ, xóa $stale khỏi danh sách nợ.',
+    );
   }
 
   final files = libFiles();
 
   test('R1: dart:io chỉ trong *_io.dart', () {
     expectBoundary(
-      found: importing(files, ["import 'dart:io'"]),
+      // Bốn biến thể, không chỉ `import 'dart:io'`: nháy kép và `export` cũng đưa
+      // được dart:io vào một file chung, mà compiler web thì im lặng.
+      found: importing(files, [
+        "import 'dart:io'",
+        'import "dart:io"',
+        "export 'dart:io'",
+        'export "dart:io"',
+      ]),
       // R1 đã đóng từ Task 5: `Image.file` nằm sau
       // `receipt_cache_image_io.dart`, không còn file chung nào nợ.
       allowed: const <String>{},
@@ -45,25 +61,31 @@ void main() {
     );
   });
 
-  test('R2: flutter_cache_manager và cached_network_image chỉ trong *_io.dart', () {
-    expectBoundary(
-      found: importing(files, [
-        "package:flutter_cache_manager",
-        "package:cached_network_image",
-      ]),
-      // R2 đã đóng từ Task 5: mọi importer cache nằm sau
-      // `receipt_cache_io.dart` / `receipt_cache_image_io.dart`.
-      allowed: const <String>{},
-      rule: 'R2',
-    );
-  });
+  test(
+    'R2: flutter_cache_manager và cached_network_image chỉ trong *_io.dart',
+    () {
+      expectBoundary(
+        // Hai needle này là chuỗi con không chứa dấu nháy, nên chúng đã khớp cả
+        // `import` lẫn `export` và cả hai kiểu nháy — khác R1, nơi needle mang luôn
+        // cú pháp import.
+        found: importing(files, [
+          'package:flutter_cache_manager',
+          'package:cached_network_image',
+        ]),
+        // R2 đã đóng từ Task 5: mọi importer cache nằm sau
+        // `receipt_cache_io.dart` / `receipt_cache_image_io.dart`.
+        allowed: const <String>{},
+        rule: 'R2',
+      );
+    },
+  );
 
   test('R3: gal, camera, flutter_local_notifications chỉ trong *_io.dart', () {
     expectBoundary(
       found: importing(files, [
-        "package:gal/gal.dart",
-        "package:camera/camera.dart",
-        "package:flutter_local_notifications",
+        'package:gal/gal.dart',
+        'package:camera/camera.dart',
+        'package:flutter_local_notifications',
       ]),
       // R3 đã đóng từ Task 6: plugin notification nằm sau
       // `receipt_notifier_io.dart`, `gal` sau `gallery_saver_io.dart`, `camera` sau

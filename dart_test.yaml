@@ -1,0 +1,6 @@
+# Khai báo tag để `@Tags(['web'])` trong `test/web/` có nghĩa: thiếu file này runner
+# in cảnh báo "A tag was used that wasn't specified in dart_test.yaml" và cờ bị vô hiệu.
+# Các test web vẫn CHẠY trên VM (chúng khoá nhánh IO của façade), nên không có `add_tags`;
+# nhánh chỉ-browser thật được chứng minh bởi bước Chrome trong CI (Task 7 Step 1c).
+tags:
+  web:
