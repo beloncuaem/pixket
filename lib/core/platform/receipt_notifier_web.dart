@@ -17,8 +17,13 @@ class WebReceiptNotifier extends ReceiptNotifier {
   @override
   Future<void> requestPermission() async {
     if (!_isSupported) return;
-    // Chính browser hiển thị lời hỏi theo origin, app không tự chế thêm bước nào.
-    await web.Notification.requestPermission().toDart;
+    // Không await lời hứa của browser: chip hỏi quyền của Chrome/Edge chỉ xong khi
+    // người dùng bấm vào nó, và đo thật ở Chromium cho thấy nếu họ không bấm thì
+    // `permission` vẫn `default` mãi — để `await` ở đây sẽ giữ onboarding làm con
+    // tin, `completeOnboarding()` không chạy và app không bao giờ tới màn login.
+    // `ignore()` vừa ném lỗi đi vừa cho Future hoàn thành ngay nên người dùng vẫn
+    // thấy lời hỏi, chỉ là app không chờ câu trả lời.
+    web.Notification.requestPermission().toDart.ignore();
   }
 
   @override
