@@ -118,7 +118,67 @@ file ảnh chụp màn hình nằm ngoài repo (thư mục làm việc của Pla
 | Serve bản web ra ngoài | (không có lỗi — đây là phát hiện, không phải crash) | `.env` được khai báo là asset trong `pubspec.yaml:39`, nên `flutter build web` **đóng gói luôn** thành `build/web/assets/.env` (382 byte) và `python -m http.server` phục vụ nó công khai: `GET http://localhost:8080/assets/.env => [200] OK`. Tôi không đọc và không dán nội dung file; chỉ đọc **tên biến** bằng `grep -o "^[A-Z_]*"`, và chúng là `SUPABASE_URL` + `SUPABASE_ANON_KEY`. Đây là **vệ sinh cấu hình (hygiene)**, không phải rò rỉ secret đang hoạt động: đúng hai giá trị đó đã là public theo thiết kế trong mọi SPA (anon key nằm trong bundle client, RLS mới là lớp bảo vệ). Nó **trở thành** rò rỉ thật ngay khi có một key không-anon (service_role, PAT, service key…) được đưa vào file này | Vệ sinh cấu hình (không phải leak đang hoạt động) | NGOÀI PHẠM VI cho Plan 2 — chuyển xuống mục "Việc còn lại cho Plan 3" với tư cách **tiền đề bắt buộc trước khi deploy** |
 | OAuth web callback | `net::ERR_CONNECTION_REFUSED` | `SITE_URL` của Supabase trỏ cổng 3000; audit serve 8080. Không thuộc seam nào trong 6 seam | Chặn luồng | NGOÀI PHẠM VI — cấu hình, không phải code |
 
+## Lượt 3 (Task 7) — trạng thái từng dòng sau Task 2..6
+
+Đo trên bản **debug** (`flutter build web --debug --output=build/web-debug`, exit 0), phục vụ
+`python -m http.server 3000 -b 127.0.0.1`, Chromium của Playwright MCP, semantics bật qua
+`flt-semantics-placeholder`. Code được đo = worktree tại `b621e3e` cộng bản sửa
+`receipt_notifier_core`/`receipt_notifier_web.dart` chưa commit ở thời điểm đo (xem dòng 14).
+Không có lượt nào ở đây cần đăng nhập; vì vậy mọi dòng lệ thuộc dữ liệu ảnh vẫn **chưa đo**.
+
+| # | Dòng trong bảng lỗi | Trạng thái sau Task 2..6 |
+|---|---|---|
+| 1 | Chọn ảnh từ thư viện, `_Namespace` | **Đã sửa về cấu trúc (Task 2 + Task 3)** — `lib/` không còn `import 'dart:io'` ngoài `*_io.dart` (R1 rỗng), `camera_screen` đi qua `PhotoCapture`, ảnh về dạng bytes. **Chưa đo lại trong browser** vì màn camera nằm sau đăng nhập |
+| 2 | "Chụp khoản chi", `_Namespace` | **Đã sửa về cấu trúc (Task 2 + Task 3)** — `takePicture` nằm sau seam, `squareBytes` bản web dùng canvas. `takePicture()` trên web **vẫn chưa từng đo** (Lượt 1 đã ghi như vậy) |
+| 3 | "Tiếp tục với Google", `ERR_CONNECTION_REFUSED` | **Còn (Plan 3, cấu hình)** — lượt này serve đúng cổng 3000 nên callback sẽ về được app, nhưng không bấm OAuth: máy audit không có phiên Google nào để chọn, và hoàn tất đăng nhập là việc của chủ dự án |
+| 4 | Feed hiện ảnh signed URL | **Đã sửa về cấu trúc (Task 5)** — `CachedNetworkImage` chỉ còn trong `receipt_cache_image_io.dart`, web dùng `Image.network`. **Chưa đo**: cần ảnh thật. Nghiệm thu dòng này bắt buộc bằng hành vi render, không bằng console (hệ quả số 3) |
+| 5 | Feed, khoản chi chỉ còn ảnh local | **Đã sửa về cấu trúc (Task 5)** — `Image.file` sau `_io.dart`; web đọc `LocalDraftStore` qua `FutureBuilder`. Chưa đo trong browser |
+| 6 | Lưu khoản chi mới kèm ảnh | **Đã sửa về cấu trúc (Task 2)** — `File(value).exists()` → `localDraftStore`, upload nhận bytes. Chưa đo |
+| 7 | Sửa khoản chi có ảnh | **Đã sửa về cấu trúc (Task 2)** — cùng đường ghi ảnh với dòng 6. Chưa đo |
+| 8 | Xóa mềm rồi vĩnh viễn xóa | **Đã sửa về cấu trúc (Task 5 + Task 2)** — `:187` → `evictReceiptImage`, nhánh local → `localDraftStore.delete`. Chưa đo |
+| 9 | Nút tải ảnh về máy | **Đã sửa về cấu trúc (Task 4)** — `Gal` sau `gallery_saver_io.dart`, web dùng blob + `<a download>`, lỗi không còn bị nuốt. **Điều kiện review Task 4 vòng 1 vẫn mở**: phải đo "tệp JPEG có thực sự xuất hiện trong mục Tải xuống" — không làm được vì nút nằm ở feed, cần đăng nhập → chuyển thẳng sang Plan 3 |
+| 10 | Dọn ảnh draft sau lưu/hủy form | **Đã sửa về cấu trúc (Task 2)** — `File(...)`/`existsSync()` → `localDraftStore.delete`. Chưa đo |
+| 11 | Mở form chọn "mức độ" | **Hệ quả của dòng 6/7** — hết chặn ở tầng code, nhưng vẫn chưa đo vì cần phiên + ảnh |
+| 12 | Cảnh báo ngân sách 80/90/100% | **Đã thêm đường web (Task 6)** — `Notification` qua `package:web`, chỉ gửi khi `permission == 'granted'`. **Chưa đo được cảnh báo thật**: cần dữ liệu vượt ngưỡng. Đo được một nửa: `Notification.permission` trên Chromium automation vẫn là `default` sau khi app bắn lời hỏi (xem dòng 14) |
+| 13 | Đăng xuất → dọn cache ảnh | **Đã sửa một nửa (Task 5)** — `clearReceiptCache()` bản web chỉ đụng `imageCache`; tầng HTTP cache của browser nằm ngoài tầm với của trang, phải có service worker → **Còn (Plan 3)**. Hành vi "ảnh còn hiện sau logout + login lại" chưa đo |
+| 14 | Onboarding: bấm `BẮT ĐẦU` | **CÓ LỖI MỚI, ĐÃ ĐO VÀ ĐÃ SỬA** — xem mục dưới |
+
+### Dòng 14 chi tiết: `BẮT ĐẦU` treo trên web, và bằng chứng trước/sau
+
+**Trước khi sửa** (bản debug commit `a624d0e`, `WebReceiptNotifier.requestPermission()` dùng
+`await web.Notification.requestPermission().toDart`):
+
+- Bấm `BẮT ĐẦU` trên trang 3 → 0 console error, **không ném gì**, nhưng
+  `localStorage` vẫn `[]` (tức `completeOnboarding()` không bao giờ chạy) và semantics vẫn là
+  trang onboarding cũ. `Notification.permission` == `default`.
+- Nguyên nhân: lời hứa permission của browser **chỉ hoàn thành khi người dùng bấm vào chip**;
+  chip không tự được trả lời trong automation, nên `await` treo vĩnh viễn và chuỗi
+  `_finish()` dừng ngay trước `completeOnboarding()`. Người dùng thật cũng treo y hệt nếu họ
+  lờ chip đi — đây là màn hình chặn toàn bộ app.
+
+**Sau khi sửa** (`requestPermission()` bắn lời hỏi rồi `ignore()`, không chờ):
+
+- Cùng một lượt bấm: `clicked:TIẾP TỤC`, `clicked:TIẾP TỤC`, `clicked:BẮT ĐẦU` →
+  `localStorage` có `flutter.onboarding_complete="true"`, semantics chuyển sang màn đăng nhập
+  (`Đăng nhập để đồng bộ chi tiêu của bạn trên Cloud`, `Email`, `Mật khẩu`, `ĐĂNG NHẬP`,
+  `Tiếp tục với Google`), `Notification.permission` vẫn `default`, **0 console error / 0 warning**.
+- Nghĩa là: lời hỏi quyền vẫn được gửi (browser hiển thị chip), nhưng onboarding không còn bị
+  giữ làm con tin. `showBudgetAlert` vẫn đòi `granted`, nên người dùng phải bấm cho phép thì
+  mới nhận cảnh báo — đúng ý nghĩa của quyền này.
+
+### Đo được trong lượt 3 (không cần đăng nhập)
+
+| Hạng mục | Bằng chứng |
+|---|---|
+| Boot bản debug ở cổng 3000 | `Total messages: 3 (Errors: 0, Warnings: 0)` — không có `Unsupported operation: _Namespace` nào, kể cả sau khi đi hết onboarding |
+| Onboarding 3 trang | Semantics đọc được `Chào mừng đến với Pixket` → `Đồng bộ an toàn trên Cloud` → `Không vượt quá ngân sách ... mốc 80%, 90% và 100%` |
+| `BẮT ĐẦU` → login | `flutter.onboarding_complete="true"` + semantics màn đăng nhập (xem mục trên) |
+| `Notification` có thật trên browser | `Notification.permission == "default"` (đọc được property → `_isSupported` true; không phải đường `catch (_)`) |
+| `shared_preferences` web | `localStorage` ghi `flutter.onboarding_complete` dưới dạng chuỗi có dấu nháy (`"true"`), khớp hành vi Lượt 1 |
+| `.env` vẫn bị đóng gói | `GET http://127.0.0.1:3000/assets/.env` → `env_status=200`, tệp 382 byte — **không đổi sau Plan 2** (đúng Ruling F: vệ sinh cấu hình, tiền đề deploy của Plan 3). Không đọc nội dung |
+
 ## Việc còn lại cho Plan 3
+
 
 Task 7 sẽ đối chiếu lại bảng này và mở rộng mục này; danh sách hiện tại:
 
@@ -134,8 +194,19 @@ Task 7 sẽ đối chiếu lại bảng này và mở rộng mục này; danh s�
    web vĩnh viễn, hoặc đổi `SITE_URL`; không phải code.
 3. **`camera_web`:** chỉ cân nhắc sau khi đo được `takePicture()` trên web (xem hệ
    quả số 2), kèm đường thoát cho trạng thái `Đang mở camera…`.
-4. **Lượt 2 chưa chạy:** toàn bộ 9 dòng Dự đoán vẫn cần tài khoản + dữ liệu ảnh
-   thật, serve ở cổng 3000, bằng bản debug.
+4. **Lượt có đăng nhập chưa chạy:** 9 dòng Dự đoán vẫn cần tài khoản + dữ liệu ảnh
+   thật, serve ở cổng 3000, bằng bản debug. Lượt 3 đã đóng được phần không cần
+   đăng nhập (boot, onboarding, `BẮT ĐẦU` → login, `Notification` có thật, `.env`
+   vẫn bị đóng gói), nên danh sách này còn đúng một nửa: các dòng ảnh/upload/xóa/cảnh báo.
+5. **Điều kiện review Task 4 vòng 1 chưa đóng:** "bấm nút tải ảnh trên browser thật,
+   kiểm tệp JPEG xuất hiện trong mục Tải xuống kèm tên và đuôi `.jpg`" — dòng 9 bảng
+   trên. Cần tài khoản có ảnh, nên thuộc lượt có đăng nhập.
+6. **Cảnh báo ngân sách trên web mới chỉ đo được một nửa:** lời hỏi quyền được bắn đi
+   và onboarding không còn treo, nhưng chưa từng có một cảnh báo thật hiện ra (cần dữ
+   liệu vượt ngưỡng + người dùng bấm "Cho phép").
+7. **Tầng cache HTTP của browser:** `clearReceiptCache()` bản web chỉ xóa `imageCache`
+   trong RAM; muốn dọn thật khi đăng xuất thì cần service worker + Cache API, tức là
+   việc của shell PWA (Plan 3).
 
 ## Hệ quả cho thứ tự Task 2..6
 
@@ -204,4 +275,6 @@ Bằng chứng ủng hộ thứ tự hiện tại, với các điều chỉnh sa
   `windows/flutter/`** — 3 file `generated_plugin_registrant.cc/.h` +
   `generated_plugins.cmake` không còn dirty, không cần `git checkout --` nào.
 - **Không sửa code nào.** File duy nhất bị sửa là báo cáo này; không đụng spec,
-  plan hay `lib/`.
+  plan hay `lib/`. *(Ngoại lệ duy nhất, ở Lượt 3: lỗi treo `BẮT ĐẦU` đo được trong lượt
+  này đã sửa ngay trong `lib/core/platform/receipt_notifier_web.dart` (kèm comment ở
+  `lib/screens/onboarding/onboarding_screen.dart`), vì không có cách nào đi tiếp mà không sửa — xem dòng 14.)*

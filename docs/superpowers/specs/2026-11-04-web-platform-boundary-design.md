@@ -205,6 +205,22 @@ audit thắng, và spec này được cập nhật kèm lý do — không đi th
    thiết bị).
 7. Giao phẩm cho Plan 3: báo cáo audit + danh sách việc còn lại + `build/web` chạy được.
 
+### Kết quả đối chiếu (Task 7, branch `web-boundary`, HEAD `a624d0e` + các commit Task 7)
+
+| # | Tiêu chí | Kết quả | Bằng chứng |
+|---|---|---|---|
+| 1 | R1–R3 xanh, `dart:io` chỉ trong `*_io.dart` | **ĐẠT** | `grep -rn "dart:io" lib --include=*.dart \| grep -v "_io.dart" \| wc -l` = `0`; ba `allowed:` trong `test/unit/web_platform_boundary_test.dart` đều `const <String>{}` và test xanh (staleness assertion cũng xanh → không file nào còn nợ) |
+| 2 | Bảng audit không còn dòng "chặn luồng" ở trạng thái chưa xử lý | **ĐẠT MỘT NỬA, ghi rõ** | Năm dòng chặn luồng (1, 2, 6, 7, 11) đã xử lý ở tầng code; dòng 3 là cấu hình `SITE_URL`, đã ghi "Còn (Plan 3)". Khoảng còn lại là **bằng chứng**, không phải code: các dòng đó chưa đo lại trong browser vì màn hình nằm sau đăng nhập (mục Lượt 3 của audit) |
+| 3 | Luồng web đo thật: đăng nhập, feed, thêm/sửa/xóa kèm ảnh, tải ảnh về máy | **CHƯA ĐẠT — cần chủ dự án** | Lượt 3 đo được toàn bộ phần không cần đăng nhập (boot 0 lỗi, onboarding 3 trang, `BẮT ĐẦU` → màn đăng nhập, `Notification` có thật, `.env` vẫn bị đóng gói). Phần còn lại cần một lượt đăng nhập thật ~15 phút, serve cổng 3000, bản debug. Điều kiện "đo thật tải ảnh trên browser" của review Task 4 vẫn mở vì đúng lý do đó |
+| 4 | `analyze` + `test` pass; các gate mục 4.4 vẫn còn và vẫn assert điều cũ | **ĐẠT** | `flutter analyze` → `No issues found`; `flutter test` → **451 pass / 10 skip / 0 fail**; `legacy_cleanup_test.dart:87` vẫn assert "mọi ảnh khoản chi đi qua PixelReceiptImage" với nghĩa mới (`!path.endsWith('_io.dart')`), không xóa test nào |
+| 5 | Hết tham số dạng đường dẫn: `writeSquareCopy` biến mất, enum đổi, upload nhận bytes | **ĐẠT, với một chỗ spec viết sai little-name** | `uploadReceiptImage(Uint8List bytes, {required String extension, required bool squared})` (`supabase_storage_service.dart:18`); `ReceiptImageSource.localFile` → **`localDraft`** chứ không phải `localBytes` như dòng 5 của mục này ghi; `localBytes` là tên **field bytes** trên `PixelReceiptImage`, còn `draftHandle` là tên handle. Giữ nguyên dòng 5 ở trên để không âm thầm sửa tiêu chí; bản mô tả đúng là bảng mục 4.3 |
+| 6 | Hành vi mobile không đổi về code | **ĐẠT ở mức đọc code + test, KHÔNG đạt ở mức thiết bị** | Draft vẫn ghi đĩa trong `local_draft_store_io.dart`; notification vẫn qua plugin 18 trong `receipt_notifier_io.dart` (dời nguyên văn, cùng channel `budget_alerts`, cùng hai chuỗi tiếng Việt mà test pin); cache vẫn `CachedNetworkImage` trong `receipt_cache_image_io.dart`. **Chưa chạy lại trên máy Android/iOS thật** —Plan 2 không có thiết bị, nên chứng cứ là 451 test, không phải thiết bị |
+| 7 | Giao phẩm cho Plan 3 | **ĐẠT** | `docs/superpowers/audits/2026-11-04-web-runtime-audit.md` có mục "Lượt 3" + "Việc còn lại cho Plan 3" (7 mục, gồm tiền đề `.env` trước khi deploy); `flutter build web --release --base-href /pixket/` exit 0 và bản debug boot sạch trong Chromium |
+
+Kết luận: tiêu chí 3 là tiêu chí duy nhất **chưa đóng được** và nó không đóng được bằng code —
+nó cần một lượt đăng nhập thật. Mọi tiêu chí khác đạt, với mức chứng cứ ghi rõ ở từng dòng.
+
+
 ## 9. Rủi ro còn lại
 
 | Rủi ro | Xử lý |

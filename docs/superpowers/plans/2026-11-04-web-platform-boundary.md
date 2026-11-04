@@ -1322,6 +1322,12 @@ jobs:
 
 Ghi chú cho người tạo workflow: `.env` là asset bắt buộc (`pubspec.yaml:39`) nên build thiếu nó sẽ fail; **không** commit `.env`. Nếu repo chưa có secrets `SUPABASE_URL`/`SUPABASE_ANON_KEY` thì workflow đỏ — đó là việc của chủ dự án, báo rõ chứ không self-hosted thay. Kiểm tra tên biến bằng `grep -o "^[A-Z_]*" .env | sort -u` (đọc, không in giá trị).
 
+Bẫy đã đo ở Task 7: trên **Git Bash Windows**, `--base-href /pixket/` bị MSYS tự dịch đường dẫn thành
+`C:/Program Files/Git/pixket/` và `flutter build web` fail với `--base-href should start and end with /`
+(exit 1, không phải lỗi code). Chạy local thì prepend `MSYS_NO_PATHCONV=1`; trên `ubuntu-latest` trong CI
+không có vấn đề này (đã đo: `MSYS_NO_PATHCONV=1 flutter build web --release --base-href /pixket/` → exit 0,
+`√ Built build\web`).
+
 - [ ] **Step 3: Audit lại toàn bộ script Task 0**
 
 Serve `build/web` mới, chạy cả hai lượt. Với mỗi dòng cũ trong báo cáo, cập nhật cột thành `Đã sửa (Task N)` / `Còn (Plan 3, lý do)`. Thêm mục "Việc còn lại cho Plan 3" ở cuối file.
