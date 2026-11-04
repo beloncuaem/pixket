@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/platform/local_draft_store.dart';
+import '../core/platform/receipt_cache.dart';
 import '../core/utils/square_image.dart';
 import '../core/utils/storage_paths.dart';
 import '../data/models/expense.dart';
@@ -184,7 +184,7 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
       await SupabaseStorageService().deleteByPath(storedPath);
       final url = expense.displayImageUrl;
       if (url != null) {
-        await CachedNetworkImage.evictFromCache(url, cacheKey: storedPath);
+        await evictReceiptImage(url, cacheKey: storedPath);
       }
     } else {
       final local = expense.imagePath;

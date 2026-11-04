@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/platform/receipt_cache.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
 import 'providers/budget_provider.dart';
@@ -64,10 +64,7 @@ class _AppHome extends ConsumerWidget {
   const _AppHome();
 
   Future<void> _clearUserCaches() async {
-    PaintingBinding.instance.imageCache
-      ..clear()
-      ..clearLiveImages();
-    await DefaultCacheManager().emptyCache();
+    await clearReceiptCache();
   }
 
   @override

@@ -1261,10 +1261,13 @@ Trên máy dev này `flutter test --platform chrome` **không chạy được** 
 đã chẩn đoán ở Task 0/Task 2 với smoke test `expect(1,1)` cũng chết bằng
 `Connection closed before test suite loaded.`). Vì vậy, cho tới Step 2, những thứ sau **chưa từng được
 chạy thật**: quy tắc cắt của `square_image_web.dart`, `getContext('2d')` có trả context thật không,
-`createImageBitmap` reject hay trả bitmap rỗng với ảnh rác, và façade `localDraftStore` có trả
-`WebLocalDraftStore` trên web hay không. Bước Chrome trong CI là chỗ duy nhất đóng được các khoảng đó;
+`createImageBitmap` reject hay trả bitmap rỗng với ảnh rác, façade `localDraftStore` có trả
+`WebLocalDraftStore` trên web hay không, và `ReceiptLocalImage` nhánh web có đọc handle qua store để vẽ
+`MemoryImage` hay không (test trong `test/web/receipt_cache_image_web_test.dart` mang `skip: !kIsWeb`
+nên trên VM nó chỉ được nạp chứ không chạy). Bước Chrome trong CI là chỗ duy nhất đóng được các khoảng đó;
 không có nó thì Task 2 chỉ mới chứng minh *compile được*, tức là đúng cái bẫy mà spec Plan 2 mục 2 đã
-bác. Nếu CI đỏ ở một trong bốn điểm đó, coi như Task 2 chưa xong — mở lại Task 2, không nới test.
+bác. Nếu CI đỏ ở một trong năm điểm đó, coi như Task 2/Task 5 chưa xong — mở lại task tương ứng, không
+nới test.
 
 - [ ] **Step 2: CI build web**
 

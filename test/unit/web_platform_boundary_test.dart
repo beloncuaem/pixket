@@ -38,9 +38,9 @@ void main() {
   test('R1: dart:io chỉ trong *_io.dart', () {
     expectBoundary(
       found: importing(files, ["import 'dart:io'"]),
-      // seam render mà Task 5 sở hữu: file duy nhất còn nợ dart:io sau Task 2,
-      // allowlist chỉ rỗng khi Task 5 thay nó bằng ReceiptCacheImage.
-      allowed: const <String>{'lib/widgets/pixel/pixel_receipt_image.dart'},
+      // R1 đã đóng từ Task 5: `Image.file` nằm sau
+      // `receipt_cache_image_io.dart`, không còn file chung nào nợ.
+      allowed: const <String>{},
       rule: 'R1',
     );
   });
@@ -51,11 +51,9 @@ void main() {
         "package:flutter_cache_manager",
         "package:cached_network_image",
       ]),
-      allowed: {
-        'lib/app.dart',
-        'lib/providers/expense_provider.dart',
-        'lib/widgets/pixel/pixel_receipt_image.dart',
-      },
+      // R2 đã đóng từ Task 5: mọi importer cache nằm sau
+      // `receipt_cache_io.dart` / `receipt_cache_image_io.dart`.
+      allowed: const <String>{},
       rule: 'R2',
     );
   });

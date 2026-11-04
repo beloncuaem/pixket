@@ -85,13 +85,14 @@ void main() {
     });
 
     test('mọi ảnh khoản chi đi qua PixelReceiptImage', () {
-      // Placeholder/evict cache là API ảnh, còn widget render ảnh thì phải gom
-      // về một chỗ; provider được phép gọi evictFromCache.
+      // Widget render ảnh phải gom về một chỗ, nhưng từ Task 5 chỗ đó là một seam
+      // nhiều nhánh: `Image.file`/`CachedNetworkImage` hợp lệ trong `*_io.dart`,
+      // còn code chung thì không được phép chạm hai cái tên ấy.
       final renderers = [
         for (final path in _filesContaining('Image.file('))
-          if (!path.endsWith('pixel_receipt_image.dart')) path,
+          if (!path.endsWith('_io.dart')) path,
         for (final path in _filesContaining('CachedNetworkImage('))
-          if (!path.endsWith('pixel_receipt_image.dart')) path,
+          if (!path.endsWith('_io.dart')) path,
       ];
       expect(renderers, isEmpty);
     });

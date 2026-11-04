@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pixket/data/models/expense.dart';
@@ -17,13 +19,13 @@ void main() {
       expect(r.source, ReceiptImageSource.signedUrl);
       expect(r.url, 'https://x/signed/a.png');
       expect(r.cacheKey, _objectPath);
-      expect(r.localPath, isNull);
+      expect(r.draftHandle, isNull);
     });
 
-    test('đường dẫn local là file tạm khi chưa upload xong', () {
+    test('ảnh nháp còn trong phiên thì là draftHandle khi chưa upload xong', () {
       final r = resolveReceiptImage(imagePath: '/data/user/0/tmp/IMG_1.jpg');
-      expect(r.source, ReceiptImageSource.localFile);
-      expect(r.localPath, '/data/user/0/tmp/IMG_1.jpg');
+      expect(r.source, ReceiptImageSource.localDraft);
+      expect(r.draftHandle, '/data/user/0/tmp/IMG_1.jpg');
       expect(r.url, isNull);
       expect(r.cacheKey, isNull);
     });
@@ -44,20 +46,32 @@ void main() {
   });
 
   group('PixelReceiptImage.source', () {
-    test('tệp tạm từ camera thành localPath', () {
+    test('tệp tạm từ camera thành draftHandle', () {
       final widget = PixelReceiptImage.source(
         '/data/user/0/tmp/IMG_1.jpg',
         semanticLabel: 'Ảnh khoản chi',
       );
-      expect(widget.localPath, '/data/user/0/tmp/IMG_1.jpg');
+      expect(widget.draftHandle, '/data/user/0/tmp/IMG_1.jpg');
       expect(widget.displayUrl, isNull);
       expect(widget.cacheKey, isNull);
       expect(widget.semanticLabel, 'Ảnh khoản chi');
     });
 
+    test('bytes có sẵn thì đi kèm handle, không thay handle', () {
+      // PixelReceiptImage ưu tiên localBytes khi render, nhưng resolveReceiptImage
+      // vẫn phải trả draftHandle để một ảnh nháp còn đọc lại được sau rebuild.
+      final widget = PixelReceiptImage.source(
+        '/data/user/0/tmp/IMG_1.jpg',
+        bytes: Uint8List.fromList([1, 2, 3]),
+      );
+      expect(widget.localBytes, Uint8List.fromList([1, 2, 3]));
+      expect(widget.draftHandle, '/data/user/0/tmp/IMG_1.jpg');
+    });
+
     test('không có đường dẫn thì về placeholder', () {
       final widget = PixelReceiptImage.source(null);
-      expect(widget.localPath, isNull);
+      expect(widget.draftHandle, isNull);
+      expect(widget.localBytes, isNull);
       expect(widget.displayUrl, isNull);
     });
 
@@ -73,7 +87,7 @@ void main() {
       final widget = PixelReceiptImage.source(_objectPath, expense: expense);
       expect(widget.displayUrl, 'https://x/signed/a.png');
       expect(widget.cacheKey, _objectPath);
-      expect(widget.localPath, isNull);
+      expect(widget.draftHandle, isNull);
     });
   });
 }

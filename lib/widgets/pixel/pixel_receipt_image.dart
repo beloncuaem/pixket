@@ -1,23 +1,23 @@
-import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/platform/receipt_cache_image.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/storage_paths.dart';
 import '../../data/models/expense.dart';
 import 'app_icon.dart';
 
-enum ReceiptImageSource { signedUrl, localFile, none }
+enum ReceiptImageSource { signedUrl, localDraft, none }
 
 typedef ReceiptImageTarget = ({
   ReceiptImageSource source,
   String? url,
-  String? localPath,
+  String? draftHandle,
   String? cacheKey,
 });
 
-/// Chọn nguồn ảnh hiển thị theo độ tin cậy: signed URL > tệp tạm trên máy.
+/// Chọn nguồn ảnh hiển thị theo độ tin cậy: signed URL > ảnh nháp trên máy.
 /// URL public legacy (bắt đầu bằng http) không còn hợp lệ nên bị loại.
 ReceiptImageTarget resolveReceiptImage({
   String? imagePath,
@@ -27,23 +27,23 @@ ReceiptImageTarget resolveReceiptImage({
     return (
       source: ReceiptImageSource.signedUrl,
       url: displayImageUrl,
-      localPath: null,
+      draftHandle: null,
       cacheKey: storagePathOf(imagePath),
     );
   }
   final path = imagePath;
   if (path != null && path.isNotEmpty && !path.startsWith('http')) {
     return (
-      source: ReceiptImageSource.localFile,
+      source: ReceiptImageSource.localDraft,
       url: null,
-      localPath: path,
+      draftHandle: path,
       cacheKey: null,
     );
   }
   return (
     source: ReceiptImageSource.none,
     url: null,
-    localPath: null,
+    draftHandle: null,
     cacheKey: null,
   );
 }
@@ -78,7 +78,8 @@ Widget receiptPlaceholder({double size = 32}) {
 class PixelReceiptImage extends StatelessWidget {
   const PixelReceiptImage({
     super.key,
-    this.localPath,
+    this.draftHandle,
+    this.localBytes,
     this.displayUrl,
     this.cacheKey,
     this.width,
@@ -103,7 +104,7 @@ class PixelReceiptImage extends StatelessWidget {
       displayImageUrl: expense.displayImageUrl,
     );
     return PixelReceiptImage(
-      localPath: target.localPath,
+      draftHandle: target.draftHandle,
       displayUrl: target.url,
       cacheKey: target.cacheKey,
       width: width,
@@ -120,10 +121,11 @@ class PixelReceiptImage extends StatelessWidget {
   }
 
   /// Ảnh trong form khoản chi: khi sửa thì lấy dữ liệu đã lưu, khi tạo mới thì
-  /// lấy tệp tạm từ camera.
+  /// lấy ảnh nháp từ camera.
   factory PixelReceiptImage.source(
     String? path, {
     Expense? expense,
+    Uint8List? bytes,
     String? semanticLabel,
   }) {
     if (expense != null) {
@@ -134,14 +136,21 @@ class PixelReceiptImage extends StatelessWidget {
     }
     final target = resolveReceiptImage(imagePath: path);
     return PixelReceiptImage(
-      localPath: target.localPath,
+      draftHandle: target.draftHandle,
+      localBytes: bytes,
       displayUrl: target.url,
       cacheKey: target.cacheKey,
       semanticLabel: semanticLabel,
     );
   }
 
-  final String? localPath;
+  /// Giá trị do `LocalDraftStore` sinh ra: trên nền tảng có hệ tệp nó là đường dẫn
+  /// thật, trên trình duyệt nó là key của một ảnh trong phiên. File này không được
+  /// đối xử nó như đường dẫn — chỉ nhánh render dưới mới hiểu nó.
+  final String? draftHandle;
+
+  /// Ảnh đã có sẵn trong bộ nhớ (vừa chụp, vừa chọn) thì thắng `draftHandle`.
+  final Uint8List? localBytes;
   final String? displayUrl;
   final String? cacheKey;
   final double? width;
@@ -155,15 +164,18 @@ class PixelReceiptImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.palette;
 
-    Widget image;
+    // Hai nhánh render nằm sau seam `receipt_cache_image.dart`: `Image.file` và
+    // `CachedNetworkImage` chỉ tồn tại ở nền tảng có hệ tệp, còn placeholder là
+    // phần thuần nên vẫn ở file này.
+    final Widget image;
     if (displayUrl != null) {
-      image = CachedNetworkImage(
-        imageUrl: displayUrl!,
+      image = ReceiptCacheImage(
+        url: displayUrl!,
         cacheKey: cacheKey,
         fit: fit,
         width: width,
         height: height,
-        placeholder: (_, __) => ColoredBox(
+        placeholder: (_) => ColoredBox(
           color: palette.surfaceAlt,
           child: Center(
             child: AppIcon(
@@ -173,15 +185,16 @@ class PixelReceiptImage extends StatelessWidget {
             ),
           ),
         ),
-        errorWidget: (_, __, ___) => receiptPlaceholder(),
+        errorBuilder: (_, __) => receiptPlaceholder(),
       );
-    } else if (localPath != null) {
-      image = Image.file(
-        File(localPath!),
+    } else if (draftHandle != null || localBytes != null) {
+      image = ReceiptLocalImage(
+        draftHandle: draftHandle,
+        bytes: localBytes,
         fit: fit,
         width: width,
         height: height,
-        errorBuilder: (_, __, ___) => receiptPlaceholder(),
+        placeholder: (_) => receiptPlaceholder(),
       );
     } else {
       image = receiptPlaceholder();

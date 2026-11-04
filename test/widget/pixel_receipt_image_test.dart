@@ -28,7 +28,7 @@ void main() {
     // dart:io không chạy trong fake-async của flutter_test nên Image.file
     // dừng ở trạng thái đang tải; điều kiểm chứng được là không có exception.
     await tester.pumpWidget(
-      _wrap(const PixelReceiptImage(localPath: '/tmp/khong_co_file.jpg')),
+      _wrap(const PixelReceiptImage(draftHandle: '/tmp/khong_co_file.jpg')),
     );
     expect(find.byType(PixelReceiptImage), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -71,7 +71,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         PixelReceiptImage(
-          localPath: '/tmp/khong_co_file.jpg',
+          draftHandle: '/tmp/khong_co_file.jpg',
           semanticLabel: 'Ảnh khoản cà phê',
           onTap: () {},
         ),
