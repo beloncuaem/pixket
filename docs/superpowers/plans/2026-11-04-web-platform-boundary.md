@@ -1204,7 +1204,8 @@ git commit -m "feat: canh bao ngan sach qua seam, web dung Web Notifications"
 **Files:**
 - Create: `.github/workflows/build-web.yml`
 - Modify: `docs/superpowers/audits/2026-11-04-web-runtime-audit.md`, `docs/superpowers/specs/2026-11-04-web-platform-boundary-design.md` (bảng audit mục 5 → trạng thái thật)
-- Modify: `test/unit/web_platform_boundary_test.dart` (mọi allowlist rỗng)
+- Modify: `test/unit/web_platform_boundary_test.dart` (mọi allowlist rỗng; needle R1 siết theo Step 1b)
+- Modify: `analysis_options.yaml` (bật `prefer_single_quotes`), `dart format` toàn repo một lần (Step 1b)
 
 **Interfaces:**
 - Consumes: Task 2-6 xong.
@@ -1212,6 +1213,28 @@ git commit -m "feat: canh bao ngan sach qua seam, web dung Web Notifications"
 - [ ] **Step 1: Allowlist rỗng**
 
 Ba `allowed:` trong boundary test thành `const <String>{}`. Run `/c/flutter/bin/flutter test test/unit/web_platform_boundary_test.dart` → Expected: PASS (nếu còn đỏ thì một seam ở task trước chưa bọc xong — sửa task đó, không nới allowlist).
+
+- [ ] **Step 1b: Siết chính needle của R1 (Ruling G, carry-over từ review Task 1)**
+
+Review Task 1 đo được hai lỗ hổng *lý thuyết nhưng có thật* của needle: `import "dart:io";`
+(nháy kép) và `export 'dart:io';` **không** bị bắt vì test chỉ `.contains("import 'dart:io'")`.
+Không bắt buộc Task 2-6 phải né hai dạng đó, nên đóng ở đây:
+
+```dart
+      found: importing(files, [
+        "import 'dart:io'",
+        'import "dart:io"',
+        "export 'dart:io'",
+        'export "dart:io"',
+      ]),
+```
+
+Ranh giới an toàn: sau khi siết, `found` phải **vẫn đúng bằng** allowlist hiện hành (lúc này đã rỗng) —
+tức là không file nào trong `lib/` vừa rơi vào bốn needle mới. Nếu đỏ, file phạm phải được bọc tiếp,
+không được nới allowlist. Cùng bước này bật `prefer_single_quotes` trong `analysis_options.yaml`
+(đang bị comment ở dòng 33) để dạng nháy kép không quay lại được nữa, rồi chạy
+`/c/flutter/bin/dart format lib test` một lần *(Ruling H: batch format ở Task 7, không format rải rác
+vì sẽ tạo nhiễu trong diff, che mất diff của seam)* và `flutter analyze` phải sạch.
 
 - [ ] **Step 2: CI build web**
 
