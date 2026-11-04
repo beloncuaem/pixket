@@ -1,7 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:pixket/core/platform/gallery_saver.dart';
+import 'package:pixket/core/platform/local_draft_store.dart';
 import 'package:pixket/core/theme/app_theme.dart';
 import 'package:pixket/data/models/category.dart';
 import 'package:pixket/data/models/expense.dart';
@@ -71,6 +75,40 @@ Widget photoPage() => FeedPhotoPage(
   onEdit: () {},
   onDelete: () {},
 );
+
+/// Máy mà plugin chết giữa chừng: nền tảng nói lưu được, rồi lần ghi ném một lỗi
+/// không gọi được tên. Chỉ màn hình mới chứng minh được là app không im lặng.
+class _ThrowingSaver implements GallerySaver {
+  @override
+  bool get isSupported => true;
+
+  @override
+  Future<String?> saveImage(Uint8List bytes, {required String name}) =>
+      throw StateError('boom');
+}
+
+/// Draft trả bytes ngay lập tức: chỉ cần một giá trị không-null để luồng lưu ảnh
+/// đi tới tận seam, còn tệp thật thì testWidgets không đọc được (fake-async).
+class _BytesDraftStore extends LocalDraftStore {
+  const _BytesDraftStore();
+
+  @override
+  Future<Uint8List?> readBytes(String handle) async =>
+      Uint8List.fromList([1, 2, 3]);
+
+  @override
+  Future<String> save(
+    Uint8List bytes, {
+    required String extension,
+    required bool squared,
+  }) async => 'unused';
+
+  @override
+  Future<bool> exists(String handle) async => true;
+
+  @override
+  Future<void> delete(String handle) async {}
+}
 
 void main() {
   testWidgets('lưới 3 cột, đủ số ảnh, tiêu đề đếm ảnh', (tester) async {
@@ -209,5 +247,37 @@ void main() {
     );
     expect(find.text('Khác'), findsOneWidget);
     expect(find.textContaining('7.000'), findsOneWidget);
+  });
+
+  testWidgets('lỗi không tên vẫn ra SnackBar, không im lặng', (tester) async {
+    // imagePath là đường dẫn tệp, không phải storage path → storagePathOf trả
+    // null → _localReceiptBytes đọc bytes từ draft, nên luồng đi tới tận
+    // saveImage; saver giả ném ở đó mô đúng "plugin chết giữa chừng". Draft giả
+    // vì `IoLocalDraftStore.readBytes` là I/O thật, nằm ngoài fake-async của
+    // testWidgets nên chuỗi await của màn hình không bao giờ hoàn tất.
+    // displayImageUrl vẫn null nên không gọi mạng.
+    final previousStore = localDraftStore;
+    final previousSaver = gallerySaver;
+    localDraftStore = const _BytesDraftStore();
+    gallerySaver = _ThrowingSaver();
+    addTearDown(() {
+      localDraftStore = previousStore;
+      gallerySaver = previousSaver;
+    });
+
+    await tester.pumpWidget(
+      wrap(
+        FeedPhotoPage(
+          expense: photos.first.copyWith(imagePath: '/tmp/pixket_legacy/a.jpg'),
+          onEdit: () {},
+          onDelete: () {},
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('feed-download')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Không lưu được ảnh về máy.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

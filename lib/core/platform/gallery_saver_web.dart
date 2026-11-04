@@ -31,19 +31,29 @@ class WebGallerySaver extends GallerySaver {
       ..href = url
       ..download = name.contains('.') ? name : '$name.jpg';
     final body = web.document.body;
-
     try {
       // Firefox bỏ qua click trên neo chưa gắn vào tài liệu, nên phải attach;
       // body vắng mặt chỉ xảy ra ngoài ngữ cảnh trang, khi đó click vẫn chạy
       // trên Chrome/Edge và chúng ta không còn chỗ nào để gắn.
       body?.appendChild(anchor);
       anchor.click();
-    } finally {
-      // Revoke trong mọi nhánh: blob URL giữ cả tấm ảnh trong bộ nhớ cho tới khi
-      // hết trang, mà người dùng có thể bấm lưu nhiều lần trong một phiên.
-      if (body != null) body.removeChild(anchor);
+    } catch (_) {
+      // Gắn neo hoặc click hỏng là browser từ chối ngay trước mắt: nói thẳng
+      // lần ghi hỏng thay vì báo thành công như `return null` cũ.
       web.URL.revokeObjectURL(url);
+      return gallerySaveFailedMessage;
+    } finally {
+      // Neo gắn tạm thì phải gỡ, kể cả khi click thành công.
+      if (body != null) body.removeChild(anchor);
     }
+    // Revoke ở task sau: nhả blob URL ngay sau click là race đã biết — có
+    // browser kịp khởi động tải trước khi URL chết, có browser thì không, và ta
+    // không quan sát được phía nào thắng. Blob còn giữ tấm ảnh trong bộ nhớ một
+    // giây, đổi lấy việc không cắt ngang lượt tải người dùng vừa bấm.
+    Future.delayed(
+      const Duration(seconds: 1),
+      () => web.URL.revokeObjectURL(url),
+    );
     return null;
   }
 }

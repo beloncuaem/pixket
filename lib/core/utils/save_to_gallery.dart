@@ -22,8 +22,8 @@ Future<String?> saveReceiptToGallery({
   // Bản cũ bắt `catch (_)` toàn hàm, nên trên nền tảng thiếu plugin mỗi lần bấm
   // đều nhận "Không lưu được ảnh về máy." dù lý do không liên quan thư viện. Từ
   // giờ mỗi câu tin phải có một thủ phạm: nền tảng thì stub trả lời, tải hỏng thì
-  // StateError trả lời, ghi hỏng thì seam trả lời. Hỏi nền tảng trước để khỏi tải
-  // về một ảnh chắc chắn không lưu được.
+  // lỗi của vòng tải trả lời, ghi hỏng thì seam trả lời. Hỏi nền tảng trước để
+  // khỏi tải về một ảnh chắc chắn không lưu được.
   if (!target.isSupported) return gallerySaveUnsupportedMessage;
 
   final Uint8List? image;
@@ -32,6 +32,15 @@ Future<String?> saveReceiptToGallery({
     // đang nhìn thấy trên feed mới là bản đáng lưu về máy.
     image = await _bytesFromUrl(signedUrl, client) ?? bytes;
   } on StateError {
+    return 'Không tải được ảnh từ Cloud.';
+  } on http.ClientException {
+    return 'Không tải được ảnh từ Cloud.';
+  } on FormatException {
+    // Ba câu giống nhau là có chủ đích: với người dùng thì 404 (`StateError`),
+    // rớt mạng (`ClientException` — đúng loại mà package:http ném ra chứ không
+    // phải StateError) và URL hỏng (`FormatException` từ `Uri.parse`) đều là
+    // "tải từ Cloud hỏng". Cái vòng sửa này chống nuốt *mọi* lỗi về một câu
+    // chung, chứ không tách từng nguyên nhân của cùng một chỗ hỏng.
     return 'Không tải được ảnh từ Cloud.';
   }
   if (image == null) return 'Khoản chi này chưa có ảnh để tải.';

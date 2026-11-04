@@ -29,3 +29,7 @@ abstract class GallerySaver {
 /// hai tin nhắn tiếng Việt drift nhau.
 const String gallerySaveUnsupportedMessage =
     'Pixket không lưu được ảnh vào thư viện trên máy này.';
+
+/// Câu trả lời khi nền tảng có chỗ lưu nhưng lần ghi hỏng vì lý do khác quyền.
+/// Đặt cạnh nhau để `_io` và `_web` không hai bản sao tiếng Việt drift.
+const String gallerySaveFailedMessage = 'Không lưu được ảnh vào thư viện.';

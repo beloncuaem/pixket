@@ -32,7 +32,7 @@ class IoGallerySaver extends GallerySaver {
       // được thành thứ người dùng hiểu, và màn hình đã quen hai câu đó.
       return error.type == GalExceptionType.accessDenied
           ? 'Pixket cần quyền lưu ảnh vào thư viện.'
-          : 'Không lưu được ảnh vào thư viện.';
+          : gallerySaveFailedMessage;
     }
   }
 }

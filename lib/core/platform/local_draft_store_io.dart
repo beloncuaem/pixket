@@ -43,9 +43,9 @@ class IoLocalDraftStore extends LocalDraftStore {
     // là đường dẫn tuyệt đối cạnh tệp tạm của camera plugin (`writeSquareCopy`
     // cũ ghi `pixket_<micros>_sq.jpg` vào chính thư mục đó), và đường dẫn ấy
     // đang chảy vào đây từ expense_repository._resolveImage (dòng 60) khi sửa
-    // khoản chi cũ và từ save_to_gallery._readBytes (dòng 54) khi lưu ảnh về
-    // thư viện. Chặn như `delete` bên dưới sẽ biến hai luồng Android đó thành
-    // StateError thay vì đọc được ảnh.
+    // khoản chi cũ và từ feed_photo_page._localReceiptBytes (dòng 190) khi lưu
+    // ảnh về thư viện. Chặn như `delete` bên dưới sẽ biến hai luồng Android đó
+    // thành StateError thay vì đọc được ảnh.
     final file = File(handle);
     if (!await file.exists()) return null;
     return file.readAsBytes();

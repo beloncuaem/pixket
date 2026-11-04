@@ -46,16 +46,25 @@ class FeedPhotoPage extends StatelessWidget {
   Future<void> _saveToGallery(BuildContext context) async {
     // Bắt messenger trước khi chờ: BuildContext sau await không còn hợp lệ.
     final messenger = ScaffoldMessenger.of(context);
-    final error = await saveReceiptToGallery(
-      signedUrl: expense.displayImageUrl,
-      bytes: await _localReceiptBytes(expense.imagePath),
-      name: 'pixket_${expense.id ?? DateTime.now().millisecondsSinceEpoch}',
-    );
+    // Gán trong cả `try` lẫn `catch` nên không để `final`: trình phân tích không
+    // chứng minh được biến chỉ ghi một lần.
+    String message;
+    try {
+      final error = await saveReceiptToGallery(
+        signedUrl: expense.displayImageUrl,
+        bytes: await _localReceiptBytes(expense.imagePath),
+        name: 'pixket_${expense.id ?? DateTime.now().millisecondsSinceEpoch}',
+      );
+      message = error ?? 'Đã lưu ảnh vào thư viện.';
+    } catch (_) {
+      // Đường cùng: lỗi không gọi được tên (đọc draft hỏng, plugin chết giữa
+      // chừng) vẫn phải để lại một câu trả lời — im lặng chính là lỗi mà vòng
+      // review này bắt. Chuỗi này của bản cũ, giờ chỉ còn xuất hiện khi thật sự
+      // không biết thủ phạm.
+      message = 'Không lưu được ảnh về máy.';
+    }
     messenger.showSnackBar(
-      SnackBar(
-        content: Text(error ?? 'Đã lưu ảnh vào thư viện.'),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
