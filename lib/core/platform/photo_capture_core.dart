@@ -22,6 +22,11 @@ abstract class PhotoCapture {
   /// Có ít nhất hai camera để đổi thị kính không.
   bool get canSwitchCamera;
 
+  /// Ống ngắm đang dở chụp một tấm khác. Screen phải hỏi cái này *trước* khi
+  /// tự bật trạng thái "đang chụp": hỏi sau là nút mờ mất một frame mà chẳng
+  /// có bức ảnh nào được chụp.
+  bool get isTakingPicture;
+
   /// Đổi sang camera khác; không có camera thứ hai thì vô sự.
   Future<void> useNextCamera();
 
@@ -31,14 +36,14 @@ abstract class PhotoCapture {
   /// null khi người dùng hủy.
   Future<({Uint8List bytes, String extension})?> pickFromGallery();
 
-  /// Vùng ngắm. `aspectRatio` là tỷ lệ khung caller muốn; ống ngắm hiện tại cắt
-  /// vuông theo `squareBytes` nên bản camera bỏ qua tham số này.
-  Widget buildViewfinder(BuildContext context, {double aspectRatio = 1});
+  /// Vùng ngắm. Khung luôn vuông vì ảnh thật bị `squareBytes` cắt về vuông.
+  Widget buildViewfinder(BuildContext context);
 
   /// Giải phóng thiết bị ảnh khi màn hình rời khỏi cây widget, để camera không
   /// bị chiếm sau khi người dùng đã thoát screen. Vì seam là toàn cục, hàm này
   /// giả định tại một thời điểm chỉ có một screen sở hữu nó — đúng với hiện tại
-  /// (chỉ `main_screen.dart:49` gắm `CameraScreen`).
+  /// (chỉ `main_screen.dart:49` gắm `CameraScreen`), và nhánh camera thật kiểm
+  /// chứng giả định đó bằng `assert` trong `initialize()`.
   void dispose();
 }
 

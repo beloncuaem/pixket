@@ -40,7 +40,18 @@ class CameraPluginPhotoCapture extends PhotoCapture {
   bool get canSwitchCamera => _cameras.length > 1;
 
   @override
+  bool get isTakingPicture => _controller?.value.isTakingPicture ?? false;
+
+  @override
   Future<void> initialize() async {
+    // Một screen sở hữu ống ngắm tại một thời điểm: screen cũ phải dispose()
+    // trước khi screen mới mở. Nếu điều này bị vi phạm thì screen cũ còn một
+    // controller đang chiếm camera của hệ thống, nên fail ngay ở debug.
+    assert(
+      _controller == null,
+      'Chỉ một screen được giữ ống ngắm: screen cũ phải dispose() trước khi '
+      'screen mới gọi initialize().',
+    );
     final generation = ++_generation;
     List<CameraDescription> cameras;
     try {
@@ -182,7 +193,7 @@ class CameraPluginPhotoCapture extends PhotoCapture {
   }
 
   @override
-  Widget buildViewfinder(BuildContext context, {double aspectRatio = 1}) {
+  Widget buildViewfinder(BuildContext context) {
     final controller = _controller;
     if (!_isReady || controller == null) return const SizedBox.shrink();
 
@@ -217,6 +228,10 @@ class CameraPluginPhotoCapture extends PhotoCapture {
     _controller?.dispose();
     _controller = null;
     _cameras = const <CameraDescription>[];
+    // Lần mở sau luôn bắt đầu bằng camera mặc định: seam sống lâu hơn screen
+    // nên giữ chỉ số là để người dùng quay lại và vẫn đứng ở thị kính cũ; nếu
+    // `availableCameras()` trả thứ tự khác thì mở nhầm camera mà không ai biết.
+    _selectedCameraIndex = 0;
     _isReady = false;
     _isSwitching = false;
     _error = null;

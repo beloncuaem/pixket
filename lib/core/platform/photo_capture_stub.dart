@@ -28,6 +28,9 @@ class _UnsupportedPhotoCapture extends PhotoCapture {
   bool get canSwitchCamera => _fail();
 
   @override
+  bool get isTakingPicture => _fail();
+
+  @override
   Future<void> useNextCamera() => _fail();
 
   @override
@@ -37,8 +40,7 @@ class _UnsupportedPhotoCapture extends PhotoCapture {
   Future<({Uint8List bytes, String extension})?> pickFromGallery() => _fail();
 
   @override
-  Widget buildViewfinder(BuildContext context, {double aspectRatio = 1}) =>
-      _fail();
+  Widget buildViewfinder(BuildContext context) => _fail();
 
   @override
   void dispose() => _fail();

@@ -30,6 +30,11 @@ class WebPhotoCapture extends PhotoCapture {
   @override
   bool get canSwitchCamera => false;
 
+  /// Không có ống ngắm đang chụp dở: ảnh nào cũng đi qua `pickImage`, và screen
+  /// đã tự chặn nút bằng trạng thái "đang chụp" của nó.
+  @override
+  bool get isTakingPicture => false;
+
   @override
   Future<void> useNextCamera() async {}
 
@@ -60,8 +65,7 @@ class WebPhotoCapture extends PhotoCapture {
   /// Screen không gọi cái này khi `supportsLiveViewfinder == false`; giữ
   /// `SizedBox.shrink()` để nhỡ có gọi cũng không vẽ gì đè lên hướng dẫn.
   @override
-  Widget buildViewfinder(BuildContext context, {double aspectRatio = 1}) =>
-      const SizedBox.shrink();
+  Widget buildViewfinder(BuildContext context) => const SizedBox.shrink();
 
   @override
   void dispose() {}

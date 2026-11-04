@@ -1,12 +1,17 @@
-@Tags(['io'])
-library;
-
+import 'dart:async';
 import 'dart:typed_data';
 
+// Test này phải dựng được cảnh "người dùng đã quay sang camera trước", mà trên
+// VM thì plugin camera không khởi tạo nổi, nên nó giả đúng interface của plugin.
+// `camera_platform_interface` là dependency bắc cầu của `camera`, không có trong
+// pubspec — thêm nó vào pubspec là việc của task khác.
+// ignore: depend_on_referenced_packages
+import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pixket/core/platform/photo_capture.dart';
+import 'package:pixket/core/platform/photo_capture_io.dart' as io_capture;
 import 'package:pixket/core/platform/photo_capture_stub.dart' as stub;
 import 'package:pixket/core/platform/photo_capture_web.dart' as web_capture;
 import 'package:pixket/core/theme/app_theme.dart';
@@ -14,6 +19,7 @@ import 'package:pixket/providers/category_provider.dart';
 import 'package:pixket/providers/expense_provider.dart';
 import 'package:pixket/providers/priority_provider.dart';
 import 'package:pixket/screens/camera/camera_screen.dart';
+import 'package:pixket/widgets/pixel/app_icon.dart';
 
 /// Bắt chước nhánh web: không ống ngắm sống, mọi ảnh đều qua thư viện.
 class _NoViewfinderCapture extends PhotoCapture {
@@ -36,6 +42,9 @@ class _NoViewfinderCapture extends PhotoCapture {
   bool get canSwitchCamera => false;
 
   @override
+  bool get isTakingPicture => false;
+
+  @override
   Future<void> useNextCamera() async {}
 
   @override
@@ -51,11 +60,79 @@ class _NoViewfinderCapture extends PhotoCapture {
   }
 
   @override
-  Widget buildViewfinder(BuildContext context, {double aspectRatio = 1}) =>
-      const SizedBox.shrink();
+  Widget buildViewfinder(BuildContext context) => const SizedBox.shrink();
 
   @override
   void dispose() {}
+}
+
+/// Camera plugin giả, đúng hai thị kính. `flutter test` chạy trên VM nên plugin
+/// thật không mở được camera (`availableCameras()` không có channel), và muốn
+/// dựng cảnh "người dùng đã quay sang camera trước" thì phải giả từ tầng này.
+class _TwoLensCameraPlatform extends CameraPlatform {
+  static const CameraDescription back = CameraDescription(
+    name: 'camera sau',
+    lensDirection: CameraLensDirection.back,
+    sensorOrientation: 90,
+  );
+  static const CameraDescription front = CameraDescription(
+    name: 'camera trước',
+    lensDirection: CameraLensDirection.front,
+    sensorOrientation: 270,
+  );
+
+  /// Thứ tự camera seam đã xin mở — bằng chứng duy nhất đọc được của
+  /// `_selectedCameraIndex` từ ngoài library.
+  final List<CameraDescription> opened = <CameraDescription>[];
+
+  int _nextCameraId = 0;
+
+  @override
+  Future<List<CameraDescription>> availableCameras() async =>
+      const <CameraDescription>[back, front];
+
+  @override
+  Future<int> createCamera(
+    CameraDescription description,
+    ResolutionPreset? resolutionPreset, {
+    bool enableAudio = false,
+  }) async {
+    opened.add(description);
+    return _nextCameraId++;
+  }
+
+  @override
+  Future<void> initializeCamera(
+    int cameraId, {
+    ImageFormatGroup imageFormatGroup = ImageFormatGroup.unknown,
+  }) async {}
+
+  @override
+  Stream<CameraInitializedEvent> onCameraInitialized(int cameraId) =>
+      Stream<CameraInitializedEvent>.fromIterable([
+        CameraInitializedEvent(
+          cameraId,
+          1080,
+          1920,
+          ExposureMode.auto,
+          false,
+          FocusMode.auto,
+          false,
+        ),
+      ]);
+
+  // `CameraController` nghe stream này bằng `.first` rồi bỏ đi: stream rỗng sẽ
+  // ném StateError không ai await, nên nó phải mở và không bao giờ phát.
+  @override
+  Stream<CameraErrorEvent> onCameraError(int cameraId) =>
+      Stream<CameraErrorEvent>.fromFuture(Completer<CameraErrorEvent>().future);
+
+  @override
+  Stream<DeviceOrientationChangedEvent> onDeviceOrientationChanged() =>
+      const Stream<DeviceOrientationChangedEvent>.empty(broadcast: true);
+
+  @override
+  Future<void> dispose(int cameraId) async {}
 }
 
 class _FakeExpenseNotifier extends StateNotifier<ExpenseState>
@@ -214,6 +291,7 @@ void main() {
     expectFails(() => capture.errorMessage);
     expectFails(() => capture.supportsLiveViewfinder);
     expectFails(() => capture.canSwitchCamera);
+    expectFails(() => capture.isTakingPicture);
     expectFails(() => capture.useNextCamera());
     expectFails(() => capture.capture());
     expectFails(() => capture.pickFromGallery());
@@ -240,6 +318,69 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Chụp khoản chi'));
       await tester.pump();
       expect(capture.captureCalls, 1);
+
+      // Không có camera thứ hai thì slot thứ ba của HUD nghỉ lại thành chỗ
+      // trống: một lối vào thư viện duy nhất, đừng cho hai nút cùng việc.
+      expect(find.byType(PixelIconButton), findsOneWidget);
     },
   );
+
+  test('quay lại màn camera phải mở lại camera đầu danh sách, không giữ thị kính cũ', () async {
+    // Seam là toàn cục nên `_selectedCameraIndex` sống lâu hơn screen. Không
+    // reset nó trong dispose() thì người dùng quay camera trước, thoát màn
+    // hình, mở lại vẫn đứng ở camera trước — và nếu `availableCameras()` trả
+    // thứ tự khác thì đó là mở nhầm thị kính mà không ai thấy.
+    final platform = _TwoLensCameraPlatform();
+    final realPlatform = CameraPlatform.instance;
+    CameraPlatform.instance = platform;
+    addTearDown(() => CameraPlatform.instance = realPlatform);
+
+    final capture = io_capture.CameraPluginPhotoCapture();
+    await capture.initialize();
+    expect(capture.isReady, isTrue);
+    expect(platform.opened, [_TwoLensCameraPlatform.back]);
+
+    await capture.useNextCamera();
+    expect(platform.opened, [
+      _TwoLensCameraPlatform.back,
+      _TwoLensCameraPlatform.front,
+    ]);
+
+    capture.dispose();
+    // Seam fire-and-forget `CameraController.dispose()`: cho nó chạy xong trên
+    // camera giả trước khi trả CameraPlatform.instance về plugin thật.
+    await Future<void>.delayed(Duration.zero);
+
+    await capture.initialize();
+    expect(
+      platform.opened.last,
+      _TwoLensCameraPlatform.back,
+      reason: 'lần mở thứ hai vẫn dùng camera người dùng lần trước đã quay',
+    );
+
+    capture.dispose();
+    await Future<void>.delayed(Duration.zero);
+  });
+
+  test('screen thứ hai mở ống ngắm khi screen cũ chưa dispose thì assert bật ở debug', () async {
+    // Hai screen cùng giữ một ống ngắm là hai controller cùng chiếm camera của
+    // hệ thống; thà fail ngay ở debug còn hơn im lặng để cả hai cùng sống.
+    final platform = _TwoLensCameraPlatform();
+    final realPlatform = CameraPlatform.instance;
+    CameraPlatform.instance = platform;
+    addTearDown(() => CameraPlatform.instance = realPlatform);
+
+    final capture = io_capture.CameraPluginPhotoCapture();
+    await capture.initialize();
+    await expectLater(capture.initialize(), throwsAssertionError);
+
+    // dispose() đúng hợp đồng thì mở lại bình thường, không còn controller cũ.
+    capture.dispose();
+    await Future<void>.delayed(Duration.zero);
+    await capture.initialize();
+    expect(capture.isReady, isTrue);
+
+    capture.dispose();
+    await Future<void>.delayed(Duration.zero);
+  });
 }

@@ -82,6 +82,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
       return;
     }
 
+    // Seam còn đang chụp dở thì bỏ qua cú bấm này *trước khi* screen đổi trạng
+    // thái: làm ngược lại là nút chụp bị mờ mất một frame dù không có ảnh nào
+    // được chụp (giữ đúng thứ tự màn camera cũ).
+    if (photoCapture.isTakingPicture) return;
+
     setState(() => _isCapturing = true);
     try {
       final bytes = await photoCapture.capture();
@@ -251,7 +256,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                   return _CameraFeedPage(
                     pane: pane,
                     viewfinder: pane == PhotoCapturePane.liveViewfinder
-                        ? photoCapture.buildViewfinder(context, aspectRatio: 1)
+                        ? photoCapture.buildViewfinder(context)
                         : null,
                     errorMessage: photoCapture.errorMessage,
                     hasPhotos: photos.isNotEmpty,
@@ -407,6 +412,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                       iconColor: palette.feedInk,
                     ),
                     _ShutterButton(onPressed: _takePicture, enabled: canShoot),
+                    // Không có camera thứ hai thì slot thứ ba nghỉ chứ không
+                    // biến thành lối thứ hai mở cùng một thư viện (web đã có
+                    // nút dải phim + card hướng dẫn); ô 48 px vẫn giữ máy chụp
+                    // ở giữa HUD.
                     if (photoCapture.canSwitchCamera)
                       PixelIconButton(
                         icon: 'refresh',
@@ -417,14 +426,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                         iconColor: palette.feedInk,
                       )
                     else
-                      PixelIconButton(
-                        icon: 'plus',
-                        tooltip: 'Chọn ảnh từ thư viện',
-                        onPressed: _pickFromGallery,
-                        background: palette.feedPanel,
-                        borderColor: palette.feedInk,
-                        iconColor: palette.feedInk,
-                      ),
+                      const SizedBox(width: 48),
                   ],
                 ),
               ],
