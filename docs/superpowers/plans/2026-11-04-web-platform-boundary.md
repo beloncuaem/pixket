@@ -1302,6 +1302,14 @@ Ghi chú cho người tạo workflow: `.env` là asset bắt buộc (`pubspec.ya
 
 Serve `build/web` mới, chạy cả hai lượt. Với mỗi dòng cũ trong báo cáo, cập nhật cột thành `Đã sửa (Task N)` / `Còn (Plan 3, lý do)`. Thêm mục "Việc còn lại cho Plan 3" ở cuối file.
 
+Bắt buộc thêm **một dòng đo thật cho nhánh web của GallerySaver** (điều kiện review Task 4 vòng 1):
+`WebGallerySaver.saveImage` không có cách nào biết browser đã tải xong hay chưa — nó chỉ biết click
+có ném ra hay không — nên unit test không phân biệt được "đã lưu" với "tải hỏng". Ở bước này phải mở
+feed trên trình duyệt, bấm nút tải ảnh của một khoản chi và ghi lại việc **tệp JPEG có thực sự xuất
+hiện trong mục Tải xuống**, kèm tên tệp và đuôi `.jpg` do nhánh web ghép. Không đo được (thiếu người
+bấm, thiếu browser) thì dòng audit ghi `Chưa đo` và chuyển thẳng sang Plan 3; **cấm** suy ra từ
+"`flutter build web` exit 0".
+
 - [ ] **Step 4: đối chiếu tiêu chí Plan 2**
 
 Đọc spec Plan 2 mục 8 và tick từng dòng bằng bằng chứng (test name, dòng audit, output lệnh). Ghi thẳng vào spec những chỗ chứng cứ yếu — ví dụ: hành vi Android/iOS trên máy thật **chưa** chạy lại, `CHROME_EXECUTABLE` có nhận Edge hay không.
