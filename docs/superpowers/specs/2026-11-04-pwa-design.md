@@ -15,7 +15,8 @@ Host trên **GitHub Pages** qua GitHub Actions, cạnh workflow `build-apk.yml` 
 ## 2. Phạm vi
 
 **Trong phạm vi:**
-- Làm cho `flutter build web` compile được (hiện đang fail vì `dart:io`).
+- Làm cho bản web **chạy đúng khi chạy thật** (Plan 2). *Sửa 2026-11-04:* bản đầu viết "`flutter
+  build web` hiện đang fail vì `dart:io`" — sai; build web đã compile sạch (mục 4.1).
 - Đủ tính năng trên web: chụp/chọn ảnh hóa đơn, xem feed, thêm/sửa/xóa khoản chi, thống kê,
   ngân sách, danh mục, mức độ cần thiết, đăng nhập email + Google OAuth, lưu ảnh về máy,
   cảnh báo ngưỡng ngân sách.
@@ -42,7 +43,15 @@ Host trên **GitHub Pages** qua GitHub Actions, cạnh workflow `build-apk.yml` 
 
 ## 4. Hiện trạng đã kiểm chứng
 
-### 4.1 Nút thắt compile
+### 4.1 Không có "nút thắt compile" — nút thắt là runtime
+
+> **Sửa 2026-11-04.** Bản đầu mục này tên "Nút thắt compile" và mục 2 khẳng định `flutter build
+> web` đang fail vì `dart:io`. Đã đo lại trên `main` sau Plan 1 (`01dd660`, vẫn đủ 8 file import
+> `dart:io`, vẫn `flutter_cache_manager` + `cached_network_image`): **`flutter build web` exit 0,
+> `√ Built build\web`**. dart2js cung cấp stub cho `dart:io` và đường truyền MethodChannel của
+> plugin, nên code biên dịch được rồi mới ném lúc chạy (`Unsupported operation:` với `File`,
+> `MissingPluginException:` với plugin). Hệ quả: build **không phải** bằng chứng nghiệm thu; chỉ
+> chạy trong trình duyệt mới là bằng chứng. Plan 2 vì thế mở đầu bằng một lượt audit runtime.
 
 `dart:io` không tồn tại trên web. **8 file trong `lib/` import `dart:io`** (chỉ dùng `File`,
 không có `Platform`/`Directory`):
@@ -58,34 +67,36 @@ không có `Platform`/`Directory`):
 | `lib/screens/camera/expense_form_sheet.dart` | dòng 130, 131, 133, 175 — draft file exists/delete |
 | `lib/widgets/pixel/pixel_receipt_image.dart` | dòng 180 — `File(localPath!)` để hiển thị |
 
-**Dependency cũng gãy compile:** `flutter_cache_manager` 3.4.5 (kéo theo `cached_network_image`
-3.4.1) import `dart:io` **vô điều kiện** trong chuỗi export chính (`cache_store.dart:2`,
-`cache_object_provider.dart:1`, `json_cache_info_repository.dart:2`,
-`compat/file_service_compat.dart:1`). Badge pub.dev của cả bản mới nhất đều **không có Web**.
-Đây là dependency bắt buộc phải bọc, không thể chỉ guard runtime.
+**Dependency phải bọc — vì runtime, không vì compile:** `flutter_cache_manager` 3.4.5 (kéo theo
+`cached_network_image` 3.4.1) import `dart:io` **vô điều kiện** trong chuỗi export chính
+(`cache_store.dart:2`, `cache_object_provider.dart:1`, `json_cache_info_repository.dart:2`,
+`compat/file_service_compat.dart:1`). Vì dart2js stub `dart:io`, thứ này **vẫn compile** trên web
+(đã đo, xem khung ở mục 4.1) rồi mới ném lúc chạy — nên lập luận "bắt buộc phải bọc" vẫn đúng, chỉ
+là vì hành vi chứ không vì build. Badge pub.dev của cả bản mới nhất đều **không có Web**.
 
-### 4.2 Bảng web-support theo pub.dev (đã giải nén đúng bản pinned để kiểm tra)
+### 4.2 Bảng web-support (đo lại 2026-11-04; cột phiên bản là bản **lock**, pubspec chỉ pin `^`)
 
-**Gãy compile — phải bọc hoặc bỏ:**
+**Import `dart:io` vô điều kiện — phải bọc (compile vẫn chạy, runtime ném):**
 
-| Package | Pin | Lý do |
+| Package | Lock | Lý do |
 |---|---|---|
 | `flutter_cache_manager` | 3.4.5 | `dart:io` vô điều kiện trong export chain |
 | `cached_network_image` | 3.4.1 | phụ thuộc `flutter_cache_manager` |
 
-**Compile OK, lỗi runtime — phải có nhánh web:**
+**Không có implementation cho web — phải có nhánh web:**
 
-| Package | Pin | Hành vi trên web |
+| Package | Lock | Hành vi trên web (đo lại) |
 |---|---|---|
-| `sqflite` | 2.4.2 | `MissingPluginException` khi mở DB |
-| `path_provider` | 2.1.5 | `MissingPluginException` |
-| `gal` | 2.3.3 | MethodChannel lỗi khi lưu ảnh |
-| `flutter_local_notifications` | 18.0.1 | `initialize()` ném runtime; web support chỉ có từ **22.0.0** |
+| `gal` | 2.3.3 | pubspec package khai báo android/ios/macos/windows, **không có web** → `MissingPluginException` trong `Gal.putImageBytes`. Hiện `save_to_gallery.dart:32` `catch (_) {}` nuốt lỗi, nên trên web bấm "lưu ảnh" chỉ ra dòng 'Không lưu được ảnh về máy.' chứ không crash (đọc mã, chưa chạy) |
+| `flutter_local_notifications` | 18.0.1 | **không ném**: plugin có 8 nhánh `if (kIsWeb)` — `initialize()` trả `true` (`flutter_local_notifications_plugin.dart:114`), `show()` return sớm (:219). Trên web mọi lệnh notification **âm thầm không làm gì**. Web Notifications chính thức chỉ có từ 22.0.0, và ta **không nâng** (mục 5.1) |
+| `sqflite` | 2.4.4 | pubspec package chỉ đăng ký plugin cho android/ios/macos → không có factory trên web **và trên Windows/Linux**. Plan 1 đã xóa mọi usage khỏi code chung; file migration guard bằng `kIsWeb` + `_supportedPlatforms` |
+
+`path_provider` không còn trong project (gỡ ở Plan 1, mục 6.3).
 
 **Đã hỗ trợ web ở đúng bản pin — không cần làm gì:**
 
 `camera` 0.11.1 · `image_picker` 1.1.2 · `shared_preferences` 2.5.6 · `permission_handler`
-11.3.1 (có `permission_handler_html` từ 11.1.0) · `flutter_secure_storage` 11.2.0 (có
+11.4.0 (có `permission_handler_html` từ 11.1.0) · `flutter_secure_storage` 11.2.0 (có
 `flutter_secure_storage_web`) · `supabase_flutter` · `flutter_dotenv` 5.2.1 · `image` 4.12.0
 (pure Dart) · `http`.
 
@@ -131,20 +142,23 @@ lib/core/platform/
   gallery_saver.dart        // export conditional
   gallery_saver_io.dart     // gal
   gallery_saver_web.dart    // Blob + <a download>
-  photo_capture.dart        // + _io / _web
-  local_draft_store.dart    // + _io / _web
-  receipt_notifier.dart     // + _io / _web
-  receipt_cache_image.dart  // + _io / _web (widget)
-  square_image.dart         // export conditional
-  square_image_io.dart      // image package + compute
-  square_image_web.dart     // canvas qua dart:js_interop
+  gallery_saver_stub.dart   // fallback + seam cho test
+  photo_capture.dart        // + _io / _web / _stub
+  local_draft_store.dart    // + _io / _web / _stub
+  receipt_notifier.dart     // + _io / _web / _stub
+  receipt_cache_image.dart  // + _io / _web / _stub (widget)
+  receipt_cache.dart        // clearReceiptCache / evictReceiptImage, + _io / _web / _stub
 ```
+
+Mỗi capability gồm **4 file**: `x.dart` (export conditional), `x_io.dart`, `x_web.dart` và
+`x_stub.dart`. Stub là điều kiện mặc định của conditional export (nền tảng không có `dart.library.io`
+lẫn `dart.library.js_interop`) đồng thời là seam để test/widget tiêm implementation không đụng plugin.
 
 Riêng `square_image.dart` không chuyển hẳn vào `lib/core/platform/`: file này đang ở
 `lib/core/utils/` và chứa cả phần pure Dart (`cropToSquareBytes`, các hằng `squareImageSide`/
 `squareImageQuality`/`squareImageSuffix`, `isSquareImagePath`) lẫn phần IO. Giữ nguyên vị trí,
-tách phần platform-specific ra cặp `_io`/`_web` cùng thư mục để không phải đổi import ở
-`supabase_storage_service.dart` và các test hiện có.
+tách phần platform-specific ra cặp `_io`/`_web`/`_stub` cùng thư mục `lib/core/utils/` để không phải
+đổi import ở `supabase_storage_service.dart` và các test hiện có.
 
 Mẫu conditional import:
 
@@ -164,8 +178,12 @@ export 'gallery_saver_stub.dart'
 | `ReceiptNotifier` | `initialize()`, `requestPermission()`, `showBudgetAlert({threshold, monthLabel})` | `flutter_local_notifications` 18 | Web Notifications API qua `dart:js_interop` |
 | `ReceiptCacheImage` | widget nhận `url` + placeholder/error | `CachedNetworkImage` | `Image.network` + `loadingBuilder`/`errorBuilder` |
 
-Kèm một hàm `clearReceiptCache()`: IO gọi `DefaultCacheManager().emptyCache()`, Web chỉ clear
-`PaintingBinding.instance.imageCache`. Thay cho `app.dart:69`.
+Kèm hai hàm trong `receipt_cache.dart`: `clearReceiptCache()` (IO gọi
+`DefaultCacheManager().emptyCache()`, Web chỉ clear `PaintingBinding.instance.imageCache`) thay cho
+`app.dart:69`, và `evictReceiptImage(String url, {String? cacheKey})` thay cho
+`CachedNetworkImage.evictFromCache` ở `expense_provider.dart:187` — Web evict khỏi
+`imageCache` theo url. Thiếu hàm sau thì code chung vẫn import `cached_network_image` và phạm
+quy tắc ở mục 12.1.
 
 ### 5.1 Hai hành vi mobile phải giữ nguyên
 
@@ -272,7 +290,10 @@ thì mới chuyển được dữ liệu, nên không thể gỡ `sqflite` cùng
 Việc giữ `sqflite` **không chặn build web**: đã kiểm chứng (mục 4.2) nó compile được trên web và
 chỉ ném `MissingPluginException` lúc chạy, mà migration đã guard bằng `if (kIsWeb) return;`.
 
-**Migration cho người dùng Android/Windows hiện hữu:** chạy một bước one-shot lúc khởi động: nếu
+**Migration cho người dùng Android/iOS hiện hữu:** *(sửa 2026-11-04: bản đầu ghi "Android/Windows".
+`sqflite` 2.4.4 chỉ đăng ký plugin cho android/ios/macos theo pubspec của package, nên trên Windows
+chưa bao giờ có `pixket.db` để mà migrate — Windows không thuộc phạm vi nghiệm thu của chuỗi PWA.)*
+chạy một bước one-shot lúc khởi động: nếu
 `pixket.db` không tồn tại (cài mới) thì bỏ qua; nếu tồn tại thì đọc 3 key `app_settings` → ghi
 sang `shared_preferences` **chỉ khi key đó chưa có giá trị** → đánh dấu đã migrate bằng key
 `legacy_sqlite_migrated`. Chỉ chạy trên IO. Nếu đọc DB cũ ném lỗi thì **không** set cờ, để lần
@@ -335,7 +356,9 @@ desktop mở file picker. Không có ống ngắm live trong app — chấp nh�
 
 ## 8. Notification trên web
 
-`flutter_local_notifications` 18 không có web và web chỉ có từ 22.0.0 → viết `ReceiptNotifier`
+*(Sửa 2026-11-04: bản 18.0.1 **không ném** trên web — `initialize()` trả `true`, `show()` return
+sớm nên mọi lệnh notification im lặng vô hiệu. Vì ta không nâng lên 22 (mục 5.1), bản Web vẫn phải
+tự viết, nhưng đây là **thêm tính năng**, không phải sửa crash.)* Viết `ReceiptNotifier`
 bản Web bằng **Web Notifications API** qua `dart:js_interop`:
 
 - `requestPermission()` → `Notification.requestPermission()`.
@@ -480,7 +503,8 @@ chỉ được import từ file `*_io.dart`.
 
 ### 12.2 Test hiện có
 
-57 file `*_test.dart` trong `test/unit`, `test/widget`, `test/tool`. Giữ nguyên `flutter test`.
+59 file `*_test.dart` trong `test/unit`, `test/widget`, `test/tool` (đếm lại sau Plan 1). Baseline
+`flutter test` trên `main` `01dd660`: **405 pass / 7 skip / 0 fail**. Giữ nguyên `flutter test`.
 Nhờ `AppSettingsRepository` giữ nguyên chữ ký (mục 6.2) nên `MemorySettingsRepository`,
 `_BrokenSettings` và các test effects không phải sửa.
 
@@ -535,10 +559,15 @@ Không thể khẳng định PWA hoạt động chỉ bằng `flutter test`. Ph�
 
 ## 14. Tiêu chí hoàn thành
 
-1. `flutter build web --release --base-href /pixket/` compile sạch, không lỗi `dart:io`.
+1. Bản web **chạy đúng trong trình duyệt** cho toàn bộ luồng nghiệp vụ (mục 12.5), không còn lỗi
+   `Unsupported operation` / `MissingPluginException` chưa giải thích được. *(Tiêu chí "build web
+   compile sạch" đã đạt sẵn từ trước Plan 2 — see mục 4.1 — nên nó chỉ là điều kiện cần, không phải
+   bằng chứng; `flutter build web --release --base-href /pixket/` vẫn phải chạy sạch trong CI.)*
 2. `flutter analyze` và `flutter test` pass, bao gồm boundary test mục 12.1.
-3. Bản Android và Windows **không đổi hành vi**: draft vẫn ghi đĩa, notification vẫn qua
-   `flutter_local_notifications`, ảnh vẫn cache qua `cached_network_image`.
+3. Bản Android (và iOS nếu build) **không đổi hành vi**: draft vẫn ghi đĩa, notification vẫn qua
+   `flutter_local_notifications`, ảnh vẫn cache qua `cached_network_image`. *Sửa 2026-11-04: Windows
+   rút khỏi tiêu chí — project không có bằng chứng bản Windows từng chạy được các plugin này (mục
+   6.3), và Plan 2 không nghiệm thu Windows.*
 4. Không còn `path_provider` và `database_helper.dart` trong project; `sqflite` chỉ còn được
    import từ đúng một file migration (mục 6.3) và sẽ gỡ ở release kế tiếp.
 5. Deploy lên GitHub Pages thành công; Lighthouse báo installable.
@@ -559,3 +588,18 @@ Không thể khẳng định PWA hoạt động chỉ bằng `flutter test`. Ph�
 - `dart:io` không khả dụng trên web — api.flutter.dev/flutter/dart-io/
 - `compute()` bản web — đọc trực tiếp `packages/flutter/lib/src/foundation/_isolates_web.dart`
   của Flutter 3.47.6 cài tại `C:\flutter`
+
+**Bổ sung 2026-11-04 (đo trên `main` `01dd660`, Flutter 3.47.6 tại `/c/flutter/bin/flutter`):**
+
+- `flutter build web` exit 0, `√ Built build\web` (53,6s) dù còn 8 file import `dart:io` và còn
+  `flutter_cache_manager` → mục 4.1/4.2 viết lại: không có nút thắt compile.
+- `flutter_local_notifications` 18.0.1 — đọc `lib/src/flutter_local_notifications_plugin.dart`
+  trong pub cache: 8 nhánh `if (kIsWeb)`, `initialize()` trả `true` ở :114, `show()` return sớm ở :219.
+- `gal` 2.3.3 và `sqflite` 2.4.4 — khối `flutter.plugin.platforms` trong pubspec của từng package
+  trong pub cache (gal: android/ios/macos/windows; sqflite: android/ios/macos).
+- Cảnh báo cho người đọc spec: 2 chuỗi `Bad state: database is locked` và
+  `Bad state: no such table: app_settings` trong output của
+  `test/unit/legacy_settings_migration_test.dart` là `StateError` **do test giả lập** (dòng 72, 82),
+  không phải lỗi thật của sqflite trên nền tảng — đừng trích chúng làm bằng chứng.
+- Máy dev không có Google Chrome, chỉ có Microsoft Edge; `build/web` đã render được bằng Chromium
+  của Playwright.
