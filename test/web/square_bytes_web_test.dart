@@ -9,7 +9,10 @@ import 'package:pixket/core/utils/square_image.dart';
 
 Uint8List jpegOf(int w, int h) => img.encodeJpg(
   // `fill` là hàm top-level của package:image 4.x, không phải method của Image.
-  img.fill(img.Image(width: w, height: h), color: img.ColorRgb8(200, 30, 30)),
+  img.fill(
+    img.Image(width: w, height: h),
+    color: img.ColorRgb8(200, 30, 30),
+  ),
 );
 
 void main() {

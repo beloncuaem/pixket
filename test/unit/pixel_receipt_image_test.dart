@@ -22,13 +22,16 @@ void main() {
       expect(r.draftHandle, isNull);
     });
 
-    test('ảnh nháp còn trong phiên thì là draftHandle khi chưa upload xong', () {
-      final r = resolveReceiptImage(imagePath: '/data/user/0/tmp/IMG_1.jpg');
-      expect(r.source, ReceiptImageSource.localDraft);
-      expect(r.draftHandle, '/data/user/0/tmp/IMG_1.jpg');
-      expect(r.url, isNull);
-      expect(r.cacheKey, isNull);
-    });
+    test(
+      'ảnh nháp còn trong phiên thì là draftHandle khi chưa upload xong',
+      () {
+        final r = resolveReceiptImage(imagePath: '/data/user/0/tmp/IMG_1.jpg');
+        expect(r.source, ReceiptImageSource.localDraft);
+        expect(r.draftHandle, '/data/user/0/tmp/IMG_1.jpg');
+        expect(r.url, isNull);
+        expect(r.cacheKey, isNull);
+      },
+    );
 
     test('URL cũ không có chữ ký thì không hiển thị', () {
       final r = resolveReceiptImage(imagePath: 'https://old.public/uuid/b.png');

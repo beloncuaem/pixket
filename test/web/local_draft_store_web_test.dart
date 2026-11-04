@@ -29,11 +29,7 @@ void main() {
   });
 
   test('squared: true ghép marker _sq vào handle', () async {
-    final handle = await store.save(
-      bytes3(4),
-      extension: 'jpg',
-      squared: true,
-    );
+    final handle = await store.save(bytes3(4), extension: 'jpg', squared: true);
     expect(handle, 'pixket-draft://0_sq.jpg');
     expect(isSquareImagePath(handle), isTrue);
   });

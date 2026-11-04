@@ -80,8 +80,7 @@ Future<Map<String, String>> _readFromSqlite() async {
   try {
     final rows = await database.query('app_settings');
     return {
-      for (final row in rows)
-        row['key'] as String: row['value'] as String,
+      for (final row in rows) row['key'] as String: row['value'] as String,
     };
   } finally {
     await database.close();

@@ -20,9 +20,8 @@ class _FakeReader implements PriorityRowReader {
 
 class _ThrowingReader implements PriorityRowReader {
   @override
-  Future<List<Map<String, dynamic>>> readAll() async => throw StateError(
-    'Chưa kết nối được Supabase. Vui lòng kiểm tra mạng.',
-  );
+  Future<List<Map<String, dynamic>>> readAll() async =>
+      throw StateError('Chưa kết nối được Supabase. Vui lòng kiểm tra mạng.');
 }
 
 /// Đúng 4 dòng mà section 5.1 của supabase_setup.sql seed.

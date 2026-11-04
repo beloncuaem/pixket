@@ -60,6 +60,9 @@ void main() {
     await tester.pumpWidget(_host(repo));
     await tester.pump();
     expect(_cellColors(tester), contains(AppPalette.light.mint));
-    expect(_cellColors(tester), isNot(contains(AppPalette.light.rampFill(0.8))));
+    expect(
+      _cellColors(tester),
+      isNot(contains(AppPalette.light.rampFill(0.8))),
+    );
   });
 }

@@ -183,22 +183,17 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
   Future<void> _sendNewAlerts() async {
     final usageRatio = state.budgetUsagePercent;
     if (state.totalBudgetAmount <= 0) return;
-    final monthLabel = DateFormat('MM/yyyy').format(
-      DateTime.parse('${state.month}-01'),
-    );
+    final monthLabel = DateFormat('MM/yyyy')
+        .format(DateTime.parse('${state.month}-01'));
     try {
       await notifyBudgetCrossing(
         receiptNotifier,
         usageRatio: usageRatio,
         monthLabel: monthLabel,
-        hasSent: (threshold) => _alertRepository.hasSent(
-          state.month,
-          threshold,
-        ),
-        markSent: (threshold) => _alertRepository.markSent(
-          state.month,
-          threshold,
-        ),
+        hasSent: (threshold) =>
+            _alertRepository.hasSent(state.month, threshold),
+        markSent: (threshold) =>
+            _alertRepository.markSent(state.month, threshold),
       );
     } catch (_) {
       // Cảnh báo ngân sách không được chặn việc tải ngân sách.

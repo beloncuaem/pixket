@@ -37,7 +37,9 @@ class ReceiptCacheImage extends StatelessWidget {
       fit: fit,
       width: width,
       height: height,
-      placeholder: placeholder == null ? null : (_, __) => placeholder!(context),
+      placeholder: placeholder == null
+          ? null
+          : (_, __) => placeholder!(context),
       errorWidget: errorBuilder == null
           ? null
           : (_, __, error) => errorBuilder!(context, error),

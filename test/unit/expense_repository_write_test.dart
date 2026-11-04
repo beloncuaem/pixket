@@ -303,32 +303,36 @@ void main() {
     );
   });
 
-  test('draft đã vuông (_sq) được repository upload mà không cắt lại', () async {
-    final store = IoLocalDraftStore(dir: tempDir);
-    final handle = await store.save(
-      jpegOf(1200, 1200),
-      extension: 'jpg',
-      squared: true,
-    );
-    expect(isSquareImagePath(handle), isTrue);
+  test(
+    'draft đã vuông (_sq) được repository upload mà không cắt lại',
+    () async {
+      final store = IoLocalDraftStore(dir: tempDir);
+      final handle = await store.save(
+        jpegOf(1200, 1200),
+        extension: 'jpg',
+        squared: true,
+      );
+      expect(isSquareImagePath(handle), isTrue);
 
-    final uploaded = await ExpenseRepository(
-      storageService: storage,
-      writer: _RecordingWriter(),
-    ).saveExpense(
-      expenseId: null,
-      imageSource: handle,
-      values: {'caption': 'A', 'amount': 1000},
-    );
+      final uploaded =
+          await ExpenseRepository(
+            storageService: storage,
+            writer: _RecordingWriter(),
+          ).saveExpense(
+            expenseId: null,
+            imageSource: handle,
+            values: {'caption': 'A', 'amount': 1000},
+          );
 
-    expect(uploaded, isNotNull);
-    expect(storage.capturedUploadCalls.single.squared, isTrue);
-    // bytes đi upload đúng là bytes của draft: không decode lại ảnh đã vuông.
-    expect(
-      storage.capturedUploadCalls.single.bytes,
-      await store.readBytes(handle),
-    );
-  });
+      expect(uploaded, isNotNull);
+      expect(storage.capturedUploadCalls.single.squared, isTrue);
+      // bytes đi upload đúng là bytes của draft: không decode lại ảnh đã vuông.
+      expect(
+        storage.capturedUploadCalls.single.bytes,
+        await store.readBytes(handle),
+      );
+    },
+  );
 }
 
 class _BrokenStorage extends SupabaseStorageService {

@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pixket/core/platform/local_draft_store.dart';
-import 'package:pixket/core/platform/receipt_cache_image_web.dart' as web_render;
+import 'package:pixket/core/platform/receipt_cache_image_web.dart'
+    as web_render;
 
 /// JPEG tối thiểu (4 byte), cách sinh quen thuộc của các test ảnh trong repo.
 Uint8List tinyJpeg() => Uint8List.fromList(<int>[0xFF, 0xD8, 0xFF, 0xD9]);
@@ -44,7 +45,9 @@ void main() {
     await localDraftStore.delete(handle);
   }, skip: !kIsWeb);
 
-  testWidgets('handle không còn trong store thì về placeholder', (tester) async {
+  testWidgets('handle không còn trong store thì về placeholder', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         web_render.ReceiptLocalImage(

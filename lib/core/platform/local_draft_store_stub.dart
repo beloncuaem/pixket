@@ -7,9 +7,8 @@ LocalDraftStore localDraftStore = const _UnsupportedLocalDraftStore();
 class _UnsupportedLocalDraftStore extends LocalDraftStore {
   const _UnsupportedLocalDraftStore();
 
-  Never _fail() => throw UnsupportedError(
-    'Pixket chưa lưu được ảnh tạm trên nền tảng này.',
-  );
+  Never _fail() =>
+      throw UnsupportedError('Pixket chưa lưu được ảnh tạm trên nền tảng này.');
 
   @override
   Future<String> save(

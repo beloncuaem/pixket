@@ -33,10 +33,7 @@ void main() {
     await LegacySettingsMigration(readLegacySettings: _fullLegacyDb).run();
 
     final preferences = await SharedPreferences.getInstance();
-    expect(
-      preferences.getBool(LegacySettingsMigration.flagKey),
-      isTrue,
-    );
+    expect(preferences.getBool(LegacySettingsMigration.flagKey), isTrue);
   });
 
   test('không đọc DB cũ lần hai khi cờ đã set', () async {

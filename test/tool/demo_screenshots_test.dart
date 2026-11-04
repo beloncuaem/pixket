@@ -141,7 +141,8 @@ StatisticsState _statisticsState() => StatisticsState(
   insights: const ['Nhà ở chiếm 78% tổng chi tháng này.'],
 );
 
-class _StubExpense extends StateNotifier<ExpenseState> implements ExpenseNotifier {
+class _StubExpense extends StateNotifier<ExpenseState>
+    implements ExpenseNotifier {
   _StubExpense(super.state);
   @override
   Future<void> refreshDashboard() async {}
@@ -159,13 +160,15 @@ class _StubExpense extends StateNotifier<ExpenseState> implements ExpenseNotifie
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _StubCategory extends StateNotifier<CategoryState> implements CategoryNotifier {
+class _StubCategory extends StateNotifier<CategoryState>
+    implements CategoryNotifier {
   _StubCategory(super.state);
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _StubPriority extends StateNotifier<PriorityState> implements PriorityNotifier {
+class _StubPriority extends StateNotifier<PriorityState>
+    implements PriorityNotifier {
   _StubPriority(super.state);
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
