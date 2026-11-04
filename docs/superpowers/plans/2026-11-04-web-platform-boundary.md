@@ -1202,7 +1202,7 @@ git commit -m "feat: canh bao ngan sach qua seam, web dung Web Notifications"
 ## Task 7: Siết allowlist, CI build web, audit lại và chốt tài liệu
 
 **Files:**
-- Create: `.github/workflows/build-web.yml`
+- Create: `.github/workflows/build-web.yml`, `dart_test.yaml` (khai báo tag `web`)
 - Modify: `docs/superpowers/audits/2026-11-04-web-runtime-audit.md`, `docs/superpowers/specs/2026-11-04-web-platform-boundary-design.md` (bảng audit mục 5 → trạng thái thật)
 - Modify: `test/unit/web_platform_boundary_test.dart` (mọi allowlist rỗng; needle R1 siết theo Step 1b)
 - Modify: `analysis_options.yaml` (bật `prefer_single_quotes`), `dart format` toàn repo một lần (Step 1b)
@@ -1236,6 +1236,29 @@ không được nới allowlist. Cùng bước này bật `prefer_single_quotes`
 `/c/flutter/bin/dart format lib test` một lần *(Ruling H: batch format ở Task 7, không format rải rác
 vì sẽ tạo nhiễu trong diff, che mất diff của seam)* và `flutter analyze` phải sạch.
 
+Kèm theo (Ruling J kéo theo): tạo **`dart_test.yaml`** ở gốc repo, vì hiện `@Tags(['web'])` trong
+`test/web/*` vô hiệu (không có file khai báo tag, runner in cảnh báo) và `flutter test` trên VM **vẫn
+nạp** `test/web` — đo: `flutter test test/web/` = `+8 ~1`.
+
+```yaml
+tags:
+  web:
+```
+
+Không bỏ các `skip: !kIsWeb`: test web vẫn phải chạy trên VM để khoá nhánh IO, còn nhánh canvas web
+chỉ được chứng minh bởi bước Chrome trong Step 2.
+
+- [ ] **Step 1c: Bước Chrome trong CI là bằng chứng duy nhất của nhánh web (Ruling J)**
+
+Trên máy dev này `flutter test --platform chrome` **không chạy được** (flutter_tools treo khi lái Edge;
+đã chẩn đoán ở Task 0/Task 2 với smoke test `expect(1,1)` cũng chết bằng
+`Connection closed before test suite loaded.`). Vì vậy, cho tới Step 2, những thứ sau **chưa từng được
+chạy thật**: quy tắc cắt của `square_image_web.dart`, `getContext('2d')` có trả context thật không,
+`createImageBitmap` reject hay trả bitmap rỗng với ảnh rác, và façade `localDraftStore` có trả
+`WebLocalDraftStore` trên web hay không. Bước Chrome trong CI là chỗ duy nhất đóng được các khoảng đó;
+không có nó thì Task 2 chỉ mới chứng minh *compile được*, tức là đúng cái bẫy mà spec Plan 2 mục 2 đã
+bác. Nếu CI đỏ ở một trong bốn điểm đó, coi như Task 2 chưa xong — mở lại Task 2, không nới test.
+
 - [ ] **Step 2: CI build web**
 
 `.github/workflows/build-web.yml`:
@@ -1261,6 +1284,8 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test test/unit/web_platform_boundary_test.dart
+      - name: Test canvas web bang Chrome that (Ruling J)
+        run: flutter test --platform chrome test/web
       - run: flutter build web --release --base-href /pixket/
 ```
 
