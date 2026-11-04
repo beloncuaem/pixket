@@ -70,7 +70,6 @@ void main() {
       allowed: {
         'lib/core/services/notification_service.dart',
         'lib/core/utils/save_to_gallery.dart',
-        'lib/screens/camera/camera_screen.dart',
       },
       rule: 'R3',
     );

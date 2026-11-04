@@ -1,13 +1,10 @@
-import 'dart:math' as math;
-
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/platform/local_draft_store.dart';
+import '../../core/platform/photo_capture.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/square_image.dart';
@@ -39,121 +36,56 @@ class CameraScreen extends ConsumerStatefulWidget {
 }
 
 class _CameraScreenState extends ConsumerState<CameraScreen> {
-  CameraController? _controller;
-  List<CameraDescription> _cameras = [];
-  bool _isCameraInitialized = false;
-  bool _isCameraInitializing = true;
-  bool _hasCameraPermission = true;
-  String? _cameraError;
-  int _selectedCameraIndex = 0;
   bool _isCapturing = false;
   bool _isSwitchingCamera = false;
 
   final PageController _pageController = PageController();
-  final ImagePicker _picker = ImagePicker();
   int _pageIndex = 0;
+
+  /// Trạng thái hiển thị suy ra từ seam, không nhân bản sang screen — screen
+  /// mà tự nhớ "đang khởi tạo" thì bản web treo ở indicator.
+  PhotoCapturePane get _pane {
+    // Đang đổi thị kính: seam đã tắt ống ngắm trong lúc mở camera mới, nhưng
+    // screen phải ẩn frame cũ ngay khi người dùng bấm chứ không chờ await xong.
+    if (_isSwitchingCamera) return PhotoCapturePane.initializing;
+    return photoCapturePaneFor(
+      supportsLiveViewfinder: photoCapture.supportsLiveViewfinder,
+      isReady: photoCapture.isReady,
+      errorMessage: photoCapture.errorMessage,
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    _openCapture();
   }
 
-  Future<void> _initializeCamera() async {
-    List<CameraDescription> cameras;
-    try {
-      cameras = await availableCameras();
-    } catch (error) {
-      debugPrint('Error listing cameras: $error');
-      cameras = [];
-    }
-
-    if (!mounted) return;
-    _cameras = cameras;
-
-    if (_cameras.isEmpty) {
-      setState(() {
-        _isCameraInitializing = false;
-        _cameraError = 'Không tìm thấy máy ảnh trên thiết bị.';
-      });
-      return;
-    }
-
-    await _setupCameraController(_cameras[_selectedCameraIndex]);
-  }
-
-  Future<bool> _setupCameraController(CameraDescription camera) async {
-    final previous = _controller;
-    _controller = null;
-
-    // Phải giải phóng camera cũ trước khi mở camera mới, nếu không thiết bị
-    // sẽ giữ cả hai và camera mới bị đen.
-    if (previous != null) {
-      try {
-        await previous.dispose();
-      } catch (_) {}
-    }
-
-    final controller = CameraController(
-      camera,
-      ResolutionPreset.high,
-      enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.jpeg,
-    );
-    _controller = controller;
-
-    try {
-      await controller.initialize();
-      if (!mounted) {
-        _controller = null;
-        await controller.dispose();
-        return false;
-      }
-      setState(() {
-        _isCameraInitialized = true;
-        _isCameraInitializing = false;
-        _hasCameraPermission = true;
-        _cameraError = null;
-      });
-      return true;
-    } on CameraException catch (error) {
-      debugPrint('Camera Exception: ${error.code}, ${error.description}');
-      try {
-        await controller.dispose();
-      } catch (_) {}
-      if (identical(_controller, controller)) _controller = null;
-      if (!mounted) return false;
-      setState(() {
-        _isCameraInitialized = false;
-        _isCameraInitializing = false;
-        _hasCameraPermission = !error.code.contains('CameraAccessDenied');
-        _cameraError = _hasCameraPermission
-            ? 'Camera đang bận hoặc không khả dụng.'
-            : 'Bạn chưa cấp quyền truy cập máy ảnh.';
-      });
-      return false;
-    }
+  Future<void> _openCapture() async {
+    await photoCapture.initialize();
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    photoCapture.dispose();
     _pageController.dispose();
     super.dispose();
   }
 
   Future<void> _takePicture() async {
     if (_isCapturing) return;
-    if (_controller == null || !_controller!.value.isInitialized) {
+    final pane = _pane;
+    if (pane == PhotoCapturePane.initializing ||
+        pane == PhotoCapturePane.error) {
       _showSnackBar('Camera chưa sẵn sàng. Hãy chọn ảnh từ thư viện.');
       return;
     }
-    if (_controller!.value.isTakingPicture) return;
 
     setState(() => _isCapturing = true);
     try {
-      final picture = await _controller!.takePicture();
-      final bytes = await picture.readAsBytes();
+      final bytes = await photoCapture.capture();
+      if (bytes == null || !mounted) return;
       final squared = await squareBytes(bytes);
       final draft = await localDraftStore.save(
         squared ?? bytes,
@@ -174,18 +106,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
 
   Future<void> _pickFromGallery() async {
     try {
-      final image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 80,
-      );
-      if (image == null || !mounted) return;
-      final bytes = await image.readAsBytes();
-      final squared = await squareBytes(bytes);
+      final picked = await photoCapture.pickFromGallery();
+      if (picked == null || !mounted) return;
+      final squared = await squareBytes(picked.bytes);
       final draft = await localDraftStore.save(
-        squared ?? bytes,
-        extension: image.path.split('.').last.toLowerCase(),
+        squared ?? picked.bytes,
+        extension: picked.extension,
         squared: squared != null,
       );
       if (!mounted) return;
@@ -215,33 +141,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   }
 
   Future<void> _switchCamera() async {
-    if (_cameras.length < 2 || _isCapturing || _isSwitchingCamera) return;
+    if (!photoCapture.canSwitchCamera || _isCapturing || _isSwitchingCamera) {
+      return;
+    }
     setState(() => _isSwitchingCamera = true);
 
-    final previousIndex = _selectedCameraIndex;
-    final currentLensDirection = _cameras[previousIndex].lensDirection;
-    var nextIndex = _cameras.indexWhere(
-      (camera) => camera.lensDirection != currentLensDirection,
-    );
-    if (nextIndex < 0) nextIndex = (previousIndex + 1) % _cameras.length;
-
-    setState(() {
-      _selectedCameraIndex = nextIndex;
-      _isCameraInitialized = false;
-      _isCameraInitializing = true;
-      _cameraError = null;
-    });
-
-    final success = await _setupCameraController(_cameras[nextIndex]);
-    if (!success && mounted && previousIndex != nextIndex) {
-      // Nếu camera mới không mở được, quay lại camera cũ để không bị màn hình đen.
-      setState(() {
-        _selectedCameraIndex = previousIndex;
-        _isCameraInitializing = true;
-        _cameraError = null;
-      });
-      await _setupCameraController(_cameras[previousIndex]);
-    }
+    await photoCapture.useNextCamera();
     if (mounted) setState(() => _isSwitchingCamera = false);
   }
 
@@ -342,10 +247,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
               onPageChanged: (index) => setState(() => _pageIndex = index),
               itemBuilder: (context, index) {
                 if (index == 0) {
+                  final pane = _pane;
                   return _CameraFeedPage(
-                    controller: _isCameraInitialized ? _controller : null,
-                    isInitializing: _isCameraInitializing,
-                    errorMessage: _cameraError,
+                    pane: pane,
+                    viewfinder: pane == PhotoCapturePane.liveViewfinder
+                        ? photoCapture.buildViewfinder(context, aspectRatio: 1)
+                        : null,
+                    errorMessage: photoCapture.errorMessage,
                     hasPhotos: photos.isNotEmpty,
                     onPickFromGallery: _pickFromGallery,
                   );
@@ -449,7 +357,13 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   Widget _buildCameraControls({required List<Expense> photos}) {
     final palette = context.palette;
     final text = Theme.of(context).textTheme;
-    final canShoot = _isCameraInitialized && !_isCapturing;
+    final pane = _pane;
+    // Trên nền tảng không có ống ngắm sống, nút chụp mở đường chọn ảnh của
+    // trình duyệt nên vẫn phải bấm được; chỉ hai trạng thái chờ/lỗi mới tắt.
+    final canShoot =
+        !_isCapturing &&
+        pane != PhotoCapturePane.initializing &&
+        pane != PhotoCapturePane.error;
     return Positioned(
       left: 0,
       right: 0,
@@ -493,7 +407,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                       iconColor: palette.feedInk,
                     ),
                     _ShutterButton(onPressed: _takePicture, enabled: canShoot),
-                    if (_cameras.length > 1)
+                    if (photoCapture.canSwitchCamera)
                       PixelIconButton(
                         icon: 'refresh',
                         tooltip: 'Đổi camera',
@@ -523,15 +437,15 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
 }
 
 class _CameraFeedPage extends StatelessWidget {
-  final CameraController? controller;
-  final bool isInitializing;
+  final PhotoCapturePane pane;
+  final Widget? viewfinder;
   final String? errorMessage;
   final bool hasPhotos;
   final VoidCallback onPickFromGallery;
 
   const _CameraFeedPage({
-    required this.controller,
-    required this.isInitializing,
+    required this.pane,
+    required this.viewfinder,
     required this.errorMessage,
     required this.hasPhotos,
     required this.onPickFromGallery,
@@ -546,33 +460,10 @@ class _CameraFeedPage extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           const Positioned.fill(child: PixelStarField()),
-          if (controller != null)
-            Center(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // Ô vuông ngắm nhỏ hơn cạnh khả dụng 24 px để nền sao còn
-                  // chỗ hở quanh khung; vùng cắt vẫn đúng tâm preview.
-                  final side =
-                      math.min(constraints.maxWidth, constraints.maxHeight) -
-                      24;
-                  return SizedBox(
-                    width: side,
-                    height: side,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: _SquareCameraPreview(controller: controller!),
-                        ),
-                        const _ViewfinderCorners(),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          if (isInitializing && controller == null)
+          if (viewfinder != null) Positioned.fill(child: viewfinder!),
+          if (pane == PhotoCapturePane.initializing)
             const Center(child: PixelLoading(label: 'Đang mở camera…')),
-          if (errorMessage != null)
+          if (pane == PhotoCapturePane.error)
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -585,7 +476,20 @@ class _CameraFeedPage extends StatelessWidget {
                 ),
               ),
             ),
-          if (!hasPhotos && errorMessage == null && controller != null)
+          if (pane == PhotoCapturePane.galleryPrompt)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _FeedNoticeCard(
+                  glyph: 'filmStrip',
+                  title: 'Chọn ảnh từ thư viện',
+                  message: 'Pixket chưa mở được ống ngắm trong trình duyệt. Chụp bằng camera của hệ thống rồi chọn ảnh đó, hoặc chọn hóa đơn đã có sẵn.',
+                  actionLabel: 'MỞ THƯ VIỆN ẢNH',
+                  onAction: onPickFromGallery,
+                ),
+              ),
+            ),
+          if (!hasPhotos && pane == PhotoCapturePane.liveViewfinder)
             const Align(
               alignment: Alignment(0, -0.08),
               child: IgnorePointer(
@@ -600,30 +504,6 @@ class _CameraFeedPage extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-/// Preview cắt giữa đúng ô vuông: cover vào khung rồi clip, khớp vùng mà
-/// [squareBytes] cắt từ ảnh thật.
-class _SquareCameraPreview extends StatelessWidget {
-  final CameraController controller;
-  const _SquareCameraPreview({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final previewSize = controller.value.previewSize;
-    if (previewSize == null) return CameraPreview(controller);
-
-    return ClipRect(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: previewSize.height,
-          height: previewSize.width,
-          child: CameraPreview(controller),
-        ),
       ),
     );
   }
@@ -680,55 +560,6 @@ class _FeedNoticeCard extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// Khung ngắm pixel: guide vuông đúng vùng cắt, 4 góc đậm, không áp filter hay
-/// làm mờ ảnh xem trước.
-class _ViewfinderCorners extends StatelessWidget {
-  const _ViewfinderCorners();
-
-  static const double _side = 24;
-
-  @override
-  Widget build(BuildContext context) {
-    final edge = BorderSide(color: context.palette.feedInk, width: 3);
-    Widget bracket(bool left, bool top) => Container(
-      width: _side,
-      height: _side,
-      decoration: BoxDecoration(
-        border: Border(
-          left: left ? edge : BorderSide.none,
-          top: top ? edge : BorderSide.none,
-          right: left ? BorderSide.none : edge,
-          bottom: top ? BorderSide.none : edge,
-        ),
-      ),
-    );
-
-    return IgnorePointer(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Preview vẽ BoxFit.cover nên vùng cắt vuông luôn phủ kín cạnh nhỏ
-          // của khung: guide là ô vuông nội tiếp, ảnh thật lấy dư hai bên.
-          final guide = math.min(constraints.maxWidth, constraints.maxHeight);
-          return Center(
-            child: SizedBox(
-              width: guide,
-              height: guide,
-              child: Stack(
-                children: [
-                  Positioned(top: 0, left: 0, child: bracket(true, true)),
-                  Positioned(top: 0, right: 0, child: bracket(false, true)),
-                  Positioned(bottom: 0, left: 0, child: bracket(true, false)),
-                  Positioned(bottom: 0, right: 0, child: bracket(false, false)),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

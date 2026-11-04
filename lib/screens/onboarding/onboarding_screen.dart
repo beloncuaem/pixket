@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -49,7 +50,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    await Permission.camera.request();
+    // Trên web browser tự hỏi quyền máy ảnh đúng lúc `<input capture>` mở, nên
+    // xin trước ở đây là thừa (và gọi plugin lúc chưa quyết quyền là lỗi treo
+    // đã đo ở audit Lượt 1).
+    if (!kIsWeb) await Permission.camera.request();
     await NotificationService.instance.requestPermission();
     await ref.read(appSettingsProvider.notifier).completeOnboarding();
   }
