@@ -36,7 +36,9 @@ abstract class PhotoCapture {
   Widget buildViewfinder(BuildContext context, {double aspectRatio = 1});
 
   /// Giải phóng thiết bị ảnh khi màn hình rời khỏi cây widget, để camera không
-  /// bị chiếm sau khi người dùng đã thoát screen.
+  /// bị chiếm sau khi người dùng đã thoát screen. Vì seam là toàn cục, hàm này
+  /// giả định tại một thời điểm chỉ có một screen sở hữu nó — đúng với hiện tại
+  /// (chỉ `main_screen.dart:49` gắm `CameraScreen`).
   void dispose();
 }
 
