@@ -50,14 +50,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    // Trên web browser tự hỏi quyền máy ảnh đúng lúc `<input capture>` mở, nên
-    // xin trước ở đây là thừa (và gọi plugin lúc chưa quyết quyền là lỗi treo
-    // đã đo ở audit Lượt 1). Quyền thông báo thì khác: `Notification.requestPermission()`
-    // không có "đúng lúc" nào do browser khởi động, bỏ lời gọi trên web sẽ khiến
-    // cảnh báo ngân sách vĩnh viễn không bật. Nhánh web bắn lời hỏi rồi đi tiếp
-    // chứ không chờ, vì chip quyền có thể không bao giờ được bấm.
-    if (!kIsWeb) await Permission.camera.request();
-    await receiptNotifier.requestPermission();
+    // Trên web: không await permission để tránh treo onboarding trên iOS Safari
+    // (Notification.requestPermission có thể không resolve). Bắn lời hỏi rồi đi tiếp.
+    if (kIsWeb) {
+      receiptNotifier.requestPermission();
+    } else {
+      await Permission.camera.request();
+      await receiptNotifier.requestPermission();
+    }
     await ref.read(appSettingsProvider.notifier).completeOnboarding();
   }
 
