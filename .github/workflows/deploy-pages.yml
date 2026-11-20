@@ -1,0 +1,68 @@
+name: Deploy web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+
+      - name: Tạo .env từ secrets
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "Thiếu secret SUPABASE_URL hoặc SUPABASE_ANON_KEY." >&2
+            exit 1
+          fi
+          printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' \
+            "${SUPABASE_URL}" "${SUPABASE_ANON_KEY}" > .env
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Cài dependency
+        run: flutter pub get
+
+      - name: flutter analyze
+        run: flutter analyze
+
+      - name: Boundary test
+        run: flutter test test/unit/web_platform_boundary_test.dart
+
+      - name: Build web
+        run: flutter build web --release --base-href /pixket/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
