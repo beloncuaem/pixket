@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/supabase_config.dart';
 import '../../core/theme/app_palette.dart';
 import '../../data/models/friendship.dart';
 import '../../providers/friend_provider.dart';
@@ -137,11 +138,17 @@ class _FriendsManageScreenState extends ConsumerState<FriendsManageScreen> {
               if (list.isEmpty) return const Text('Chưa có bạn bè nào.');
               return Column(
                 children: list.map((f) {
-                  return ListTile(
+                  final avatarPublicUrl = f.avatarUrl == null
+                    ? null
+                    : SupabaseConfig.client?.storage
+                        .from('avatars')
+                        .getPublicUrl(f.avatarUrl!);
+                return ListTile(
                     leading: CircleAvatar(
-                      backgroundImage:
-                          f.avatarUrl != null ? NetworkImage(f.avatarUrl!) : null,
-                      child: f.avatarUrl == null
+                      backgroundImage: avatarPublicUrl != null
+                          ? NetworkImage(avatarPublicUrl)
+                          : null,
+                      child: avatarPublicUrl == null
                           ? Text(f.displayName.characters.first.toUpperCase())
                           : null,
                     ),

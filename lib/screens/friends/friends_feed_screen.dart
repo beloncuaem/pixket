@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/supabase_config.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/expense.dart';
@@ -69,6 +70,9 @@ class _FeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final avatarPublicUrl = avatarUrl == null
+        ? null
+        : SupabaseConfig.client?.storage.from('avatars').getPublicUrl(avatarUrl!);
     return Column(
       children: [
         Expanded(
@@ -89,10 +93,10 @@ class _FeedPage extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 14,
-                    backgroundImage: avatarUrl != null
-                        ? NetworkImage(avatarUrl!)
+                    backgroundImage: avatarPublicUrl != null
+                        ? NetworkImage(avatarPublicUrl)
                         : null,
-                    child: avatarUrl == null
+                    child: avatarPublicUrl == null
                         ? Text(authorName.characters.first.toUpperCase())
                         : null,
                   ),

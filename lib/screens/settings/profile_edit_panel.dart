@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/config/supabase_config.dart';
 import '../../providers/friend_provider.dart';
 import '../../widgets/pixel/pixel_panel.dart';
 
@@ -90,9 +91,14 @@ class _ProfileEditPanelState extends ConsumerState<ProfileEditPanel> {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundImage: profile.valueOrNull?.avatarUrl != null
-                    ? NetworkImage(profile.valueOrNull!.avatarUrl!)
-                    : null,
+                backgroundImage: profile.valueOrNull?.avatarUrl == null
+                    ? null
+                    : NetworkImage(
+                        SupabaseConfig.client?.storage
+                                .from('avatars')
+                                .getPublicUrl(profile.valueOrNull!.avatarUrl!) ??
+                            profile.valueOrNull!.avatarUrl!,
+                      ),
                 child: profile.valueOrNull?.avatarUrl == null
                     ? const Text('?')
                     : null,
