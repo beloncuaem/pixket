@@ -10,6 +10,7 @@ import '../widgets/pixel/pixel_star_field.dart';
 import 'budget/budget_screen.dart';
 import 'camera/camera_screen.dart';
 import 'categories/manage_categories_screen.dart';
+import 'friends/friends_manage_screen.dart';
 import 'home/home_screen.dart';
 import 'settings/settings_screen.dart';
 import 'statistics/statistics_screen.dart';
@@ -141,6 +142,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         onOpenCategories: () => _push(const ManageCategoriesScreen()),
         onOpenTrash: () => _push(const TrashScreen()),
         onOpenSettings: () => _push(const SettingsScreen()),
+        onOpenFriends: () => _push(const FriendsManageScreen()),
         onLogout: _handleLogout,
         onToggleTheme: () => ref.read(themeProvider.notifier).toggleTheme(),
         displayName: displayName,

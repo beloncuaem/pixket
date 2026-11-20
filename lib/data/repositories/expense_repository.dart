@@ -39,6 +39,7 @@ class ExpenseRepository {
     return Expense(
       id: row['id'] as int?,
       imagePath: row['image_url'] as String?,
+      authorId: row['user_id'] as String?,
       caption: (row['caption'] as String?) ?? '',
       amount: (row['amount'] as num).toDouble(),
       categoryId: (row['category_id'] as int?) ?? 0,
@@ -329,6 +330,25 @@ class ExpenseRepository {
         .not('deleted_at', 'is', null)
         .order('deleted_at', ascending: false);
 
+    final rows = (data as List)
+        .map((row) => _fromRow(row as Map<String, dynamic>))
+        .toList();
+    return decorateWithSignedUrls(rows);
+  }
+
+  /// Khoản chi của một nhóm user (bạn bè + chính mình). RLS sẽ lọc theo
+  /// quyền đọc; chỉ trả về các dòng được phép.
+  Future<List<Expense>> getExpensesForUsers(List<String> userIds, {int? limit}) async {
+    if (userIds.isEmpty) return const [];
+    final client = _requireClient();
+    var query = client
+        .from('expenses')
+        .select()
+        .inFilter('user_id', userIds)
+        .isFilter('deleted_at', null);
+    var sorted = query.order('created_at', ascending: false);
+    if (limit != null) sorted = sorted.limit(limit);
+    final data = await sorted;
     final rows = (data as List)
         .map((row) => _fromRow(row as Map<String, dynamic>))
         .toList();

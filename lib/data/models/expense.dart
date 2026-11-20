@@ -4,6 +4,9 @@ class Expense {
   final int? id;
   final String? imagePath;
 
+  /// Tác giả khoản chi (dùng cho feed bạn bè). Null = chính mình.
+  final String? authorId;
+
   /// Signed URL chỉ dùng để hiển thị trong phiên hiện tại; không lưu vào DB.
   final String? displayImageUrl;
   final String caption;
@@ -16,6 +19,7 @@ class Expense {
   Expense({
     this.id,
     this.imagePath,
+    this.authorId,
     this.displayImageUrl,
     required this.caption,
     required this.amount,
@@ -39,6 +43,7 @@ class Expense {
   Expense copyWith({
     int? id,
     String? imagePath,
+    String? authorId,
     String? displayImageUrl,
     String? caption,
     double? amount,
@@ -50,6 +55,7 @@ class Expense {
     return Expense(
       id: id ?? this.id,
       imagePath: imagePath ?? this.imagePath,
+      authorId: authorId ?? this.authorId,
       displayImageUrl: displayImageUrl ?? this.displayImageUrl,
       caption: caption ?? this.caption,
       amount: amount ?? this.amount,

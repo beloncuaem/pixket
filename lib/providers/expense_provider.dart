@@ -207,3 +207,7 @@ class ExpenseNotifier extends StateNotifier<ExpenseState> {
 final expenseProvider = StateNotifierProvider<ExpenseNotifier, ExpenseState>(
   (ref) => ExpenseNotifier(ref),
 );
+
+final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
+  return ExpenseRepository();
+});

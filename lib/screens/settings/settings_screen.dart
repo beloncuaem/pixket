@@ -13,6 +13,7 @@ import '../../widgets/pixel/pixel_dialog.dart';
 import '../../widgets/pixel/pixel_panel.dart';
 import '../../widgets/pixel/pixel_screen_header.dart';
 import '../categories/manage_categories_screen.dart';
+import 'profile_edit_screen.dart';
 import '../trash/trash_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -53,6 +54,15 @@ class SettingsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _ProfilePanel(displayName: displayName, email: email),
+                  _NavRow(
+                    glyph: 'console',
+                    label: 'Chỉnh hồ sơ (avatar, biệt danh)',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ProfileEditScreen(),
+                      ),
+                    ),
+                  ),
                   pixelGroupHeader('DỮ LIỆU'),
                   _NavRow(
                     glyph: 'tag',

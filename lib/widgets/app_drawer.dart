@@ -15,6 +15,7 @@ class AppDrawer extends StatelessWidget {
   final VoidCallback onOpenCategories;
   final VoidCallback onOpenTrash;
   final VoidCallback onOpenSettings;
+  final VoidCallback? onOpenFriends;
   final Future<void> Function() onLogout;
   final VoidCallback onToggleTheme;
   final String displayName;
@@ -28,6 +29,7 @@ class AppDrawer extends StatelessWidget {
     required this.onOpenCategories,
     required this.onOpenTrash,
     required this.onOpenSettings,
+    this.onOpenFriends,
     required this.onToggleTheme,
     required this.displayName,
     required this.onLogout,
@@ -137,6 +139,11 @@ class AppDrawer extends StatelessWidget {
                           glyph: 'engine',
                           label: 'Cài đặt',
                           onTap: () => _closeThen(context, onOpenSettings),
+                        ),
+                        _DrawerTile(
+                          glyph: 'console',
+                          label: 'Bạn bè',
+                          onTap: () => _closeThen(context, onOpenFriends ?? () {}),
                         ),
                         const PixelDivider(),
                         _DrawerTile(
